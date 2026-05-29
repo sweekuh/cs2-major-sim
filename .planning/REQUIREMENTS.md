@@ -11,14 +11,20 @@
 
 - [x] **ENG-01
 **: Engine builds Round 1 pairings as seed N vs seed N+8, derived from the single seed→team map (no second hardcoded copy)
-- [ ] **ENG-02**: Rounds 2+ group active teams by (wins, losses) record and seed within group by Difficulty Score descending then initial seed ascending, via a single code path (no `if round == 2` special case)
+- [x] **ENG-02
+**: Rounds 2+ group active teams by (wins, losses) record and seed within group by Difficulty Score descending then initial seed ascending, via a single code path (no `if round == 2` special case)
 - [x] **ENG-03
 **: Difficulty Score is computed as `Σ(opp.wins − opp.losses)` over a team's played opponents (NOT `Σ opp.wins`)
-- [ ] **ENG-04**: Within-group pairing uses rematch-avoiding high-vs-low fold; the fold sorts on the difficulty-ranked order, not raw seed
-- [ ] **ENG-05**: When no rematch-free perfect matching exists, the engine pairs the least-disruptive rematch and logs a warning instead of crashing (no unhandled `None`)
-- [ ] **ENG-06**: A match is Bo3 iff either team is at 2 wins (advancement) or 2 losses (elimination); otherwise Bo1
-- [ ] **ENG-07**: No pair plays twice within a stage (no rematches); teams terminate at 3 wins (advance) or 3 losses (eliminated) with final record recorded
-- [ ] **ENG-08**: Engine accepts `locked: dict[frozenset({id,id}) -> winner_id]` and uses locked winners deterministically (no sampling), respecting locked history in the no-rematch rule
+- [x] **ENG-04
+**: Within-group pairing uses rematch-avoiding high-vs-low fold; the fold sorts on the difficulty-ranked order, not raw seed
+- [x] **ENG-05
+**: When no rematch-free perfect matching exists, the engine pairs the least-disruptive rematch and logs a warning instead of crashing (no unhandled `None`)
+- [x] **ENG-06
+**: A match is Bo3 iff either team is at 2 wins (advancement) or 2 losses (elimination); otherwise Bo1
+- [x] **ENG-07
+**: No pair plays twice within a stage (no rematches); teams terminate at 3 wins (advance) or 3 losses (eliminated) with final record recorded
+- [x] **ENG-08
+**: Engine accepts `locked: dict[frozenset({id,id}) -> winner_id]` and uses locked winners deterministically (no sampling), respecting locked history in the no-rematch rule
 - [ ] **ENG-09**: RNG is injected as a `seed` param threaded through the MC for reproducible runs/backtests, using `numpy.random.SeedSequence.spawn` so reproducibility survives chunked execution
 
 ### Backtest gate (HARD GATE — blocks UI and trusted output)
@@ -26,7 +32,8 @@
 - [ ] **GATE-01**: Round-by-round backtest feeds a completed past Major stage (Budapest 2025 or Austin 2025) seeds + forced results and asserts the engine reproduces the actual round-by-round pairings exactly
 - [x] **GATE-02
 **: `test_difficulty_formula` asserts `difficulty()` on Valve's worked example (opponents 2-0 and 1-1) == 2
-- [ ] **GATE-03**: `test_forced_rematch_pairing` (group whose ideal fold is a rematch matches Valve's priority table) and `test_no_valid_matching_fallback` (forced unmatchable group pairs without crashing) both pass
+- [x] **GATE-03
+**: `test_forced_rematch_pairing` (group whose ideal fold is a rematch matches Valve's priority table) and `test_no_valid_matching_fallback` (forced unmatchable group pairs without crashing) both pass
 - [ ] **GATE-04**: The exact Valve rematch priority table is pulled verbatim from `major-supplemental-rulebook.md` during this phase; greedy fold is replaced by literal table lookup if any backtest pairing diverges
 - [ ] **GATE-05**: No sim output is trusted and no UI is built until GATE-01 passes
 

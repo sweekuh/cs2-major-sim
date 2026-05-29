@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-05-29T04:55:25.300Z"
-last_activity: 2026-05-28 — Completed 01-01-PLAN.md (engine math core + Wave 0 test harness)
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-05-29T05:03:45.292Z"
+last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 ## Current Position
 
 Phase: 01 (Engine + Backtest Gate) — EXECUTING
-Plan: 2 of 4
-Status: Executing Phase 01
-Last activity: 2026-05-28 — Completed 01-01-PLAN.md (engine math core + Wave 0 test harness)
+Plan: 3 of 4
+Status: Ready to execute
+Last activity: 2026-05-29
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 25%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 25 | 3 tasks | 12 files |
+| Phase 01 P02 | 20 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - [Phase 5]: Odds placed last — fails soft, never gates; first run needs no API key.
 - [Phase 1]: Pinned pytest 9.x (live pip index showed 9.0.3 current); supersedes RESEARCH assumption A1 (8.x [ASSUMED]). numpy confirmed 2.4.6.
 - [Phase 1]: difficulty() canonical Buchholz lives in engine/probs.py; swiss.py imports it in wave 2 (no second copy).
+- [Phase 1]: Team is @dataclass(eq=False) so opponent OBJECTS live in opps (difficulty() reads o.wins-o.losses); identity equality is correct per distinct stage entity.
+- [Phase 1]: simulate_stage(teams, ratings, S, rng, locked); ratings is optional {id:rating} override (None->team.rating), the Phase-5/MC seam.
 
 ### Pending Todos
 
@@ -95,8 +98,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-29T04:55:25.295Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-05-29T05:03:45.287Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Engine + Backtest Gate) — 4 plans — 2026-05-29T04:40:49.038Z
