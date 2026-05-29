@@ -136,7 +136,9 @@ The Phase 1 Budapest backtest was **DEFERRED** (authoritative Valve seeds unsour
 
 ## Layout & Information Architecture (medium-specific, UI-01)
 
-Two explicit modes via **`st.segmented_control`** (DEFAULT — confirm; `st.radio(horizontal=True)` is the locked-in fallback) at the top: **Pre-stage** ↔ **Live**. Same data; the **main column reorders** by what matters per mode.
+Two explicit modes via **`st.segmented_control`** (CONFIRMED 2026-05-29) at the top: **Pre-stage** ↔ **Live**. Same data; the **main column reorders** by what matters per mode.
+
+**Default mode on first load = Pre-stage** (a fresh user / first run has no locked results; defaulting to Live would land them on the empty `Lock a result to go live` state). **Design-review note (2026-05-29):** Phase 2 ships the Live toggle as a placeholder shell — result-locking is Phase 4. User accepted keeping it as-is (the brief `Lock a result to go live` dead-end is acceptable for the shell build); revisit copy if Phase 4 slips.
 
 ```
 PRE-STAGE                                   LIVE (priority flips)
@@ -184,7 +186,7 @@ No shadcn. No external component registry. Registry vetting gate: N/A.
 
 ## Open Items for Orchestrator Confirmation
 
-These three were the ONLY genuinely-open items (everything else is locked by §10.5/§10.6/CLAUDE.md). `AskUserQuestion` is unavailable in this subagent, so prescriptive defaults were chosen and flagged — the orchestrator should confirm or override:
+**ALL THREE CONFIRMED by the user 2026-05-29 (keep all defaults): accent `#7C5CFC` violet, mode toggle `st.segmented_control`, base theme `dark`.** Original rationale retained below for the record.
 
 1. **Accent color** — DEFAULT `#7C5CFC` violet. Rationale: must avoid blue/amber (status semantics) and red (the "never red/green" rule, which also rules out Streamlit's default `#FF4B4B`). Alternatives: teal `#16B8A6`, magenta `#E0509E`.
 2. **Mode toggle widget** — DEFAULT `st.segmented_control` (best mode-switch affordance, matches the §10.5 mockup). Fallback: `st.radio(horizontal=True)`. Both are explicitly sanctioned in §10.5.
