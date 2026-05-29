@@ -116,17 +116,21 @@
 **: All four interaction states built per feature (loading / empty-pre-run / error / success-partial), including inline cell errors that block the run on bad ratings
 - [x] **UI-06
 **: Visual tokens enforced — monospace for all numbers; one accent color for primary action/hero numbers; colorblind-safe status (advanced=blue, eliminated=amber, never red/green) always paired with text label + glyph (`o live` / `x dead` / `/ secured`); contrast ≥4.5:1
-- [ ] **UI-07**: Persistent "engine validated vs [stage] backtest ✓" trust badge tied to the backtest gate
+- [x] **UI-07
+**: Persistent "engine validated vs [stage] backtest ✓" trust badge tied to the backtest gate
 
 ### Inputs, data & DX
 
 - [x] **DX-01
 **: Ship `data/stage1.json` with editable [INFERRED] seeds + default ratings so the first run needs no API key and no editing
-- [ ] **DX-02**: Persistent dismissable in-app banner `⚠ Seeds are INFERRED — verify vs the official seed list before trusting outputs.` with a "seeds confirmed" toggle to dismiss
+- [x] **DX-02
+**: Persistent dismissable in-app banner `⚠ Seeds are INFERRED — verify vs the official seed list before trusting outputs.` with a "seeds confirmed" toggle to dismiss
 - [x] **DX-03
 **: `uv run streamlit run app.py` one-command bootstrap, identical on Windows/Mac/Linux, Python pinned `>=3.12` in `pyproject.toml`; pip fallback documented; no bash-only `run.sh`
-- [ ] **DX-04**: README quickstart at top in order: what-it-is → run command (+pip fallback) → "first sim needs no API key" + ~15s expectation → what the numbers mean → [INFERRED]-seed reconcile step → optional `.env.example` for live odds; ends with a 30-second event-day cold-start drill
-- [ ] **DX-05**: `.env.example` lists optional provider keys; `.env` gitignored
+- [x] **DX-04
+**: README quickstart at top in order: what-it-is → run command (+pip fallback) → "first sim needs no API key" + ~15s expectation → what the numbers mean → [INFERRED]-seed reconcile step → optional `.env.example` for live odds; ends with a 30-second event-day cold-start drill
+- [x] **DX-05
+**: `.env.example` lists optional provider keys; `.env` gitignored
 
 ## v2 Requirements
 
