@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: streamlit-ui-shell
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-05-28
+reviewed_at: 2026-05-29
 ---
 
 # Phase 2 — UI Design Contract
