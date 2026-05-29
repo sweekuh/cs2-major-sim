@@ -81,8 +81,11 @@ def _validate_fixture(rows: dict[int, tuple[str, float]]) -> None:
     seeds = list(rows.keys())
     if len(seeds) != STAGE_SIZE:
         raise ValueError(f"fixture must have exactly {STAGE_SIZE} teams, got {len(seeds)}")
-    if len(set(seeds)) != len(seeds):
-        raise ValueError("duplicate seed in fixture")
+    # NOTE: ``rows`` is a dict keyed by seed, so duplicate seeds are impossible here by
+    # construction (dict keys are unique). Duplicate detection for the JSON load path
+    # happens earlier in load_teams() (the ``if seed in rows`` guard); the in-code
+    # _DEFAULT_FIXTURE path cannot have duplicates either. The exact-seed-set check below
+    # subsumes any count/range mismatch.
     if set(seeds) != set(range(1, STAGE_SIZE + 1)):
         raise ValueError(f"seeds must be exactly 1..{STAGE_SIZE}, got {sorted(seeds)}")
     names = [name for name, _ in rows.values()]
