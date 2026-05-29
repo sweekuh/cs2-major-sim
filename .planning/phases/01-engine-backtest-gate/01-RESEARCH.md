@@ -479,17 +479,23 @@ No `security_enforcement` key is set in config.json (absent = enabled); the genu
 
 **Items A2/A3 are the load-bearing assumptions.** They are tagged HIGH risk deliberately: this research could fetch the *rules* authoritatively (verbatim GitHub, twice, identical) but could NOT obtain an internally-consistent round-by-round *fixture* in one pass. The planner must budget a verification task: re-fetch Budapest 2025 Stage 1 via `/browse`, reconcile every match, before encoding `test_backtest_budapest_2025`.
 
-## Open Questions
+## Open Questions (RESOLVED via Execution — see 01-04 Task 1)
+
+> Both questions below are **intentionally unresolvable at planning time** — the Budapest
+> fixture data was internally inconsistent across fetches, so encoding it now would bake in an
+> error. Their resolution path is fully planned: plan **01-04 Task 1** is an `autonomous: false`
+> `checkpoint:human-verify` task that re-fetches and reconciles the fixture via gstack `/browse`
+> before the backtest is encoded. The reconciliation *is* the gate — not pre-work for it.
 
 1. **Exact Budapest 2025 Stage 1 round-by-round fixture.**
    - What we know: format confirmed (16-team Valve+Buchholz Swiss); final-eight advancers stable (M80, FlyQuest, B8, Fnatic, NIP, PARIVISION, Imperial, FaZe); R1 seeded pairings provisionally captured.
    - What's unclear: the exact R2→R5 within-bucket pairings (two fetches disagreed on the 1-1 bucket entering R3); the full Bo1/Bo3 map scores per match.
-   - Recommendation: re-fetch via gstack `/browse` at execution, transcribe match-by-match, reconcile (8 teams must be at 1-1 after R2), THEN encode. Do not encode from this research.
+   - **RESOLUTION:** Transcribed verbatim via `/browse` and reconciled match-by-match (8 teams must be at 1-1 after R2) in **01-04 Task 1** (autonomous: false checkpoint), THEN encoded in `test_backtest_budapest_2025`. Do not encode from this research.
 
 2. **Bucket sizes > 6 in the chosen backtest stage.**
    - What we know: Valve's published priority table is for 6-team groups.
    - What's unclear: whether any Budapest Stage 1 record bucket held 8 teams and, if so, whether the greedy fold reproduces Valve's pairing there.
-   - Recommendation: when transcribing, note each round's bucket sizes; if an 8-team bucket diverges, extend the table-lookup fork (GATE-04) to that size or fetch the corresponding rulebook section.
+   - **RESOLUTION:** Bucket sizes recorded during the 01-04 Task 1 transcription; if an 8-team bucket diverges, the GATE-04 priority-table-lookup fork (01-04 Task 2) extends to that size or fetches the corresponding rulebook section. Resolved at execution, not planning.
 
 ## Environment Availability
 
