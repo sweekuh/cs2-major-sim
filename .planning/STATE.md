@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md
+stopped_at: Completed 01-04-PLAN.md (DEFERRED-GATE form)
 last_updated: "2026-05-29T05:11:03.036Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 
 ## Current Position
 
-Phase: 01 (Engine + Backtest Gate) — EXECUTING
-Plan: 4 of 4
-Status: Ready to execute
+Phase: 01 (Engine + Backtest Gate) — ALL PLANS EXECUTED (gate DEFERRED)
+Plan: 4 of 4 (done)
+Status: Phase 1 plans complete; GATE-01/04 deferred to TODO (see Blockers)
 Last activity: 2026-05-29
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [████████░░] 75%
 | Phase 01 P01 | 25 | 3 tasks | 12 files |
 | Phase 01 P02 | 20 | 2 tasks | 3 files |
 | Phase 01 P03 | 20 | 2 tasks | 3 files |
+| Phase 01 P04 | 25 | DEFERRED-GATE | 3 files |
 
 ## Accumulated Context
 
@@ -71,18 +72,19 @@ Recent decisions affecting current work:
 - [Phase 1]: difficulty() canonical Buchholz lives in engine/probs.py; swiss.py imports it in wave 2 (no second copy).
 - [Phase 1]: Team is @dataclass(eq=False) so opponent OBJECTS live in opps (difficulty() reads o.wins-o.losses); identity equality is correct per distinct stage entity.
 - [Phase 1]: simulate_stage(teams, ratings, S, rng, locked); ratings is optional {id:rating} override (None->team.rating), the Phase-5/MC seam.
+- [Phase 1, 2026-05-29 USER DECISION]: DEFER the full Budapest pairing-reproduction backtest (GATE-01). Budapest Stage 1 RESULTS reconciled + frozen, but the authoritative Valve 1-16 seed integers could not be sourced (HLTV Cloudflare-walled; Liquipedia/Wikipedia publish no seed integers) and the VRS world-rank order does NOT reproduce the actual R1/R2 pairings. Asserting a green backtest on guessed seeds = false pass/fail (T-04-01). Phase 1 gated on the green rulebook unit tests instead; Phase 2 unblocked WITH caveat (trust badge: "validated vs rulebook unit tests — full Budapest backtest pending seed data").
 
 ### Pending Todos
 
 [From .planning/todos/pending/ — ideas captured during sessions]
 
-None yet.
+- **Complete Budapest 2025 backtest gate (GATE-01) once authoritative seeds sourced** — `.planning/todos/pending/2026-05-29-budapest-backtest-gate-gate01.md`. Captures the seed blocker, the VRS-vs-actual-pairing divergence finding (possible engine within-group-pairing nuance, not just a data gap — worth root-causing before trusting Cologne), and the resume path (obtain seeded bracket → freeze seeds → unskip backtest → apply GATE-04 fork on divergence).
 
 ### Blockers/Concerns
 
 [Issues that affect future work]
 
-- **GATE before Phase 2:** No UI work begins until the round-by-round backtest (GATE-01..05) passes exactly.
+- **GATE-01/04 DEFERRED (2026-05-29 user decision):** The round-by-round backtest is BLOCKED on the authoritative Valve seed bracket (HLTV Cloudflare-walled). Phase 1 is gated on the green rulebook unit tests instead; Phase 2 proceeds WITH the caveat in the trust badge. The deferred backtest carries a real open question: the VRS order does not reproduce Budapest's R1/R2 pairings — this may be a seed-data gap OR an engine within-group-pairing nuance that must be root-caused before Cologne output is fully trusted. Tracked in .planning/todos/pending.
 - **Phase 1×2 seam:** SeedSequence.spawn over pinned chunk count must survive Phase 2 chunked progress yielding.
 - **Phase 2×4 seam:** `@st.cache_data` key must include `locked` from Phase 2 or Phase 4 becomes a re-architecture.
 - **Phase 5×v2 seam:** read-only `odds_cache.json` contract (ODDS-07) must be written so the deferred v2 cron (OPS-01) is a zero-app-change drop-in.
@@ -100,7 +102,7 @@ Items acknowledged and carried forward:
 ## Session Continuity
 
 Last session: 2026-05-29T05:11:03.031Z
-Stopped at: Completed 01-03-PLAN.md
+Stopped at: Completed 01-04-PLAN.md (DEFERRED-GATE form — GATE-01/04 deferred to TODO)
 Resume file: None
 
 **Planned Phase:** 1 (Engine + Backtest Gate) — 4 plans — 2026-05-29T04:40:49.038Z

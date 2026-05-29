@@ -31,12 +31,15 @@
 ### Backtest gate (HARD GATE — blocks UI and trusted output)
 
 - [ ] **GATE-01**: Round-by-round backtest feeds a completed past Major stage (Budapest 2025 or Austin 2025) seeds + forced results and asserts the engine reproduces the actual round-by-round pairings exactly
+  - **DEFERRED (user decision 2026-05-29):** Budapest Stage 1 RESULTS reconciled + frozen, but the authoritative Valve 1-16 seed integers are unsourceable (HLTV Cloudflare-walled; Liquipedia/Wikipedia publish no seed integers) and the VRS world-rank order does not reproduce the actual R1/R2 pairings. Deferred to `.planning/todos/pending/2026-05-29-budapest-backtest-gate-gate01.md` rather than asserted on guessed seeds (false pass/fail, T-04-01). NOT complete.
 - [x] **GATE-02
 **: `test_difficulty_formula` asserts `difficulty()` on Valve's worked example (opponents 2-0 and 1-1) == 2
 - [x] **GATE-03
 **: `test_forced_rematch_pairing` (group whose ideal fold is a rematch matches Valve's priority table) and `test_no_valid_matching_fallback` (forced unmatchable group pairs without crashing) both pass
 - [ ] **GATE-04**: The exact Valve rematch priority table is pulled verbatim from `major-supplemental-rulebook.md` during this phase; greedy fold is replaced by literal table lookup if any backtest pairing diverges
+  - **DEFERRED (2026-05-29):** `PRIORITY_TABLE` is encoded in `engine/swiss.py` and unit-tested (GATE-03), but the fork was never exercised against real Budapest pairings because the backtest is deferred. NOT complete.
 - [ ] **GATE-05**: No sim output is trusted and no UI is built until GATE-01 passes
+  - **REINTERPRETED (2026-05-29 user decision):** the hard backtest gate is deferred; Phase 1 is instead gated on the green rulebook unit tests (all passing). Phase 2 is unblocked WITH the caveat that the trust badge must read "validated vs Valve rulebook unit tests — full Budapest backtest pending seed data," NOT "validated vs Budapest backtest." NOT complete (the named backtest gate has not run).
 
 ### Monte Carlo runner
 
@@ -155,11 +158,11 @@ Which phases cover which requirements.
 | ENG-07 | Phase 1 | Pending |
 | ENG-08 | Phase 1 | Pending |
 | ENG-09 | Phase 1 | Pending |
-| GATE-01 | Phase 1 | Pending |
-| GATE-02 | Phase 1 | Pending |
-| GATE-03 | Phase 1 | Pending |
-| GATE-04 | Phase 1 | Pending |
-| GATE-05 | Phase 1 | Pending |
+| GATE-01 | Phase 1 | Deferred (seeds unsourceable; TODO 2026-05-29) |
+| GATE-02 | Phase 1 | Complete |
+| GATE-03 | Phase 1 | Complete |
+| GATE-04 | Phase 1 | Deferred (fork untested vs real data; TODO 2026-05-29) |
+| GATE-05 | Phase 1 | Reinterpreted — gated on rulebook unit tests; Phase 2 unblocked w/ caveat |
 | MC-01 | Phase 1 | Pending |
 | MC-02 | Phase 1 | Pending |
 | MC-03 | Phase 1 | Pending |
