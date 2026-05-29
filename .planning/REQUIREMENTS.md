@@ -9,9 +9,11 @@
 
 ### Engine (Swiss correctness core)
 
-- [ ] **ENG-01**: Engine builds Round 1 pairings as seed N vs seed N+8, derived from the single seed→team map (no second hardcoded copy)
+- [x] **ENG-01
+**: Engine builds Round 1 pairings as seed N vs seed N+8, derived from the single seed→team map (no second hardcoded copy)
 - [ ] **ENG-02**: Rounds 2+ group active teams by (wins, losses) record and seed within group by Difficulty Score descending then initial seed ascending, via a single code path (no `if round == 2` special case)
-- [ ] **ENG-03**: Difficulty Score is computed as `Σ(opp.wins − opp.losses)` over a team's played opponents (NOT `Σ opp.wins`)
+- [x] **ENG-03
+**: Difficulty Score is computed as `Σ(opp.wins − opp.losses)` over a team's played opponents (NOT `Σ opp.wins`)
 - [ ] **ENG-04**: Within-group pairing uses rematch-avoiding high-vs-low fold; the fold sorts on the difficulty-ranked order, not raw seed
 - [ ] **ENG-05**: When no rematch-free perfect matching exists, the engine pairs the least-disruptive rematch and logs a warning instead of crashing (no unhandled `None`)
 - [ ] **ENG-06**: A match is Bo3 iff either team is at 2 wins (advancement) or 2 losses (elimination); otherwise Bo1
@@ -22,7 +24,8 @@
 ### Backtest gate (HARD GATE — blocks UI and trusted output)
 
 - [ ] **GATE-01**: Round-by-round backtest feeds a completed past Major stage (Budapest 2025 or Austin 2025) seeds + forced results and asserts the engine reproduces the actual round-by-round pairings exactly
-- [ ] **GATE-02**: `test_difficulty_formula` asserts `difficulty()` on Valve's worked example (opponents 2-0 and 1-1) == 2
+- [x] **GATE-02
+**: `test_difficulty_formula` asserts `difficulty()` on Valve's worked example (opponents 2-0 and 1-1) == 2
 - [ ] **GATE-03**: `test_forced_rematch_pairing` (group whose ideal fold is a rematch matches Valve's priority table) and `test_no_valid_matching_fallback` (forced unmatchable group pairs without crashing) both pass
 - [ ] **GATE-04**: The exact Valve rematch priority table is pulled verbatim from `major-supplemental-rulebook.md` during this phase; greedy fold is replaced by literal table lookup if any backtest pairing diverges
 - [ ] **GATE-05**: No sim output is trusted and no UI is built until GATE-01 passes
@@ -34,15 +37,21 @@
 - [ ] **MC-03**: Probability invariants hold every run within tolerance (±0.05 at N≥50k): Σ P(3-0)≈2, Σ P(0-3)≈2, Σ P(advance)≈8
 - [ ] **MC-04**: MC retains the full per-sim record sample (not just marginals) so the optimizer's P(≥5) and conditional re-sim can score against it
 - [ ] **MC-05**: MC is structured generator-first — yields incremental tally aggregates per chunk (e.g. 20×5k) to drive a progress bar — with a separate cached wrapper for the final result
-- [ ] **MC-06**: Series win prob uses closed-form Bo3 `p²(3−2p)` as a single Bernoulli draw (no 3-map sampling); Bo1 = `p_map`
+- [x] **MC-06
+**: Series win prob uses closed-form Bo3 `p²(3−2p)` as a single Bernoulli draw (no 3-map sampling); Bo1 = `p_map`
 
 ### Probabilities & math
 
-- [ ] **PROB-01**: Per-map win prob `p_map(a,b) = 1/(1 + 10^(-(rating_a − rating_b)/S))`, S default 40, exposed as a slider
-- [ ] **PROB-02**: An odds-derived probability for an exact matchup is used directly as the series prob (Bo3 formula NOT re-applied — the market already prices the series)
-- [ ] **PROB-03**: Epistemic uncertainty (source disagreement) is modeled as an OUTER loop — sample p-vector from Beta(blend, var) per epistemic draw, run an MC batch per draw, aggregate across draws — never folded into per-sim sampling
-- [ ] **PROB-04**: Beta method-of-moments fit clamps `variance < p(1−p)` before fitting so low-liquidity high-disagreement matches do not crash
-- [ ] **PROB-05**: Reported band = epistemic spread across draws (⊇ inner Wilson aleatoric band); a single source collapses the band to Wilson only
+- [x] **PROB-01
+**: Per-map win prob `p_map(a,b) = 1/(1 + 10^(-(rating_a − rating_b)/S))`, S default 40, exposed as a slider
+- [x] **PROB-02
+**: An odds-derived probability for an exact matchup is used directly as the series prob (Bo3 formula NOT re-applied — the market already prices the series)
+- [x] **PROB-03
+**: Epistemic uncertainty (source disagreement) is modeled as an OUTER loop — sample p-vector from Beta(blend, var) per epistemic draw, run an MC batch per draw, aggregate across draws — never folded into per-sim sampling
+- [x] **PROB-04
+**: Beta method-of-moments fit clamps `variance < p(1−p)` before fitting so low-liquidity high-disagreement matches do not crash
+- [x] **PROB-05
+**: Reported band = epistemic spread across draws (⊇ inner Wilson aleatoric band); a single source collapses the band to Wilson only
 
 ### Pick'Em optimizer (Valve binary)
 

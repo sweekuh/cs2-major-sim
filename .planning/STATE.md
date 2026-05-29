@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: ROADMAP.md and STATE.md written; REQUIREMENTS.md traceability updated
-last_updated: "2026-05-29T04:40:49.044Z"
-last_activity: 2026-05-28 — Roadmap created (6 phases, 58 v1 requirements mapped)
+status: executing
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-05-29T04:55:25.300Z"
+last_activity: 2026-05-28 — Completed 01-01-PLAN.md (engine math core + Wave 0 test harness)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase 1 — Engine + Backtest Gate
+**Current focus:** Phase 01 (Engine + Backtest Gate) — executing
 
 ## Current Position
 
-Phase: 1 of 6 (Engine + Backtest Gate)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-05-28 — Roadmap created (6 phases, 58 v1 requirements mapped)
+Phase: 01 (Engine + Backtest Gate) — EXECUTING
+Plan: 2 of 4
+Status: Executing Phase 01
+Last activity: 2026-05-28 — Completed 01-01-PLAN.md (engine math core + Wave 0 test harness)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P01 | 25 | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Recent decisions affecting current work:
 - [Phase 1]: Buchholz = `Σ(opp.wins − opp.losses)`, single seeding code path (eng-review P0).
 - [Phase 1]: Three cross-phase seams honored now — `locked` in swiss.py (Phase 4), generator-first MC + per-sim sample (Phases 2/3), epistemic outer loop stubbed (Phase 5).
 - [Phase 5]: Odds placed last — fails soft, never gates; first run needs no API key.
+- [Phase 1]: Pinned pytest 9.x (live pip index showed 9.0.3 current); supersedes RESEARCH assumption A1 (8.x [ASSUMED]). numpy confirmed 2.4.6.
+- [Phase 1]: difficulty() canonical Buchholz lives in engine/probs.py; swiss.py imports it in wave 2 (no second copy).
 
 ### Pending Todos
 
@@ -92,8 +95,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-28
-Stopped at: ROADMAP.md and STATE.md written; REQUIREMENTS.md traceability updated
+Last session: 2026-05-29T04:55:25.295Z
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None
 
 **Planned Phase:** 1 (Engine + Backtest Gate) — 4 plans — 2026-05-29T04:40:49.038Z

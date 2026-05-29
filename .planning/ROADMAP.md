@@ -45,7 +45,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. The MC yields per-chunk partial aggregates (generator-first) and retains the full per-sim record sample, with the epistemic outer loop present as a single-draw no-op.
 
 **Plans**: 4 plans
-- [ ] 01-01-PLAN.md — Scaffold (uv, py>=3.12), full Wave 0 test harness, engine/probs.py math core, engine/teams.py seed→team fixtures + data/stage1.json (ENG-01/03, PROB-01..05, MC-06, GATE-02)
+- [x] 01-01-PLAN.md — Scaffold (uv, py>=3.12), full Wave 0 test harness, engine/probs.py math core, engine/teams.py seed→team fixtures + data/stage1.json (ENG-01/03, PROB-01..05, MC-06, GATE-02)
 - [ ] 01-02-PLAN.md — engine/swiss.py: difficulty-ranked fold + verbatim priority-table oracle + rematch fallback + Bo3 placement + locked support + simulate_stage (ENG-02..08, GATE-03)
 - [ ] 01-03-PLAN.md — engine/montecarlo.py generator-first MC (SeedSequence.spawn pinned chunks, Wilson bands, full sample retention, epistemic outer no-op) + `__main__` headless smoke run (ENG-09, MC-01..05, PROB-03/05)
 - [ ] 01-04-PLAN.md — BLOCKING GATE: transcribe + reconcile Budapest 2025 Stage 1 fixture via /browse, encode the round-by-round backtest, apply the GATE-04 priority-table fork on divergence (GATE-01/04/05)
@@ -150,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Engine + Backtest Gate | 0/4 | Planned | - |
+| 1. Engine + Backtest Gate | 1/4 | In progress | - |
 | 2. Streamlit UI Shell | 0/TBD | Not started | - |
 | 3. Pick'Em Optimizer | 0/TBD | Not started | - |
 | 4. Conditional Re-Sim + Live Mode | 0/TBD | Not started | - |
