@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-05-29T07:55:23.046Z"
+status: ready_to_execute
+stopped_at: Planned Phase 3 (03-01-PLAN.md, 03-02-PLAN.md)
+last_updated: "2026-05-29T00:00:00.000Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 7
+  total_plans: 9
   completed_plans: 7
   percent: 50
 ---
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Ready to plan
+Phase: 3 (pickem-optimizer)
+Plan: 03-01 + 03-02 planned (0/2 executed)
+Status: Ready to execute
 Last activity: 2026-05-29
 
 Progress: [██████████] 100%
@@ -83,6 +83,10 @@ Recent decisions affecting current work:
 - Phase 2 plan 02: STATUS palette locked colorblind-safe (advanced/live blue #3B82F6, eliminated amber #F59E0B); colour always paired with ASCII glyph + text label, never red/green (UI-06)
 - Phase 2 plan 02: hero number renders a placeholder stand-in (top-team P(advance)) so the 28px monospace accent slot is real now; Phase 3/4 fill the optimal-ballot P(>=5)
 - Phase 2 plan 03: BACKTEST_PASSED=False explicit constant gates the trust badge — it cannot drift to a green validated claim while GATE-01 is deferred; trust_badge_state validates only when BOTH BACKTEST_PASSED AND seeds_confirmed (Pitfall 6)
+- [Phase 3 PLANNED 2026-05-29]: optimizer is a pure, RNG-free layer over `Result.sample` — Ballot A greedy is the EXACT E[correct] maximizer (no enumeration), Ballot B hill-climbs P(≥5) from the A seed (no ~10M brute force); P(≥5) vectorized via precomputed boolean outcome matrices so it never re-runs the MC (ROADMAP SC4).
+- [Phase 3 PLANNED 2026-05-29]: correlated-0-3-in-R1 detection REUSES `engine.swiss.build_round1_pairs` — no seed re-derivation (sidesteps the GATE-01 seed blocker); warning is reported for Ballot A (correlation-blind), Ballot B avoids the trap for free via the joint sample.
+- [Phase 3 PLANNED 2026-05-29]: pre-stage hero = recommended (Ballot B) P(≥5), filling the Phase-2 `_hero_slot` placeholder; Live-mode "P(≥5)-from-here" delta stays Phase 4. `optimize_cached` memoized on the SAME (ratings_key,S,N,locked_key) MC cache tuple (no recompute per rerun).
+- [Phase 3 NOTE]: `/gsd-plan-phase` slash command is not installed in the web session (no .claude/commands/); Phase 3 planning was authored by hand following GSD conventions on branch `phase-3-optimizer`.
 - Phase 2 plan 03: INFERRED-seed banner + seed->team reconcile expander persists until the seeds_confirmed toggle (positive confirmation, no red) dismisses it; fail-soft odds-off banner uses os.environ only (no httpx/dotenv import — preserves zero-config first run)
 
 ### Pending Todos
@@ -112,8 +116,12 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-29T07:55:14.703Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-05-29
+Stopped at: Planned Phase 3 (03-01-PLAN.md, 03-02-PLAN.md) on branch phase-3-optimizer
 Resume file: None
+Resume path: `/gsd-execute-phase 3` → 03-01 (engine/optimizer.py) then 03-02 (UI wiring)
 
-**Planned Phase:** 02 (streamlit-ui-shell) — 3 plans — 2026-05-29T07:14:15.798Z
+**Planned Phase:** 03 (pickem-optimizer) — 2 plans — 2026-05-29
+
+Next: execute 03-01 (pure optimizer core, TDD — owns test_greedy_is_e_correct_optimal +
+test_pge5_known_answer), then 03-02 (hero P(≥5) + dual-ballot panel + correlated-pick warning).

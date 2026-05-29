@@ -94,7 +94,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. The chosen ballot's P(≥5/10) is computed by scoring each simulated stage's record vector against it (exact-record 3-0/0-3) and shown as the hero number (OPT-04).
   3. A correlated-pick warning fires when the two 0-3 picks meet in Round 1, and Ballot B automatically avoids the trap (OPT-05).
   4. The optimizer consumes the stored sample and never re-runs the MC (verified by `test_pge5_known_answer` and `test_greedy_is_e_correct_optimal`).
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 03-01-PLAN.md — `engine/optimizer.py` pure core: Ballot A greedy (E[correct]-optimal), vectorized P(≥5) over `Result.sample`, E[correct], Ballot B hill-climb, correlated-0-3-in-R1 via `build_round1_pairs`, `optimize()` facade + `tests/test_optimizer.py` (incl. `test_greedy_is_e_correct_optimal`, `test_pge5_known_answer`) (OPT-01/02/04/05)
+- [ ] 03-02-PLAN.md — UI wiring: fill `_hero_slot` with recommended-ballot P(≥5) (OPT-04), Ballot A vs B side by side with diff highlight (OPT-03), correlated-pick warning banner (OPT-05/UI-06), `optimize_cached` memoized on the MC cache key + AppTest coverage
 **UI hint**: yes
 
 ### Phase 4: Conditional Re-Sim + Live Mode
@@ -155,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Engine + Backtest Gate | 4/4 | Plans done (GATE-01/04 deferred) | 2026-05-29 |
 | 2. Streamlit UI Shell | 3/3 | Plans done | 2026-05-29 |
-| 3. Pick'Em Optimizer | 0/TBD | Not started | - |
+| 3. Pick'Em Optimizer | 0/2 | Planned | - |
 | 4. Conditional Re-Sim + Live Mode | 0/TBD | Not started | - |
 | 5. Odds Ensemble | 0/TBD | Not started | - |
 | 6. Full-Major v3 | 0/TBD | Not started | - |
