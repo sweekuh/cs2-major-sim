@@ -120,17 +120,79 @@ Deferred to future release. Tracked, not in current milestone phasing unless roa
 
 ## Traceability
 
-Which phases cover which requirements. Populated during roadmap creation.
+Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | — | Pending |
+| ENG-01 | Phase 1 | Pending |
+| ENG-02 | Phase 1 | Pending |
+| ENG-03 | Phase 1 | Pending |
+| ENG-04 | Phase 1 | Pending |
+| ENG-05 | Phase 1 | Pending |
+| ENG-06 | Phase 1 | Pending |
+| ENG-07 | Phase 1 | Pending |
+| ENG-08 | Phase 1 | Pending |
+| ENG-09 | Phase 1 | Pending |
+| GATE-01 | Phase 1 | Pending |
+| GATE-02 | Phase 1 | Pending |
+| GATE-03 | Phase 1 | Pending |
+| GATE-04 | Phase 1 | Pending |
+| GATE-05 | Phase 1 | Pending |
+| MC-01 | Phase 1 | Pending |
+| MC-02 | Phase 1 | Pending |
+| MC-03 | Phase 1 | Pending |
+| MC-04 | Phase 1 | Pending |
+| MC-05 | Phase 1 | Pending |
+| MC-06 | Phase 1 | Pending |
+| PROB-01 | Phase 1 | Pending |
+| PROB-02 | Phase 1 | Pending |
+| PROB-03 | Phase 1 | Pending |
+| PROB-04 | Phase 1 | Pending |
+| PROB-05 | Phase 1 | Pending |
+| UI-01 | Phase 2 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+| UI-04 | Phase 2 | Pending |
+| UI-05 | Phase 2 | Pending |
+| UI-06 | Phase 2 | Pending |
+| UI-07 | Phase 2 | Pending |
+| DX-01 | Phase 2 | Pending |
+| DX-02 | Phase 2 | Pending |
+| DX-03 | Phase 2 | Pending |
+| DX-04 | Phase 2 | Pending |
+| DX-05 | Phase 2 | Pending |
+| OPT-01 | Phase 3 | Pending |
+| OPT-02 | Phase 3 | Pending |
+| OPT-03 | Phase 3 | Pending |
+| OPT-04 | Phase 3 | Pending |
+| OPT-05 | Phase 3 | Pending |
+| RESIM-01 | Phase 4 | Pending |
+| RESIM-02 | Phase 4 | Pending |
+| RESIM-03 | Phase 4 | Pending |
+| RESIM-04 | Phase 4 | Pending |
+| ODDS-01 | Phase 5 | Pending |
+| ODDS-02 | Phase 5 | Pending |
+| ODDS-03 | Phase 5 | Pending |
+| ODDS-04 | Phase 5 | Pending |
+| ODDS-05 | Phase 5 | Pending |
+| ODDS-06 | Phase 5 | Pending |
+| ODDS-07 | Phase 5 | Pending |
+| ODDS-08 | Phase 5 | Pending |
+| V3-01 | Phase 6 | Pending |
+| V3-02 | Phase 6 | Pending |
+| V3-03 | Phase 6 | Pending |
+| V3-04 | Phase 6 | Pending |
+| OPS-01 | v2 (deferred) | Deferred |
+| OPS-02 | v2 (deferred) | Deferred |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 48 ⚠️ (resolved at roadmap step)
+- v1 requirements enumerated: 58 REQ-IDs (ENG 9, GATE 5, MC 6, PROB 5, OPT 5, RESIM 4, ODDS 8, V3 4, UI 7, DX 5)
+- Mapped to phases: 58 / 58 ✓ (no orphans, no duplicates)
+- Unmapped: 0
+- v2 deferred (not phased): OPS-01, OPS-02
+
+> **Note:** the v1 summary line previously read "48 total"; the enumerated REQ-IDs actually total 58. All 58 are mapped. Header count corrected here.
 
 ---
 *Requirements defined: 2026-05-28*
-*Last updated: 2026-05-28 after initial definition*
+*Last updated: 2026-05-28 — traceability populated by roadmapper (6 phases)*
