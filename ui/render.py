@@ -12,6 +12,7 @@ table, right-alignment) lands in plan 02; this is the bar substance (UI-04 parti
 
 from __future__ import annotations
 
+import html
 import re
 
 # Track colour behind the filled CI portion (UI-SPEC Color §contrast). The fill uses the
@@ -110,4 +111,70 @@ def hero_number_html(pct: float) -> str:
     return (
         f'<span style="font-size:28px;font-weight:600;'
         f'font-family:ui-monospace,monospace;color:{_ACCENT}">{formatted}</span>'
+    )
+
+
+# --- Phase 3: Pick'Em ballot panel (OPT-03 / OPT-05) -------------------------------------
+# Team names ARE interpolated here (the ballot lists them), so unlike ci_bar_html they are
+# HTML-escaped (html.escape) before reaching the unsafe_allow_html markup (T-03-XSS). Names
+# come from the read-only fixture, not the rating editor, but escaping is defense-in-depth.
+
+DIFF_MARK = "*"  # ASCII marker on a pick that differs between Ballot A and Ballot B (UI-06:
+#                  never rely on colour alone — the glyph is the real signal, like STATUS).
+
+_BALLOT_BUCKETS = (("3-0", "picks_30"), ("Advance", "picks_adv"), ("0-3", "picks_03"))
+
+
+def _ballot_card_html(title: str, ballot, name_of: dict[int, str], diff: set[int]) -> str:
+    """One ballot column: its 3-0 / Advance / 0-3 picks by team name; differing picks bolded
+    with the ASCII DIFF_MARK so the A-vs-B difference reads without colour (OPT-03)."""
+    sections = []
+    for label, field_name in _BALLOT_BUCKETS:
+        items = []
+        for tid in getattr(ballot, field_name):
+            name = html.escape(str(name_of.get(tid, tid)))
+            if tid in diff:
+                items.append(f"<li><strong>{name} {DIFF_MARK}</strong></li>")
+            else:
+                items.append(f"<li>{name}</li>")
+        sections.append(
+            f'<div style="font-family:ui-monospace,monospace;opacity:0.65;'
+            f'font-size:12px">{label}</div>'
+            f'<ul style="margin:0 0 8px 18px;padding:0">{"".join(items)}</ul>'
+        )
+    # ``title`` is a fixed in-code literal (never user input), so it is not escaped — escaping
+    # would turn "P(>=5)" into "P(&gt;=5)" in the source string. Team NAMES are escaped above.
+    return (
+        f'<div style="flex:1">'
+        f'<div style="font-weight:600;margin-bottom:4px">{title}</div>'
+        f'{"".join(sections)}</div>'
+    )
+
+
+def ballot_columns(
+    name_of: dict[int, str], ballot_a, ballot_b, diff_ids
+) -> str:
+    """Render Ballot A and Ballot B side by side, differing picks highlighted (OPT-03).
+
+    ``name_of`` maps team id -> name; ``diff_ids`` is the set/sequence of team ids whose
+    bucket assignment differs between the two ballots. All names are HTML-escaped.
+    """
+    diff = set(diff_ids)
+    return (
+        '<div style="display:flex;gap:24px">'
+        f'{_ballot_card_html("A — Max E[correct]", ballot_a, name_of, diff)}'
+        f'{_ballot_card_html("B — Max P(>=5)", ballot_b, name_of, diff)}'
+        "</div>"
+    )
+
+
+def correlated_pick_warning_text(name_a: str, name_b: str) -> str:
+    """Plain-text copy for the correlated-0-3-in-R1 warning (OPT-05), rendered via st.warning
+    (natively amber — colorblind-safe, never red/green; the leading ``!`` is the ASCII glyph).
+
+    Names only (no markup); the two teams meet in Round 1 so they can't both go 0-3.
+    """
+    return (
+        f"! Correlated 0-3 picks: {name_a} and {name_b} meet in Round 1 — "
+        f"they can't both go 0-3, so Ballot A caps at 1 here. Ballot B avoids this."
     )

@@ -226,6 +226,37 @@ def test_bad_rating_blocks_run():
     # Open Q2), so the firing condition is covered by the validate_ratings unit test above.
 
 
+# --- Phase 3: ballot panel + P(>=5) hero (OPT-03 / OPT-04) -------------------------------
+
+
+def _run_small(at, n=2000):
+    """Set N small and click Run (keeps AppTest under the latency budget)."""
+    at.number_input(key="N_input").set_value(n).run()
+    at.button(key="run_btn").click().run()
+    return at
+
+
+def test_ballot_panel_renders_after_run():
+    """OPT-03: after a Run the pre-stage panel shows Ballot A (Max E[correct]) and Ballot B
+    (Max P(>=5)) side by side with team names."""
+    at = _run_small(_apptest().run())
+    assert not at.exception
+    text = _all_text(at)
+    assert "Max E[correct]" in text  # Ballot A
+    assert "Max P(>=5)" in text      # Ballot B
+
+
+def test_hero_is_pge5_not_placeholder():
+    """OPT-04: the pre-stage hero is the recommended-ballot P(>=5) in the reserved accent —
+    the Phase-2 'Placeholder hero' stand-in is gone in pre-stage."""
+    at = _run_small(_apptest().run())
+    assert not at.exception
+    # The accent hero number (28px monospace #7C5CFC) carries a percentage.
+    assert any("#7C5CFC" in m.value and "%" in m.value for m in at.markdown)
+    # Pre-stage no longer renders the live placeholder caption.
+    assert "Placeholder hero" not in _all_text(at)
+
+
 # --- Plan 03: trust badge (UI-07) --------------------------------------------------------
 
 

@@ -24,8 +24,15 @@ import streamlit as st
 
 from engine.montecarlo import run_mc_progressive
 from engine.teams import load_teams
-from ui.cache import freeze_locked, freeze_ratings
-from ui.render import ci_bar_html, hero_number_html, status_badge_html
+from ui.cache import freeze_locked, freeze_ratings, optimize_cached
+from ui.render import (
+    ballot_columns,
+    ci_bar_html,
+    correlated_pick_warning_text,
+    fmt_pct,
+    hero_number_html,
+    status_badge_html,
+)
 from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
@@ -281,16 +288,19 @@ def _render_bracket() -> None:
 
 
 def _run_or_serve():
-    """Validate + dispatch the engine (cache hit / miss). Returns (result, error_msg).
+    """Validate + dispatch the engine (cache hit / miss). Returns (result, error_msg, cache_key).
 
-    Shared by both modes' top section. On a bad rating returns (None, BAD_RATING_MSG) and the
-    engine is NEVER called (UI-05). On no click returns (None, None) — the EMPTY state.
+    Shared by both modes' top section. On a bad rating returns (None, BAD_RATING_MSG, None)
+    and the engine is NEVER called (UI-05). On no click returns (None, None, None) — the EMPTY
+    state. ``cache_key`` is the ``(ratings_key, S, N, locked_key)`` tuple so the optimizer can
+    memoize on the SAME key (Phase 3, OPT-04) without re-running the MC.
     """
     if not run_clicked:
-        return None, None
+        return None, None, None
     offenders = validate_ratings(edited)
     if offenders:
-        return None, BAD_RATING_MSG  # ERROR state (UI-05): block Run, engine NEVER called.
+        # ERROR state (UI-05): block Run, engine NEVER called.
+        return None, BAD_RATING_MSG, None
     ratings = {r["seed"]: float(r["rating"]) for r in edited}
     locked: dict = {}  # Phase 4 fills this; the key shape is final now.
     ratings_key = freeze_ratings(ratings)
@@ -299,7 +309,7 @@ def _run_or_serve():
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         # CACHE HIT: serve the stored Result, no recompute (single compute per key).
-        return cache[cache_key], None
+        return cache[cache_key], None, cache_key
     # CACHE MISS: LOADING state — drive the bar over the generator, compute ONCE.
     # In-session deduplication via the session_state cache (above) is sufficient for Phase 2:
     # a unique input tuple computes the MC exactly once. The earlier cross-session
@@ -312,15 +322,15 @@ def _run_or_serve():
     # a long session of re-runs (insertion-ordered dict → pop oldest first).
     while len(cache) > MAX_CACHE_ENTRIES:
         cache.pop(next(iter(cache)))
-    return result, None
+    return result, None, cache_key
 
 
 def _hero_slot(result, label: str) -> None:
     """Render the one display-size hero number (UI-SPEC Typography/Color — accent reserved).
 
-    Phase 3 (Pre-stage P(>=5)) / Phase 4 (Live P(>=5)-from-here) fill the real ballot content;
-    this plan owns the hero SLOT + renderer. With a result we show a placeholder hero number
-    (top-team P(advance) stand-in) so the 28px monospace accent slot is real now.
+    Used by LIVE mode for the Phase-4 "P(>=5) from here" delta, still a placeholder here
+    (top-team P(advance) stand-in) so the 28px monospace accent slot is real. The PRE-STAGE
+    hero is the real recommended-ballot P(>=5) — see _render_ballot_panel (Phase 3, OPT-04).
     """
     if result is None:
         return
@@ -328,25 +338,64 @@ def _hero_slot(result, label: str) -> None:
     top = max(p_adv.values()) if p_adv else 0.0
     st.markdown(f"**{label}**")
     st.markdown(hero_number_html(top), unsafe_allow_html=True)
-    st.caption("Placeholder hero — Phase 3/4 fills the optimal-ballot P(>=5).")
+    st.caption("Placeholder hero — Phase 4 fills the live P(>=5)-from-here delta.")
+
+
+def _render_ballot_panel(result, cache_key) -> None:
+    """PRE-STAGE recommended-ballot panel (OPT-03/04/05): the P(>=5) hero + Ballot A vs B
+    side by side with differing picks highlighted + the correlated-0-3-in-R1 warning.
+
+    The optimizer is memoized on the SAME cache key as the MC (optimize_cached) and scores
+    the stored sample — it never re-runs the MC (ROADMAP SC4).
+    """
+    opt = optimize_cached(result, *cache_key)
+
+    # Hero = the recommended (Ballot B) P(>=5) — the true coin odds (OPT-04).
+    st.markdown("**P(>=5) — recommended ballot (B)**")
+    st.markdown(hero_number_html(opt.recommended_pge5), unsafe_allow_html=True)
+    st.caption(
+        f"P(>=5): A {fmt_pct(opt.pge5_a)} · B {fmt_pct(opt.pge5_b)}  |  "
+        f"E[correct]: A {opt.e_correct_a:.2f} · B {opt.e_correct_b:.2f}"
+    )
+
+    # Correlated-pick warning (OPT-05) — st.warning is natively amber (colorblind-safe).
+    if opt.warning is not None:
+        a_id, b_id = opt.warning
+        st.warning(
+            correlated_pick_warning_text(by_seed[a_id].name, by_seed[b_id].name)
+        )
+
+    # Ballot A vs B side by side, differing picks marked (OPT-03).
+    name_of = {t.id: t.name for t in teams}
+    st.markdown(
+        ballot_columns(name_of, opt.ballot_a, opt.ballot_b, opt.diff),
+        unsafe_allow_html=True,
+    )
+    if opt.diff:
+        st.caption(
+            "An asterisk (\\*) marks a pick where A and B disagree — "
+            "that difference is the insight."
+        )
+    else:
+        st.caption("Ballot A and Ballot B agree on all 10 picks.")
 
 
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
 with main:
-    result, error_msg = _run_or_serve()
+    result, error_msg, cache_key = _run_or_serve()
     if result is not None:
         st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
 
     if mode is Mode.PRE_STAGE:
-        # PRE-STAGE order: (1) recommended-ballot placeholder + hero, (2) per-team probs,
-        # (3) collapsed bracket.
+        # PRE-STAGE order: (1) recommended ballot (hero P(>=5) + A vs B + warning),
+        # (2) per-team probs, (3) collapsed bracket.
         st.subheader("Recommended ballot")
         if error_msg:
             st.error(error_msg)
         elif result is None:
             st.info("Run to see the recommended ballot.")
         else:
-            _hero_slot(result, "P(>=5) — recommended ballot")
+            _render_ballot_panel(result, cache_key)
 
         st.subheader("Per-team probabilities")
         if error_msg:

@@ -17,6 +17,7 @@ from __future__ import annotations
 import streamlit as st
 
 from engine.montecarlo import Result, run_mc
+from engine.optimizer import OptimizerOutput, optimize
 from engine.teams import load_teams
 
 from ui.state import FIXED_SEED
@@ -62,3 +63,19 @@ def run_mc_cached(
     locked = {frozenset(pair): winner for pair, winner in locked_key}
     teams = load_teams()
     return run_mc(teams, ratings, S, N, locked=locked, seed=FIXED_SEED)
+
+
+@st.cache_data(show_spinner=False)
+def optimize_cached(
+    _result: Result, ratings_key: tuple, S: float, N: int, locked_key: tuple
+) -> OptimizerOutput:
+    """Cached Pick'Em optimizer output (OPT-01..05), memoized on the MC cache tuple.
+
+    Cache key = ``(ratings_key, S, N, locked_key)`` — the SAME key as ``run_mc_cached``, so
+    the recommendation recomputes only when the run does (and, in Phase 4, when ``locked``
+    changes). ``_result`` carries the leading underscore so it is EXCLUDED from the key:
+    that is correct HERE (and the opposite of the ``locked`` rule) because the Result is a
+    pure function of the key, so the already-computed Result can be reused without re-running
+    the N-sim MC — the optimizer only scores ``_result.sample`` (ROADMAP SC4, never re-sims).
+    """
+    return optimize(_result, load_teams())
