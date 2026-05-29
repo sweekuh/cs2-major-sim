@@ -35,8 +35,13 @@ from ui.state import (
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
+    KEY_SEEDS_CONFIRMED,
     MAX_N,
     Mode,
+    TRUST_BADGE_CAVEATED,
+    odds_key_present,
+    read_seeds_confirmed,
+    trust_badge_state,
     validate_ratings,
 )
 
@@ -56,6 +61,65 @@ by_seed = {t.seed: t for t in teams}
 
 # --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
 st.title("Cologne 2026 Swiss Monte Carlo")
+
+
+def _render_header_strip() -> None:
+    """Persistent header strip rendered in BOTH modes, above the body (UI-SPEC Header strip).
+
+    Three honest-by-construction pieces:
+      1. Trust badge (UI-07): the EXACT caveated string while BACKTEST_PASSED is False — never
+         a green ✓ / Budapest claim. Validated state needs BOTH the backtest AND seeds (Pitfall 6).
+      2. INFERRED-seed banner (DX-02): a persistent ``st.warning`` + a field-by-field reconcile
+         area (seed→team rows to eyeball vs the official list) + a ``seeds confirmed`` toggle that
+         dismisses it. The toggle is the gate the badge reads; seeded from data/stage1.json read-only.
+      3. Fail-soft odds banner (ODDS-08): a one-line ``st.info`` when no ODDSPAPI_KEY is set —
+         never crashes, never imports httpx/python-dotenv.
+    """
+    # Seed the seeds_confirmed session_state from the read-only JSON flag on first load only;
+    # thereafter the in-session toggle owns it. Setting the key BEFORE the widget is created
+    # makes it the toggle's initial value (Streamlit binds the widget to the existing key).
+    if KEY_SEEDS_CONFIRMED not in st.session_state:
+        st.session_state[KEY_SEEDS_CONFIRMED] = read_seeds_confirmed()
+
+    seeds_confirmed = bool(st.session_state.get(KEY_SEEDS_CONFIRMED, False))
+
+    # 1. Trust badge — caveated while BACKTEST_PASSED is False (UI-07, Pitfall 6: both, not one).
+    if trust_badge_state(seeds_confirmed) == "validated":
+        st.success(f"/ {TRUST_BADGE_CAVEATED}")  # only reachable once GATE-01 lands AND seeds confirmed
+    else:
+        # Caveated: render the EXACT string as a neutral caption — no green ✓, no Budapest claim.
+        st.caption(TRUST_BADGE_CAVEATED)
+
+    # 2. INFERRED-seed banner + reconcile area + confirm toggle (persists until confirmed).
+    if not seeds_confirmed:
+        st.warning(
+            "⚠ Seeds are INFERRED — verify vs the official seed list before trusting outputs."
+        )
+        with st.expander("Reconcile seeds vs the official list", expanded=False):
+            st.caption(
+                "Eyeball each seed→team against the official Cologne 2026 seed list, then "
+                "flip 'seeds confirmed'. A wrong seed silently corrupts every probability."
+            )
+            rh = st.columns([1, 4])
+            rh[0].markdown("**Seed**")
+            rh[1].markdown("**Team**")
+            for t in sorted(teams, key=lambda x: x.seed):
+                rc = st.columns([1, 4])
+                rc[0].markdown(f"{t.seed}")
+                rc[1].markdown(t.name)
+    # The confirm toggle is a positive confirmation (NOT destructive — no red; protects the
+    # never-red/green rule). On True it dismisses the banner and is the gate the badge reads.
+    st.toggle(
+        "Seeds confirmed (dismiss the INFERRED-seed banner)",
+        key=KEY_SEEDS_CONFIRMED,
+    )
+
+    # 3. Fail-soft odds-off info banner (ODDS-08 seam) — one line, never a crash, no Phase-5 import.
+    if not odds_key_present():
+        st.info("live odds off (no ODDSPAPI_KEY) — using manual ratings")
+
+
+_render_header_strip()
 
 # Pre-stage / Live mode toggle. segmented_control is the UI-SPEC default; the active segment
 # is the reserved accent (Streamlit applies primaryColor automatically). Bound to ui.state.Mode.

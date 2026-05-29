@@ -256,3 +256,73 @@ def test_odds_key_present_uses_only_env(monkeypatch):
     assert odds_key_present() is False
     monkeypatch.setenv("ODDSPAPI_KEY", "sk-test")
     assert odds_key_present() is True
+
+
+# --- Plan 03: header strip in app.py (UI-07 / DX-02 / ODDS-08) ---------------------------
+
+
+def _all_text(at):
+    """Concatenate every text-bearing element's value (markdown/caption/warning/info/error)."""
+    parts = []
+    for coll in ("markdown", "caption", "warning", "info", "error", "subheader", "title"):
+        parts.extend(e.value for e in getattr(at, coll, []))
+    return "\n".join(parts)
+
+
+def test_trust_badge_caveated_until_both():
+    """UI-07: the header renders the EXACT caveated badge text and never a green/Budapest
+    'validated' state (because BACKTEST_PASSED is False), on both first load and after Run."""
+    from ui.state import TRUST_BADGE_CAVEATED
+
+    at = _apptest().run()
+    assert not at.exception
+    text = _all_text(at)
+    assert TRUST_BADGE_CAVEATED in text
+    assert "Budapest" not in text
+    # No green-check / "backtest passed" / "validated ✓" claim anywhere in the header.
+    assert "✓" not in text
+    assert "backtest passed" not in text.lower()
+
+
+def test_seed_banner():
+    """DX-02: the persistent '⚠ Seeds are INFERRED' warning is present on first load, with a
+    field-by-field reconcile area listing the seed→team rows so the user can eyeball it."""
+    at = _apptest().run()
+    assert not at.exception
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning)
+    # The reconcile area lists seed→team rows (eyeball vs the official list) — assert a few.
+    text = _all_text(at)
+    assert "GamerLegion" in text  # seed 1
+    assert "FlyQuest" in text     # seed 16
+
+
+def test_seed_banner_dismissable():
+    """DX-02: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
+    drives session_state (the gate the trust badge reads)."""
+    from ui.state import KEY_SEEDS_CONFIRMED
+
+    at = _apptest().run()
+    assert not at.exception
+    # First load: banner present, toggle off.
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning)
+
+    # Find the seeds-confirmed toggle (st.toggle preferred; checkbox is the sanctioned fallback).
+    widgets = list(getattr(at, "toggle", [])) + list(getattr(at, "checkbox", []))
+    tog = next(w for w in widgets if w.key == KEY_SEEDS_CONFIRMED)
+    tog.set_value(True).run()
+    assert not at.exception
+    # After confirming, the INFERRED-seed warning is gone (dismissed).
+    assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
+    assert at.session_state[KEY_SEEDS_CONFIRMED] is True
+
+
+def test_odds_off_banner_failsoft(monkeypatch):
+    """ODDS-08: with no ODDSPAPI_KEY the one-line 'live odds off … manual ratings' info banner
+    renders and the app never crashes (fail-soft stub; no Phase-5 import)."""
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    at = _apptest().run()
+    assert not at.exception
+    assert any(
+        "live odds off" in i.value.lower() and "manual ratings" in i.value.lower()
+        for i in at.info
+    )
