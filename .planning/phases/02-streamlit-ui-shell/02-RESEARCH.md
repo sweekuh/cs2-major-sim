@@ -475,7 +475,9 @@ No `httpx`/network/secret handling in Phase 2 — those threats (key leakage, SS
 | A3 | Fixed `seed=20260528` (matching engine `__main__`) is the right default; reruns should be reproducible | Pattern 2 | Low — deterministic tool wants reproducible runs; if per-session variety is wanted, add `seed` to the cache key. Flag to user. |
 | A4 | The "bad rating cell" (UI-05) means empty/out-of-range, since `NumberColumn` blocks non-numeric text at the widget | Pattern 3 / Pitfall 5 | Medium — if the planner writes the error path against non-numeric text, the branch is unreachable. Confirmed widget behavior via docs+forum but not exercised against 1.57 specifically. |
 
-## Open Questions
+## Open Questions (RESOLVED — see plan 02-01/02-03 decisions)
+
+> All three resolved by the plan designs: (1) RESOLVED option B — session_state keyed on the tuple (02-01 Task 3); (2) RESOLVED — validate via pure helper, AppTest only for the block message (02-01 Task 3); (3) RESOLVED — explicit `BACKTEST_PASSED=False` constant (02-03 Task 1).
 
 1. **Double-compute on the first cache miss (Pattern 2 A vs B).**
    - What we know: driving the progress bar requires iterating `run_mc_progressive`; memoizing requires storing the `Result`.
