@@ -55,6 +55,9 @@ st.set_page_config(page_title="Cologne 2026 Swiss MC", layout="wide")
 
 # session_state init (Pattern 2 option B): a dict keyed on (ratings_key, S, N, locked_key)
 # gives single-compute-per-unique-key AND a real progress bar, surviving reruns in-session.
+# Bounded: each cached Result retains the full per-sim sample (MC-04, ~N records), so an
+# unbounded dict would balloon RAM under repeated event-day re-runs / slider drags.
+MAX_CACHE_ENTRIES = 8
 if KEY_MC_CACHE not in st.session_state:
     st.session_state[KEY_MC_CACHE] = {}
 
@@ -305,6 +308,10 @@ def _run_or_serve():
     # (CR-01). Cross-session reuse can be wired correctly in a later phase if needed.
     result = _drive_progress(ratings, S, int(N), locked)
     cache[cache_key] = result
+    # Evict oldest entries so the retained per-sim samples can't grow unbounded across
+    # a long session of re-runs (insertion-ordered dict → pop oldest first).
+    while len(cache) > MAX_CACHE_ENTRIES:
+        cache.pop(next(iter(cache)))
     return result, None
 
 
