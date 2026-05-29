@@ -326,3 +326,41 @@ def test_odds_off_banner_failsoft(monkeypatch):
         "live odds off" in i.value.lower() and "manual ratings" in i.value.lower()
         for i in at.info
     )
+
+
+# --- Plan 03: DX docs — README + .env.example (DX-04 / DX-05) ----------------------------
+
+
+def test_env_example_present_and_gitignored():
+    """DX-05: .env.example exists and lists ODDSPAPI_KEY (+ optional Polymarket/Kalshi keys);
+    .env is in .gitignore (already present — assert it stays so secrets are never committed)."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+
+    env_example = root / ".env.example"
+    assert env_example.exists(), ".env.example must exist (DX-05)"
+    body = env_example.read_text(encoding="utf-8")
+    assert "ODDSPAPI_KEY" in body
+    # Optional provider keys listed (Polymarket + Kalshi seams).
+    assert "POLYMARKET" in body.upper()
+    assert "KALSHI" in body.upper()
+
+    # .env stays gitignored (secrets never committed — T-02-SECRET).
+    gitignore = (root / ".gitignore").read_text(encoding="utf-8")
+    assert any(line.strip() == ".env" for line in gitignore.splitlines())
+
+
+def test_readme_quickstart_and_cold_start_drill():
+    """DX-04: README opens with the uv quickstart and ends with the cold-start drill."""
+    from pathlib import Path
+
+    readme = (Path(__file__).resolve().parent.parent / "README.md").read_text(
+        encoding="utf-8"
+    )
+    assert "uv run streamlit run app.py" in readme
+    assert "no api key" in readme.lower()
+    # The cold-start drill lives at the END of the README.
+    tail = readme[-1200:].lower()
+    assert "cold-start" in tail or "cold start" in tail
+    assert "git pull" in tail
