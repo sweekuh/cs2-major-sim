@@ -169,6 +169,13 @@ def run_mc_progressive(
         child_seeds = ss.spawn(n_chunks)
         done = 0
         for chunk_idx, chunk_n in enumerate(sizes):
+            # When n_chunks > N, _chunk_sizes emits trailing zero-sized chunks. Skip them
+            # so they neither emit a spurious no-progress Partial (which would mislead the
+            # Phase-2 UI) nor risk a divide-by-zero in running_p_adv before any sim lands.
+            # Skipping is reproducibility-safe: a zero-sized chunk consumes no RNG draws,
+            # so leaving its pinned child seed unused does not shift any other chunk.
+            if chunk_n == 0:
+                continue
             rng = np.random.default_rng(child_seeds[chunk_idx])
             for _ in range(chunk_n):
                 by_id = simulate_stage(_fresh_teams(teams), ratings, S, rng, locked)
