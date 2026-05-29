@@ -15,13 +15,6 @@ falsely green.
 
 from __future__ import annotations
 
-import pytest
-
-# Wave 0: app.py not built yet. Remove this marker in Task 3 when app.py lands.
-pytestmark = pytest.mark.xfail(
-    strict=False, reason="Wave 0 RED — app.py not built until Task 3"
-)
-
 APP = "app.py"
 
 
