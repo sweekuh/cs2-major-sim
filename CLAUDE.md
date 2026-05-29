@@ -29,6 +29,14 @@ Config: interactive mode, standard granularity, parallel execution, Quality mode
 research + plan-check + verifier all on. Run `/gsd-progress` to see where things stand,
 `/gsd-settings` to change preferences.
 
+## Web browsing (gstack)
+
+Use gstack's `/browse` for all web fetching — never the `mcp__claude-in-chrome__*` tools.
+This matters in two phases: **Phase 1** fetches Valve's `major-supplemental-rulebook.md`
+(the 15-row rematch priority table, pulled verbatim) and HLTV/Liquipedia for the past-Major
+backtest pairings; **Phase 5** reads the OddsPapi / Polymarket / Kalshi API docs and verifies
+Cologne fixture slugs/tickers once markets post.
+
 ## Non-negotiable build rules (correctness is the product)
 
 These are the load-bearing facts; getting any wrong silently corrupts every probability:
