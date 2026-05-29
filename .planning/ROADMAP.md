@@ -74,7 +74,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. All four interaction states (loading / empty-pre-run / error / success-partial) render per feature, including inline cell errors that block the run on bad ratings (UI-05).
 **Plans**: 3 plans
 - [x] 02-01-PLAN.md - Bootstrap + zero-config first run + per-team probs slice: streamlit dep/uv (DX-03), zero-config Run (DX-01), freeze_locked-keyed @st.cache_data (UI-02 / Phase 2x4 seam), no-re-chunk progress generator (UI-03 / Phase 1x2 seam), rating validation blocks Run + four states (UI-05), Wave 0 test scaffold
-- [ ] 02-02-PLAN.md - Two-mode shell + visual tokens: Pre-stage/Live toggle + main-column reorder (UI-01), number + always-visible inline CI mini-bar on every cell (UI-04), monospace/accent/colorblind-safe blue-amber status with ASCII glyph+label (UI-06), theming
+- [x] 02-02-PLAN.md - Two-mode shell + visual tokens: Pre-stage/Live toggle + main-column reorder (UI-01), number + always-visible inline CI mini-bar on every cell (UI-04), monospace/accent/colorblind-safe blue-amber status with ASCII glyph+label (UI-06), theming
 - [ ] 02-03-PLAN.md - Trust + seed safety + DX docs: caveated trust badge gated on BOTH BACKTEST_PASSED=False AND seeds-confirmed (UI-07), dismissable INFERRED-seed banner + reconcile (DX-02), fail-soft odds-off banner, README quickstart + cold-start drill (DX-04), .env.example (DX-05)
 **UI hint**: yes
 
@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Engine + Backtest Gate | 4/4 | Plans done (GATE-01/04 deferred) | 2026-05-29 |
-| 2. Streamlit UI Shell | 0/3 | Planned | - |
+| 2. Streamlit UI Shell | 2/3 | In progress | - |
 | 3. Pick'Em Optimizer | 0/TBD | Not started | - |
 | 4. Conditional Re-Sim + Live Mode | 0/TBD | Not started | - |
 | 5. Odds Ensemble | 0/TBD | Not started | - |

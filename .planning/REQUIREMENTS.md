@@ -104,15 +104,18 @@
 
 ### Interface & UX (Streamlit)
 
-- [ ] **UI-01**: Explicit two-mode toggle (Pre-stage / Live); main column reorders by mode (Pre-stage: ballot hero → per-team probs → bracket; Live: locked-pick status + P(≥5)-from-here hero → delta probs → bracket)
+- [x] **UI-01
+**: Explicit two-mode toggle (Pre-stage / Live); main column reorders by mode (Pre-stage: ballot hero → per-team probs → bracket; Live: locked-pick status + P(≥5)-from-here hero → delta probs → bracket)
 - [x] **UI-02
 **: Controls: rating `st.data_editor`, S slider, sim-count input, Run button; MC wrapped in `@st.cache_data` keyed on `(ratings, S, N, locked)`
 - [x] **UI-03
 **: Loading shows a progress bar + live running P(advance) tally fed by the MC generator (not a blank spinner)
-- [ ] **UI-04**: Every probability cell renders the number + an always-visible inline CI mini-bar (never hover/expand-hidden)
+- [x] **UI-04
+**: Every probability cell renders the number + an always-visible inline CI mini-bar (never hover/expand-hidden)
 - [x] **UI-05
 **: All four interaction states built per feature (loading / empty-pre-run / error / success-partial), including inline cell errors that block the run on bad ratings
-- [ ] **UI-06**: Visual tokens enforced — monospace for all numbers; one accent color for primary action/hero numbers; colorblind-safe status (advanced=blue, eliminated=amber, never red/green) always paired with text label + glyph (`o live` / `x dead` / `/ secured`); contrast ≥4.5:1
+- [x] **UI-06
+**: Visual tokens enforced — monospace for all numbers; one accent color for primary action/hero numbers; colorblind-safe status (advanced=blue, eliminated=amber, never red/green) always paired with text label + glyph (`o live` / `x dead` / `/ secured`); contrast ≥4.5:1
 - [ ] **UI-07**: Persistent "engine validated vs [stage] backtest ✓" trust badge tied to the backtest gate
 
 ### Inputs, data & DX
