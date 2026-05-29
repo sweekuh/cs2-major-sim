@@ -189,3 +189,70 @@ def test_bad_rating_blocks_run():
     # The error string is defined in the app (rendered when validation fails). We assert
     # the app can render it — driving data_editor cells via AppTest is awkward (RESEARCH
     # Open Q2), so the firing condition is covered by the validate_ratings unit test above.
+
+
+# --- Plan 03: trust badge (UI-07) --------------------------------------------------------
+
+
+def test_trust_badge_wording():
+    """UI-07 / Pitfall 6: the trust badge text is EXACTLY the caveated string, gated on BOTH
+    BACKTEST_PASSED and seeds_confirmed, and MUST NOT claim a green/Budapest 'validated'.
+
+    The Budapest backtest was DEFERRED (GATE-01/04/05); the badge cannot drift to a green
+    'validated' claim while the backtest has not run. Both flags must be true to validate.
+    """
+    from ui.state import (
+        BACKTEST_PASSED,
+        TRUST_BADGE_CAVEATED,
+        trust_badge_state,
+    )
+
+    # The constant is False in Phase 2 — the deferred backtest has not run.
+    assert BACKTEST_PASSED is False
+
+    # Exact caveated wording (UI-SPEC Copywriting) — no Budapest/Austin, no green check.
+    assert (
+        TRUST_BADGE_CAVEATED
+        == "engine validated vs Valve rulebook unit tests — full backtest pending seed data"
+    )
+    assert "Budapest" not in TRUST_BADGE_CAVEATED
+    assert "Austin" not in TRUST_BADGE_CAVEATED
+    assert "✓" not in TRUST_BADGE_CAVEATED
+    assert "backtest passed" not in TRUST_BADGE_CAVEATED.lower()
+
+    # Gated on BOTH flags (Pitfall 6 "both, not one"): only validated when both are true.
+    assert trust_badge_state(seeds_confirmed=True) == "caveated"  # backtest still False
+    assert trust_badge_state(seeds_confirmed=False) == "caveated"
+    assert trust_badge_state(False) == "caveated"
+
+    # The validated state requires BOTH — proven by overriding BACKTEST_PASSED locally.
+    import ui.state as state_mod
+
+    original = state_mod.BACKTEST_PASSED
+    try:
+        state_mod.BACKTEST_PASSED = True
+        assert state_mod.trust_badge_state(seeds_confirmed=True) == "validated"
+        assert state_mod.trust_badge_state(seeds_confirmed=False) == "caveated"
+    finally:
+        state_mod.BACKTEST_PASSED = original
+
+
+def test_read_seeds_confirmed_reads_json_read_only():
+    """DX-02: read_seeds_confirmed parses data/stage1.json read-only (the JSON ships False)
+    and falls back to False on a missing/bad file — it never mutates the engine or the JSON."""
+    from ui.state import read_seeds_confirmed
+
+    # The shipped JSON has seeds_confirmed=false -> initial banner state is "not confirmed".
+    assert read_seeds_confirmed() is False
+    # Missing file -> safe False fallback (never raises).
+    assert read_seeds_confirmed("does/not/exist.json") is False
+
+
+def test_odds_key_present_uses_only_env(monkeypatch):
+    """ODDS-08 fail-soft seam: odds_key_present checks os.environ only (no httpx/dotenv import)."""
+    from ui.state import odds_key_present
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    assert odds_key_present() is False
+    monkeypatch.setenv("ODDSPAPI_KEY", "sk-test")
+    assert odds_key_present() is True
