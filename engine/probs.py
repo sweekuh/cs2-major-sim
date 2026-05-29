@@ -99,12 +99,18 @@ def beta_moment_fit(mean: float, var: float) -> tuple[float, float]:
 
     Unused until Phase 5 fills epistemic_draws, but present and structured now.
     """
-    bound = mean * (1.0 - mean)
-    # Clamp strictly below the bound; epsilon keeps alpha/beta finite and positive.
+    # Clamp the mean strictly inside (0, 1): a degenerate mean of 0.0 or 1.0 drives
+    # bound to 0.0, which would yield non-positive alpha/beta and crash
+    # numpy.random.Generator.beta (both params must be strictly > 0).
     eps = 1e-9
-    v = min(var, bound - eps) if bound > eps else eps
-    v = max(v, eps)
-    common = mean * (1.0 - mean) / v - 1.0
+    mean = max(eps, min(1.0 - eps, mean))
+    bound = mean * (1.0 - mean)
+    # Keep the variance STRICTLY below the maximal bound so common = bound/v - 1 stays
+    # strictly positive and both alpha/beta come out > 0. A multiplicative ceiling
+    # (rather than bound - eps) is robust even when bound itself is tiny near mean 0/1.
+    v = min(var, bound * (1.0 - eps))
+    v = max(v, eps * bound)
+    common = bound / v - 1.0
     alpha = mean * common
     beta = (1.0 - mean) * common
     return alpha, beta
