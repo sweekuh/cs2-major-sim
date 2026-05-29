@@ -13,12 +13,7 @@ green. Tasks 2 flips these GREEN.
 
 from __future__ import annotations
 
-import pytest
-
-# Wave 0: ui/ not built yet. Remove this marker in Task 2 when the helpers land.
-pytestmark = pytest.mark.xfail(
-    strict=False, reason="Wave 0 RED — ui/ helpers not built until Task 2"
-)
+import pytest  # noqa: F401  (kept for test_ci_bar_html_is_xss_safe_numeric_only)
 
 
 def test_freeze_locked_roundtrip():
