@@ -39,36 +39,39 @@ def test_difficulty_unit(make_team):
 def test_fold_uses_difficulty_rank(make_team):
     """ENG-04 / Pitfall 3: the fold pairs on difficulty rank, not raw seed.
 
-    Build a 4-team group whose Buchholz (difficulty) order is the REVERSE of seed
-    order, with no rematch constraints. The rank key is (-difficulty, seed), so the
-    highest-difficulty team is group-seed 1 and faces the lowest-difficulty team
-    (fold: 1v4, 2v3 in difficulty-rank space). If the difficulty sort were removed
-    (ranking by raw seed instead), the pairing would differ — proving the sort is
-    load-bearing, not dead code.
+    Build a 4-team group whose Buchholz (difficulty) order is NOT the seed order, so
+    the high-vs-low fold pairs differently depending on which key is used. The rank key
+    is (-difficulty, seed); difficulty values are chosen so the difficulty-desc order is
+    [seed 1, seed 2, seed 4, seed 3]. Folding that gives {1v3, 2v4}, whereas folding on
+    raw seed order [1,2,3,4] gives {1v4, 2v3} — two fully DISJOINT pairings. This test
+    FAILS if the difficulty sort is removed (proving it is load-bearing, not dead code;
+    Pitfall 3). (For a 4-team group the two pairs partition the four ids, so the result
+    sets can only differ if they share no pair — hence the deliberately disjoint construction.)
     """
     from engine.swiss import pair_within_group, rank_group
 
-    # opponents that confer difficulty = sum(opp.wins - opp.losses)
-    strong = lambda: [make_team(id=900, wins=2, losses=0)]  # +2 difficulty each opp
-    weak = lambda: [make_team(id=901, wins=0, losses=2)]  # -2 difficulty each opp
+    # difficulty(t) = sum(o.wins - o.losses for o in t.opps). One opp each, tuned so the
+    # difficulty-desc order is seed 1 (+3), seed 2 (+2), seed 4 (+1), seed 3 (0).
+    def opp(delta_wins):
+        return [make_team(id=900, wins=delta_wins, losses=0)]
 
-    # seed 1 has LOW difficulty, seed 4 has HIGH difficulty (reverse of seed order).
-    t1 = make_team(id=1, seed=1, wins=1, losses=1, opps=weak())  # diff -2
-    t2 = make_team(id=2, seed=2, wins=1, losses=1, opps=weak())  # diff -2
-    t3 = make_team(id=3, seed=3, wins=1, losses=1, opps=strong())  # diff +2
-    t4 = make_team(id=4, seed=4, wins=1, losses=1, opps=strong())  # diff +2
+    t1 = make_team(id=1, seed=1, wins=1, losses=1, opps=opp(3))  # diff +3
+    t2 = make_team(id=2, seed=2, wins=1, losses=1, opps=opp(2))  # diff +2
+    t3 = make_team(id=3, seed=3, wins=1, losses=1, opps=opp(0))  # diff  0
+    t4 = make_team(id=4, seed=4, wins=1, losses=1, opps=opp(1))  # diff +1
     group = [t1, t2, t3, t4]
 
     ranked = rank_group(group)
-    # (-difficulty, seed): +2 teams first (seed asc: 3,4), then -2 teams (seed asc: 1,2).
-    assert [t.id for t in ranked] == [3, 4, 1, 2]
+    # (-difficulty, seed): +3 (seed1), +2 (seed2), +1 (seed4), 0 (seed3).
+    assert [t.id for t in ranked] == [1, 2, 4, 3]
 
-    pairs = pair_within_group(ranked)
+    pairs = pair_within_group(group)
     pair_ids = {frozenset((a.id, b.id)) for a, b in pairs}
-    # Fold over difficulty-ranked [3,4,1,2]: 3v2, 4v1.
-    assert pair_ids == {frozenset((3, 2)), frozenset((4, 1))}
+    # Fold over difficulty-ranked [1,2,4,3]: 1v3, 2v4.
+    assert pair_ids == {frozenset((1, 3)), frozenset((2, 4))}
 
-    # If the engine folded on RAW SEED ([1,2,3,4]) it would produce 1v4, 2v3 — different.
+    # If the engine folded on RAW SEED ([1,2,3,4]) it would produce {1v4, 2v3} — a fully
+    # DISJOINT pairing. The sets are NOT equal.
     raw_seed_pairs = {frozenset((1, 4)), frozenset((2, 3))}
     assert pair_ids != raw_seed_pairs
 
