@@ -131,22 +131,25 @@ def test_status_badge_html_pairs_glyph_and_label():
 
     Colour is reinforcement, never the only signal (UI-06): glyph + label must both appear.
     """
-    from ui.render import status_badge_html
+    from ui.render import STATUS, status_badge_html
 
     html = status_badge_html("advanced")
     assert isinstance(html, str)
-    assert "/" in html          # ASCII glyph
-    assert "secured" in html    # text label
-    assert "#3B82F6" in html    # blue hue, never red/green
+    # Assert the glyph appears in the SPAN's TEXT CONTENT (">glyph label<"), not anywhere in
+    # the HTML: a bare `"/" in html` is vacuously true because the `</span>` close tag also
+    # contains "/" (WR-04) — it would pass even if the glyph were changed to "X".
+    glyph_a, label_a, _ = STATUS["advanced"]
+    assert f">{glyph_a} {label_a}<" in html   # matches ">/ secured<" in the span text
+    assert "#3B82F6" in html                   # blue hue, never red/green
 
     elim = status_badge_html("eliminated")
-    assert "x" in elim
-    assert "dead" in elim
-    assert "#F59E0B" in elim     # amber
+    glyph_e, label_e, _ = STATUS["eliminated"]
+    assert f">{glyph_e} {label_e}<" in elim    # ">x dead<"
+    assert "#F59E0B" in elim                   # amber
 
     live = status_badge_html("live")
-    assert "o" in live
-    assert "live" in live
+    glyph_l, label_l, _ = STATUS["live"]
+    assert f">{glyph_l} {label_l}<" in live    # ">o live<"
     assert "#3B82F6" in live
 
 
