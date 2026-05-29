@@ -71,8 +71,8 @@
 
 ### Pick'Em optimizer (Valve binary)
 
-- [x] **OPT-01**: Ballot A (E[correct]-optimal) via greedy: top 2 by P(3-0), top 2 by P(0-3), top 6 by P(advance) excluding the four chosen
-- [x] **OPT-02**: Ballot B (P(≥5)-optimal) via hill-climb single-team swaps scored by P(≥5) against the stored per-sim sample (no brute-force enumeration)
+- [x] **OPT-01**: Ballot A (greedy per-bucket marginal baseline) via greedy: top 2 by P(3-0), top 2 by P(0-3), top 6 by P(advance) excluding the four chosen. NOTE (Phase 3 V&V): the bucket-wise greedy maximizes the per-bucket marginal sum, not global E[correct] (the buckets compete for teams; Padv≥P30). Kept as a transparent baseline; Ballot B (OPT-02) is the real P(≥5) recommendation.
+- [x] **OPT-02**: Ballot B (P(≥5)-optimal) via hill-climb single-team swaps + re-bucketing moves scored by P(≥5) against the stored per-sim sample (no brute-force enumeration)
 - [x] **OPT-03**: Both ballots are valid (exactly 2/6/2, no team in two buckets) and reported side by side with differing picks highlighted
 - [x] **OPT-04**: P(≥5/10) is computed for the chosen ballot by scoring each simulated stage against it
 - [x] **OPT-05**: Correlated-pick warning surfaces when the two 0-3 picks meet in Round 1 (caps correct picks); Ballot B avoids the trap automatically
