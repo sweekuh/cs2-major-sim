@@ -1,0 +1,16 @@
+# Original upload bundle (redundant — contents live in files/)
+files.zip
+
+# Secrets (HANDOFF §8: never commit)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
