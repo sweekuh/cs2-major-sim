@@ -25,16 +25,18 @@ import streamlit as st
 from engine.montecarlo import run_mc_progressive
 from engine.teams import load_teams
 from ui.cache import freeze_locked, freeze_ratings, run_mc_cached
-from ui.render import ci_bar_html
+from ui.render import ci_bar_html, hero_number_html, status_badge_html
 from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
     FIXED_SEED,
     KEY_MC_CACHE,
+    KEY_MODE,
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
     MAX_N,
+    Mode,
     validate_ratings,
 )
 
@@ -52,13 +54,31 @@ if KEY_MC_CACHE not in st.session_state:
 teams = load_teams()  # DX-01 zero-config: data/stage1.json (or in-code default), no API key
 by_seed = {t.seed: t for t in teams}
 
-# --- Header strip (mode toggle is a plan-02 shell; Pre-stage is the default) -------------
+# --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
 st.title("Cologne 2026 Swiss Monte Carlo")
-mode = DEFAULT_MODE  # Live toggle + reorder lands in plan 02; default Pre-stage on load.
-st.caption(
-    "Pre-stage — per-team P(advance) / P(3-0) / P(0-3) from the proven engine. "
-    "First sim needs no API key."
+
+# Pre-stage / Live mode toggle. segmented_control is the UI-SPEC default; the active segment
+# is the reserved accent (Streamlit applies primaryColor automatically). Bound to ui.state.Mode.
+# Default on first load = Pre-stage (a fresh user has no locks; Live would dead-end empty).
+_mode_label = st.segmented_control(
+    "Mode",
+    options=[Mode.PRE_STAGE.value, Mode.LIVE.value],
+    default=DEFAULT_MODE.value,
+    key=KEY_MODE,
+    label_visibility="collapsed",
 )
+mode = Mode(_mode_label) if _mode_label else DEFAULT_MODE
+
+if mode is Mode.PRE_STAGE:
+    st.caption(
+        "Pre-stage — per-team P(advance) / P(3-0) / P(0-3) from the proven engine. "
+        "First sim needs no API key."
+    )
+else:
+    st.caption(
+        "Live — lock results round-by-round and re-sim from here. "
+        "(Result locking lands in Phase 4.)"
+    )
 
 controls, main = st.columns([1, 3], gap="medium")
 
@@ -114,81 +134,178 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict):
     return result
 
 
-# --- Main column: four interaction states (loading / empty / error / success) ------------
-with main:
-    st.subheader("Per-team probabilities")
+def _render_probs_table(result) -> None:
+    """SUCCESS state: per-team rows sorted by P(advance), each cell = number + inline CI bar.
 
-    if run_clicked:
-        offenders = validate_ratings(edited)
-        if offenders:
-            # ERROR state (UI-05): block Run, engine NEVER called.
-            st.error(BAD_RATING_MSG)
-        else:
-            ratings = {r["seed"]: float(r["rating"]) for r in edited}
-            locked: dict = {}  # Phase 4 fills this; the key shape is final now.
-            ratings_key = freeze_ratings(ratings)
-            locked_key = freeze_locked(locked)
-            cache_key = (ratings_key, S, int(N), locked_key)
-            cache = st.session_state[KEY_MC_CACHE]
-
-            if cache_key in cache:
-                # CACHE HIT: serve the stored Result, no recompute (single compute per key).
-                result = cache[cache_key]
-            else:
-                # CACHE MISS: LOADING state — drive the bar over the generator, compute once.
-                result = _drive_progress(ratings, S, int(N), locked)
-                cache[cache_key] = result
-                # Also prime the cross-session @st.cache_data memo so an identical input in a
-                # later session is instant (it recomputes once here; in-session hits use the
-                # session_state dict above — Pattern 2 option B, single in-session compute).
-                run_mc_cached(ratings_key, S, int(N), locked_key)
-
-            # SUCCESS state: per-team rows sorted by P(advance), number + inline CI bar.
-            p_adv = result.p_advance()
-            p_30 = result.p_30()
-            p_03 = result.p_03()
-            st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
-
-            order = sorted(by_seed, key=lambda s: p_adv.get(s, 0.0), reverse=True)
-            hdr = st.columns([3, 2, 2, 2])
-            hdr[0].markdown("**Team**")
-            hdr[1].markdown("**P(advance)**")
-            hdr[2].markdown("**P(3-0)**")
-            hdr[3].markdown("**P(0-3)**")
-            for seed in order:
-                t = by_seed[seed]
-                c = st.columns([3, 2, 2, 2])
-                c[0].markdown(f"{t.name}")
-                lo_a, hi_a = result.band_advance.get(seed, (0.0, 0.0))
-                lo_3, hi_3 = result.band_30.get(seed, (0.0, 0.0))
-                lo_0, hi_0 = result.band_03.get(seed, (0.0, 0.0))
-                c[1].markdown(
-                    ci_bar_html(p_adv.get(seed, 0.0), lo_a, hi_a, HUE_ADVANCE),
-                    unsafe_allow_html=True,
-                )
-                c[2].markdown(
-                    ci_bar_html(p_30.get(seed, 0.0), lo_3, hi_3, HUE_ADVANCE),
-                    unsafe_allow_html=True,
-                )
-                c[3].markdown(
-                    ci_bar_html(p_03.get(seed, 0.0), lo_0, hi_0, HUE_ADVANCE),
-                    unsafe_allow_html=True,
-                )
-    else:
-        # EMPTY (pre-run) state (UI-05): never blank, never 0% — show dashes.
-        st.info("Set ratings, then Run.")
-        st.caption(
-            f"First sim needs no API key — ~15s for 100k tournaments. "
-            f"Per-team probs show {EM_DASH} until you Run."
+    UI-04: EVERY probability cell renders the number PLUS an always-visible inline Wilson CI
+    mini-bar via ci_bar_html — never hover/expand-hidden. Reused for the Pre-stage probs and
+    the Live delta-probs section (delta content is Phase 4; the render is shared now).
+    """
+    p_adv = result.p_advance()
+    p_30 = result.p_30()
+    p_03 = result.p_03()
+    order = sorted(by_seed, key=lambda s: p_adv.get(s, 0.0), reverse=True)
+    hdr = st.columns([3, 2, 2, 2])
+    hdr[0].markdown("**Team**")
+    hdr[1].markdown("**P(advance)**")
+    hdr[2].markdown("**P(3-0)**")
+    hdr[3].markdown("**P(0-3)**")
+    for seed in order:
+        t = by_seed[seed]
+        c = st.columns([3, 2, 2, 2])
+        c[0].markdown(f"{t.name}")
+        lo_a, hi_a = result.band_advance.get(seed, (0.0, 0.0))
+        lo_3, hi_3 = result.band_30.get(seed, (0.0, 0.0))
+        lo_0, hi_0 = result.band_03.get(seed, (0.0, 0.0))
+        c[1].markdown(
+            ci_bar_html(p_adv.get(seed, 0.0), lo_a, hi_a, HUE_ADVANCE),
+            unsafe_allow_html=True,
         )
-        hdr = st.columns([3, 2, 2, 2])
-        hdr[0].markdown("**Team**")
-        hdr[1].markdown("**P(advance)**")
-        hdr[2].markdown("**P(3-0)**")
-        hdr[3].markdown("**P(0-3)**")
-        for t in teams:
-            c = st.columns([3, 2, 2, 2])
-            c[0].markdown(t.name)
-            c[1].markdown(EM_DASH)
-            c[2].markdown(EM_DASH)
-            c[3].markdown(EM_DASH)
+        c[2].markdown(
+            ci_bar_html(p_30.get(seed, 0.0), lo_3, hi_3, HUE_ADVANCE),
+            unsafe_allow_html=True,
+        )
+        c[3].markdown(
+            ci_bar_html(p_03.get(seed, 0.0), lo_0, hi_0, HUE_ADVANCE),
+            unsafe_allow_html=True,
+        )
+
+
+def _render_probs_empty() -> None:
+    """EMPTY (pre-run) probs state (UI-05): never blank, never 0% — dashes under each team."""
+    st.caption(
+        f"First sim needs no API key — ~15s for 100k tournaments. "
+        f"Per-team probs show {EM_DASH} until you Run."
+    )
+    hdr = st.columns([3, 2, 2, 2])
+    hdr[0].markdown("**Team**")
+    hdr[1].markdown("**P(advance)**")
+    hdr[2].markdown("**P(3-0)**")
+    hdr[3].markdown("**P(0-3)**")
+    for t in teams:
+        c = st.columns([3, 2, 2, 2])
+        c[0].markdown(t.name)
+        c[1].markdown(EM_DASH)
+        c[2].markdown(EM_DASH)
+        c[3].markdown(EM_DASH)
+
+
+def _render_bracket() -> None:
+    """Bracket as a COLLAPSED expander — seeded Round 1 `(seed, seed+8)` table only (UI-SPEC
+    bracket empty state). Record-bucket columns + locked/simulated styling are Phase 4."""
+    with st.expander("Bracket — seeded Round 1", expanded=False):
+        st.caption("Round 1 pairings (seed vs seed+8). Record buckets fill in Phase 4.")
+        bh = st.columns([1, 3, 3])
+        bh[0].markdown("**Match**")
+        bh[1].markdown("**Team A**")
+        bh[2].markdown("**Team B**")
+        for i in range(1, 9):
+            a = by_seed.get(i)
+            b = by_seed.get(i + 8)
+            row = st.columns([1, 3, 3])
+            row[0].markdown(f"R1-{i}")
+            row[1].markdown(a.name if a else EM_DASH)
+            row[2].markdown(b.name if b else EM_DASH)
+
+
+def _run_or_serve():
+    """Validate + dispatch the engine (cache hit / miss). Returns (result, error_msg).
+
+    Shared by both modes' top section. On a bad rating returns (None, BAD_RATING_MSG) and the
+    engine is NEVER called (UI-05). On no click returns (None, None) — the EMPTY state.
+    """
+    if not run_clicked:
+        return None, None
+    offenders = validate_ratings(edited)
+    if offenders:
+        return None, BAD_RATING_MSG  # ERROR state (UI-05): block Run, engine NEVER called.
+    ratings = {r["seed"]: float(r["rating"]) for r in edited}
+    locked: dict = {}  # Phase 4 fills this; the key shape is final now.
+    ratings_key = freeze_ratings(ratings)
+    locked_key = freeze_locked(locked)
+    cache_key = (ratings_key, S, int(N), locked_key)
+    cache = st.session_state[KEY_MC_CACHE]
+    if cache_key in cache:
+        # CACHE HIT: serve the stored Result, no recompute (single compute per key).
+        return cache[cache_key], None
+    # CACHE MISS: LOADING state — drive the bar over the generator, compute once.
+    result = _drive_progress(ratings, S, int(N), locked)
+    cache[cache_key] = result
+    # Prime the cross-session @st.cache_data memo (Pattern 2 option B).
+    run_mc_cached(ratings_key, S, int(N), locked_key)
+    return result, None
+
+
+def _hero_slot(result, label: str) -> None:
+    """Render the one display-size hero number (UI-SPEC Typography/Color — accent reserved).
+
+    Phase 3 (Pre-stage P(>=5)) / Phase 4 (Live P(>=5)-from-here) fill the real ballot content;
+    this plan owns the hero SLOT + renderer. With a result we show a placeholder hero number
+    (top-team P(advance) stand-in) so the 28px monospace accent slot is real now.
+    """
+    if result is None:
+        return
+    p_adv = result.p_advance()
+    top = max(p_adv.values()) if p_adv else 0.0
+    st.markdown(f"**{label}**")
+    st.markdown(hero_number_html(top), unsafe_allow_html=True)
+    st.caption("Placeholder hero — Phase 3/4 fills the optimal-ballot P(>=5).")
+
+
+# --- Main column: mode-conditional ordering (UI-01) --------------------------------------
+with main:
+    result, error_msg = _run_or_serve()
+    if result is not None:
+        st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
+
+    if mode is Mode.PRE_STAGE:
+        # PRE-STAGE order: (1) recommended-ballot placeholder + hero, (2) per-team probs,
+        # (3) collapsed bracket.
+        st.subheader("Recommended ballot")
+        if error_msg:
+            st.error(error_msg)
+        elif result is None:
+            st.info("Run to see the recommended ballot.")
+        else:
+            _hero_slot(result, "P(>=5) — recommended ballot")
+
+        st.subheader("Per-team probabilities")
+        if error_msg:
+            pass  # error already shown above; probs stay empty
+        elif result is None:
+            st.info("Set ratings, then Run.")
+            _render_probs_empty()
+        else:
+            _render_probs_table(result)
+
+        _render_bracket()
+    else:
+        # LIVE order: (1) locked-pick status placeholder + hero + status legend,
+        # (2) delta-probs area, (3) collapsed bracket.
+        st.subheader("Your picks — status")
+        if error_msg:
+            st.error(error_msg)
+        elif result is None:
+            st.info("Lock a result to go live.")
+            # Status legend (UI-06): glyph + label + colorblind-safe hue, never red/green.
+            legend = " &nbsp; ".join(
+                status_badge_html(state) for state in ("live", "eliminated", "advanced")
+            )
+            st.markdown(legend, unsafe_allow_html=True)
+        else:
+            _hero_slot(result, "P(>=5) from here")
+            legend = " &nbsp; ".join(
+                status_badge_html(state) for state in ("live", "eliminated", "advanced")
+            )
+            st.markdown(legend, unsafe_allow_html=True)
+
+        st.subheader("Delta probabilities")
+        if error_msg:
+            pass
+        elif result is None:
+            st.caption("Lock a result to see how each team's odds move (Phase 4).")
+            _render_probs_empty()
+        else:
+            _render_probs_table(result)
+
+        _render_bracket()

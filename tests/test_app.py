@@ -95,6 +95,84 @@ def test_progress_preserves_reproducibility():
     assert n_partials <= 20
 
 
+def _mode_widget(at):
+    """Return the mode toggle (segmented_control preferred; radio is the sanctioned fallback)."""
+    sc = getattr(at, "segmented_control", [])
+    if len(sc):
+        return sc[0]
+    return at.radio[0]
+
+
+def test_two_mode_toggle_present():
+    """UI-01: a Pre-stage / Live mode toggle is present on first load, defaulting Pre-stage.
+
+    The widget is a single-select offering both mode labels; first-load default is Pre-stage
+    (a fresh user has no locked results — defaulting to Live would dead-end on an empty
+    'Lock a result to go live' state).
+    """
+    from ui.state import Mode
+
+    at = _apptest().run()
+    assert not at.exception
+    w = _mode_widget(at)
+    # Both mode labels are options on the single toggle.
+    assert Mode.PRE_STAGE.value in w.options
+    assert Mode.LIVE.value in w.options
+    # Default mode is Pre-stage.
+    assert w.value == Mode.PRE_STAGE.value
+    # Pre-stage default surfaces the recommended-ballot empty copy.
+    assert any("recommended ballot" in i.value.lower() for i in at.info)
+
+
+def test_mode_toggle_reorders_main_column():
+    """UI-01: switching to Live reorders the main column to a Live-first layout.
+
+    Pre-stage (default): the 'Recommended ballot' subheader precedes 'Per-team probabilities'
+    and the recommended-ballot empty copy shows. Selecting Live makes 'Your picks — status'
+    the top main section and shows 'Lock a result to go live.' — the conditional reorder.
+    """
+    from ui.state import Mode
+
+    at = _apptest().run()
+    assert not at.exception
+    # Default Pre-stage ordering: ballot then probs (Ratings is the controls-column subheader).
+    pre_subs = [s.value for s in at.subheader]
+    assert "Recommended ballot" in pre_subs
+    assert "Per-team probabilities" in pre_subs
+    assert pre_subs.index("Recommended ballot") < pre_subs.index(
+        "Per-team probabilities"
+    )
+    assert any("run to see the recommended ballot" in i.value.lower() for i in at.info)
+
+    # Flip the toggle to Live and assert the reorder fired.
+    _mode_widget(at).set_value(Mode.LIVE.value).run()
+    assert not at.exception
+    live_subs = [s.value for s in at.subheader]
+    assert any("your picks" in s.lower() for s in live_subs)
+    assert any("delta prob" in s.lower() for s in live_subs)
+    # Live's status section precedes its delta-probs section.
+    status_i = next(i for i, s in enumerate(live_subs) if "your picks" in s.lower())
+    delta_i = next(i for i, s in enumerate(live_subs) if "delta prob" in s.lower())
+    assert status_i < delta_i
+    assert any("lock a result to go live" in i.value.lower() for i in at.info)
+    # The Pre-stage ballot copy is gone in Live (sections actually swapped, not just appended).
+    assert not any("recommended ballot" in i.value.lower() for i in at.info)
+
+
+def test_ci_bars_on_every_cell_after_run():
+    """UI-04 regression: after a Run every probability cell still renders an inline CI bar.
+
+    The CI-bar markup (the positioned fill div from ci_bar_html) must appear for the probs
+    table — never hover/expand-hidden. This guards against the reorder dropping the bars.
+    """
+    at = _apptest().run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    bar_markup = [m for m in at.markdown if "position:absolute" in m.value]
+    # 16 teams x 3 prob columns = 48 inline CI bars (a generous lower bound guards regressions).
+    assert len(bar_markup) >= 16
+
+
 def test_bad_rating_blocks_run():
     """UI-05: an empty/out-of-range rating blocks Run with the inline message and the
     engine is never called. The validation gate is unit-tested directly in
