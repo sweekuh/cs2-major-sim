@@ -23,7 +23,8 @@ guessed inputs into false precision.
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Headless Valve Stage-1 Swiss engine + Monte Carlo correctness core — Phase 1. Buchholz `Σ(w−l)`, difficulty-rank fold, verbatim 15-row priority table, `locked` support, generator-first MC with `SeedSequence.spawn` reproducibility, full per-sim sample, closed-form Bo3, Wilson bands, invariants Σ=2/8/2. Validated by Valve-rulebook unit tests (21 passed / 1 skipped).
+- ⚠ **Deferred (tracked):** full Budapest 2025 backtest (GATE-01/04). Authoritative 1-16 Valve seeds unsourceable; VRS world-rank order does NOT reproduce Budapest's R1/R2 pairings — an open engine-vs-data question to root-cause before Cologne output is fully trusted. See `.planning/todos/pending/2026-05-29-budapest-backtest-gate-gate01.md`.
 
 ### Active
 
@@ -136,4 +137,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-28 after initialization*
+*Last updated: 2026-05-29 after Phase 1 (engine + backtest gate) — engine core validated by unit tests; full backtest deferred (tracked)*
