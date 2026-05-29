@@ -124,6 +124,15 @@ def load_teams(path: Path | str | None = None) -> list[Team]:
         raise ValueError("stage1.json must contain a 'teams' list")
     rows: dict[int, tuple[str, float]] = {}
     for entry in teams_json:
+        if not isinstance(entry, dict):
+            raise ValueError(
+                f"each team entry must be a dict, got {type(entry).__name__!r}"
+            )
+        for field_name in ("seed", "name", "rating"):
+            if field_name not in entry:
+                raise ValueError(
+                    f"team entry missing required field {field_name!r}: {entry!r}"
+                )
         seed = entry["seed"]
         if seed in rows:
             raise ValueError(f"duplicate seed {seed} in {src}")
