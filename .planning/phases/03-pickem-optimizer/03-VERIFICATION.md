@@ -101,7 +101,17 @@ not the global E[correct] maximizer (brute-force-confirmed +0.86 case), and Ball
 narrow swap neighborhood can't re-bucket to escape it — so even the P(≥5) hero can be
 suboptimal in the (uncommon) marginal structures where the P(3-0) rank and the advance-gap
 rank disagree. The implementation faithfully matches OPT-01 *as written*; the over-claim is in
-the "optimal / no search" wording. **Resolution is the user's call:**
-1. **Document-only** — keep greedy, soften the wording. (Minimal; favorites usually align; B is the hero.)
-2. **Broaden Ballot B** — add re-bucketing moves to the hill-climb so the recommendation can escape A's blind spot; soften A's wording.
-3. **True optimum** — make Ballot A the exact E[correct] maximizer (small 3-0-pair search, no full enumeration) AND broaden Ballot B. Fullest fix; diverges from OPT-01's literal greedy.
+the "optimal / no search" wording.
+
+**RESOLVED (option 2 — broaden Ballot B + soften wording), implemented:**
+- `ballot_b` now hill-climbs over a broadened `_neighbors` set that adds **re-bucketing
+  moves** (exchange the buckets of two already-picked teams), so the P(≥5) recommendation can
+  escape Ballot A's marginal-greedy blind spot — directly neutralizing Finding 2 and Finding
+  1's practical impact on the hero. Still no brute-force enumeration; still deterministic.
+- Ballot A is kept as the literal greedy OPT-01 defines, with the "(E[correct]-optimal) /
+  provably optimal, no search" over-claim softened to "greedy per-bucket marginal baseline" in
+  the `ballot_a` docstring and OPT-01.
+- New regression tests: `test_rebucket_preserves_validity`, `test_neighbors_include_rebucketing_moves`,
+  `test_ballot_b_is_full_neighborhood_local_optimum`. Suite now **66 passed, 1 skipped**.
+- Option 3 (make Ballot A itself the exact E[correct] maximizer) was declined: it contradicts
+  OPT-01's explicit "via greedy" and muddies the deliberate A-vs-B (naive-vs-search) contrast.

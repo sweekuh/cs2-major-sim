@@ -17,6 +17,8 @@ from __future__ import annotations
 from engine.montecarlo import Result
 from engine.optimizer import (
     Ballot,
+    _neighbors,
+    _rebucket,
     _swap,
     ballot_a,
     ballot_b,
@@ -189,6 +191,39 @@ def _trap_sample() -> list[dict[int, tuple[int, int]]]:
             rec[2] = (0, 3)
         sims.append(rec)
     return sims
+
+
+def test_rebucket_preserves_validity():
+    """_rebucket exchanges two picked teams' buckets, keeping the same 10 teams + 2/6/2 sizes
+    (V&V Finding 2 — the move family that lets Ballot B re-assign Ballot A's own picks)."""
+    a = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))
+    # Move team 3 (advance) into 3-0 and team 1 (3-0) into advance.
+    b = _rebucket(a, "picks_30", 1, "picks_adv", 3)
+    assert set(b.all_ids) == set(a.all_ids)  # same 10 teams
+    assert len(b.picks_30) == 2 and len(b.picks_adv) == 6 and len(b.picks_03) == 2
+    assert 3 in b.picks_30 and 1 in b.picks_adv
+
+
+def test_neighbors_include_rebucketing_moves():
+    """The hill-climb neighborhood contains re-bucketing moves (same 10 teams, different
+    buckets) — not just picked<->unpicked swaps (V&V Finding 2 regression guard)."""
+    a = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))
+    same_team_reassignments = [
+        n for n in _neighbors(a, IDS) if set(n.all_ids) == set(a.all_ids) and n != a
+    ]
+    assert same_team_reassignments, "neighborhood must include re-bucketing of picked teams"
+
+
+def test_ballot_b_is_full_neighborhood_local_optimum():
+    """Ballot B converges to a local optimum under the FULL neighborhood: no single neighbor
+    (in/out swap OR re-bucketing) strictly improves P(>=5) (OPT-02)."""
+    teams = load_teams()
+    out = optimize(_result(_trap_sample()), teams)
+    matrices = build_outcome_matrices(_trap_sample(), [t.id for t in teams])
+    best = out.ballot_b
+    best_score = p_ge5(best, matrices)
+    for neighbor in _neighbors(best, [t.id for t in teams]):
+        assert p_ge5(neighbor, matrices) <= best_score + 1e-12
 
 
 def test_correlated_03_warning_fires_and_b_avoids_it():

@@ -17,6 +17,7 @@ Scoring per simulated stage is exact-record: a 3-0 pick scores iff the record is
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 
 import numpy as np
@@ -84,13 +85,18 @@ def ballot_a(
     p_advance: dict[int, float],
     p_03: dict[int, float],
 ) -> Ballot:
-    """Ballot A — the E[correct]-optimal greedy (OPT-01).
+    """Ballot A — the greedy per-bucket marginal baseline (OPT-01).
 
     Top 2 by P(3-0), top 2 by P(0-3) (excluding the 3-0 picks), top 6 by P(advance)
-    (excluding all four already chosen). E[correct] is a linear sum of per-slot hit
-    probabilities, so this bucket-wise greedy is the exact maximizer, not a heuristic —
-    no enumeration needed (HANDOFF §7). The advance bucket EXCLUDES the four already
-    chosen so the ballot is valid 2/6/2 by construction (OPT-03).
+    (excluding all four already chosen); the advance bucket EXCLUDES the four already chosen
+    so the ballot is valid 2/6/2 by construction (OPT-03).
+
+    NOTE (Phase 3 V&V): this maximizes the sum of each bucket's marginals, but it is NOT the
+    global E[correct] maximizer — the 3-0 and advance buckets compete for the same teams and
+    Padv >= P30, so the true optimum spends the 3-0 slots on the smallest-(Padv-P30)-gap teams,
+    not the highest-P(3-0). The two coincide for typical favorites (high P30 => also high Padv).
+    Ballot A is kept as this transparent greedy baseline on purpose; the real recommendation is
+    Ballot B, whose P(>=5) hill-climb includes re-bucketing moves and so can escape this gap.
     """
     picks_30 = _top(p_30, N_PICK_30)
     picks_03 = _top(p_03, N_PICK_03, exclude=set(picks_30))
@@ -177,36 +183,64 @@ def _swap(ballot: Ballot, bucket: str, out_id: int, in_id: int) -> Ballot:
     return Ballot(new["picks_30"], new["picks_adv"], new["picks_03"])
 
 
-def ballot_b(seed_ballot: Ballot, matrices: Matrices, candidate_ids: list[int]) -> Ballot:
-    """Ballot B — P(>=5)-optimal via hill-climb single-team swaps (OPT-02).
+def _rebucket(ballot: Ballot, b1: str, t1: int, b2: str, t2: int) -> Ballot:
+    """Return a new Ballot with picked teams ``t1`` (in ``b1``) and ``t2`` (in ``b2``) swapping
+    buckets. Same 10 teams, bucket sizes preserved — only the assignment changes."""
+    new = {b: list(getattr(ballot, b)) for b in _BUCKETS}
+    new[b1][new[b1].index(t1)] = t2
+    new[b2][new[b2].index(t2)] = t1
+    return Ballot(new["picks_30"], new["picks_adv"], new["picks_03"])
 
-    Seeded from Ballot A. Each move replaces ONE currently-picked team in a bucket with one
-    not-picked team (bucket sizes preserved, so validity holds). Accept only the single best
-    STRICTLY-improving swap per pass; iterate to a local optimum. NO brute-force enumeration
-    of the ~10M ballots (HANDOFF §7). Deterministic: candidates and members are scanned in
-    sorted order and ties never displace the incumbent, so the same sample yields the same
-    Ballot B every run. The correlated-0-3-in-R1 trap is avoided automatically — the joint
-    sample makes P(both 0-3) ~ 0, so keeping both never maximizes P(>=5) (OPT-05).
+
+def _neighbors(ballot: Ballot, candidate_ids: list[int]) -> Iterator[Ballot]:
+    """Deterministically yield the hill-climb neighborhood of ``ballot`` (OPT-02).
+
+    Two move families, both size-preserving so every neighbor is a valid 2/6/2 ballot:
+      (a) replace one PICKED team in a bucket with one UNPICKED team (changes which teams), and
+      (b) exchange the buckets of two already-PICKED teams in different buckets (re-buckets the
+          same 10 teams). Family (b) is what lets Ballot B escape Ballot A's marginal-greedy
+          blind spot (Phase 3 V&V Finding 1/2) — e.g. demote a high-Padv advance pick that was
+          forced into the 3-0 slot. Sorted iteration keeps the climb reproducible.
+    """
+    chosen = set(ballot.all_ids)
+    cands = sorted(t for t in candidate_ids if t not in chosen)
+    for bucket in _BUCKETS:  # (a) picked <-> unpicked, same bucket
+        for out_id in sorted(getattr(ballot, bucket)):
+            for in_id in cands:
+                yield _swap(ballot, bucket, out_id, in_id)
+    for i in range(len(_BUCKETS)):  # (b) re-bucket two picked teams
+        for j in range(i + 1, len(_BUCKETS)):
+            b1, b2 = _BUCKETS[i], _BUCKETS[j]
+            for t1 in sorted(getattr(ballot, b1)):
+                for t2 in sorted(getattr(ballot, b2)):
+                    yield _rebucket(ballot, b1, t1, b2, t2)
+
+
+def ballot_b(seed_ballot: Ballot, matrices: Matrices, candidate_ids: list[int]) -> Ballot:
+    """Ballot B — P(>=5)-optimal via hill-climb (OPT-02).
+
+    Seeded from Ballot A. Each pass evaluates the full ``_neighbors`` set — single picked<->
+    unpicked swaps AND re-bucketing exchanges of two picked teams — and applies the single best
+    STRICTLY-improving move; iterate to a local optimum. NO brute-force enumeration of the ~10M
+    ballots (HANDOFF §7). Deterministic: neighbors are generated in sorted order and ties never
+    displace the incumbent, so the same sample yields the same Ballot B every run. The
+    correlated-0-3-in-R1 trap is avoided automatically — the joint sample makes P(both 0-3) ~ 0,
+    so keeping both never maximizes P(>=5) (OPT-05). Including the re-bucketing moves lets B
+    reach P(>=5) optima that re-assign Ballot A's own picks across buckets (V&V Finding 2).
     """
     best = seed_ballot
     best_score = p_ge5(best, matrices)
     improved = True
     while improved:
         improved = False
+        move_best = best
         move_score = best_score
-        move: tuple[str, int, int] | None = None
-        chosen = set(best.all_ids)
-        cands = sorted(t for t in candidate_ids if t not in chosen)
-        for bucket in _BUCKETS:
-            for out_id in sorted(getattr(best, bucket)):
-                for in_id in cands:
-                    score = p_ge5(_swap(best, bucket, out_id, in_id), matrices)
-                    if score > move_score + _EPS:
-                        move_score, move = score, (bucket, out_id, in_id)
-        if move is not None:
-            best = _swap(best, *move)
-            best_score = move_score
-            improved = True
+        for neighbor in _neighbors(best, candidate_ids):
+            score = p_ge5(neighbor, matrices)
+            if score > move_score + _EPS:
+                move_best, move_score = neighbor, score
+        if move_best is not best:
+            best, best_score, improved = move_best, move_score, True
     return best
 
 
