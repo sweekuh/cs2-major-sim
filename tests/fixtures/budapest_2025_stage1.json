@@ -1,0 +1,181 @@
+{
+  "_comment": "StarLadder Budapest Major 2025 — Stage 1 (Swiss). RESULTS fully reconciled and internally consistent (verified via /browse 2026-05-29; both anchors confirmed: exactly 8 teams at 1-1 entering R3; final eight = M80, FlyQuest, B8, Fnatic, NIP, PARIVISION, Imperial, FaZe). SEEDING IS UNRESOLVED — the authoritative Valve 1-16 seed assignment could not be sourced (HLTV Cloudflare-walled; Liquipedia/Wikipedia do not publish seed integers), and the observed R1/R2 pairings do NOT reduce to a seed-offset fold under the VRS world-rank order. The full pairing-reproduction backtest (GATE-01) is therefore DEFERRED — see .planning/todos/pending. This fixture freezes the VERIFIED results only; it is NOT asserted against engine pairing generation.",
+  "event": "StarLadder Budapest Major 2025",
+  "stage": "Stage 1 (Swiss, 16 teams)",
+  "format": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3,
+    "round1": "Bo1",
+    "advancement_elimination": "Bo3 (a match is Bo3 iff a team is at 2W or 2L)",
+    "mid_bracket": "Bo1"
+  },
+  "provenance": {
+    "primary": "liquipedia.net/counterstrike/StarLadder/2025/Major/Stage_1 (oldid 3296139), fetched via /browse 2026-05-29",
+    "cross_check": "HLTV VRS world ranks supplied by user (screenshots 2026-05-29) — used for the seeding investigation only; HLTV event page is Cloudflare-walled",
+    "results_status": "fully reconciled + internally consistent (8 advance / 8 eliminated; no rematch; legal record progression)",
+    "seeding_status": "UNRESOLVED"
+  },
+  "teams": [
+    "M80",
+    "FlyQuest",
+    "B8",
+    "Fnatic",
+    "NIP",
+    "PARIVISION",
+    "Imperial",
+    "FaZe",
+    "Fluxo",
+    "NRG",
+    "Legacy",
+    "RED Canids",
+    "GamerLegion",
+    "The Huns",
+    "Rare Atom",
+    "Lynn Vision"
+  ],
+  "team_aliases": {
+    "M80": "M80",
+    "FlyQuest": "FLY",
+    "B8": "B8",
+    "Fnatic": "Fnatic",
+    "NIP": "NIP",
+    "PARIVISION": "PV",
+    "Imperial": "Imperial",
+    "FaZe": "FaZe",
+    "Fluxo": "Fluxo",
+    "NRG": "NRG",
+    "Legacy": "Legacy",
+    "RED Canids": "RED",
+    "GamerLegion": "GL",
+    "The Huns": "The Huns",
+    "Rare Atom": "RA",
+    "Lynn Vision": "Lynn Vision"
+  },
+  "seeding": null,
+  "seeding_note": "UNRESOLVED. The authoritative Valve 1-16 seed integers were not sourced: HLTV is Cloudflare-walled, and Liquipedia/Wikipedia do not publish seed integers. The HLTV VRS world-rank order recorded below does NOT reproduce the actual R1 pairings or the R2 pure-seed fold, so it cannot be used as the seeding without risking a false pass/fail (threat T-04-01). Until the authoritative seeded bracket is obtained, this fixture must NOT be asserted against the engine's pairing generation. The recorded VRS ranks are kept ONLY for the resume investigation, not as a seed source.",
+  "vrs_world_rank_order_NOT_seeding": [
+    { "rank": 1, "team": "Legacy", "vrs": 8 },
+    { "rank": 2, "team": "B8", "vrs": 16 },
+    { "rank": 3, "team": "FaZe", "vrs": 17 },
+    { "rank": 4, "team": "GamerLegion", "vrs": 20 },
+    { "rank": 5, "team": "PARIVISION", "vrs": 22 },
+    { "rank": 6, "team": "Fnatic", "vrs": 24 },
+    { "rank": 7, "team": "FlyQuest", "vrs": 25 },
+    { "rank": 8, "team": "M80", "vrs": 26 },
+    { "rank": 9, "team": "NIP", "vrs": 28 },
+    { "rank": 10, "team": "Lynn Vision", "vrs": 29 },
+    { "rank": 11, "team": "NRG", "vrs": 30 },
+    { "rank": 12, "team": "Imperial", "vrs": 33 },
+    { "rank": 13, "team": "Fluxo", "vrs": 39 },
+    { "rank": 14, "team": "Rare Atom", "vrs": 56 },
+    { "rank": 15, "team": "The Huns", "vrs": 62 },
+    { "rank": 16, "team": "RED Canids", "vrs": 65 }
+  ],
+  "vrs_seeding_divergence_finding": "Under the VRS world-rank order above, an N-vs-N+8 R1 fold would give Legacy-NIP, B8-LynnVision, FaZe-NRG, ... — none of which match the ACTUAL R1 pairings (M80-B8, Imperial-RA, FLY-Legacy, PV-TheHuns, Fluxo-GL, NRG-NIP, FaZe-LynnVision, Fnatic-RED). The R2 'High' bracket (8 R1-winners, no rematch possible, uniform Buchholz -> should be a pure seed fold) actual FLY-Imperial, M80-PV, Fnatic-Fluxo, FaZe-NRG is also NOT reproduced by the world-rank order. Implication: either Budapest's published seed integers differ from the visible HLTV rankings, OR Valve's within-group pairing has a nuance the engine's difficulty-fold does not capture. This is unresolvable without the authoritative seed bracket and is the reason GATE-01 is deferred.",
+  "rounds": [
+    {
+      "round": 1,
+      "bo": "Bo1",
+      "buckets": { "all": 16 },
+      "matches": [
+        { "winner": "M80", "loser": "B8", "score": "13-11" },
+        { "winner": "Imperial", "loser": "Rare Atom", "score": "13-11" },
+        { "winner": "FlyQuest", "loser": "Legacy", "score": "13-10" },
+        { "winner": "PARIVISION", "loser": "The Huns", "score": "13-8" },
+        { "winner": "Fluxo", "loser": "GamerLegion", "score": "13-10" },
+        { "winner": "NRG", "loser": "NIP", "score": "13-7" },
+        { "winner": "FaZe", "loser": "Lynn Vision", "score": "13-5" },
+        { "winner": "Fnatic", "loser": "RED Canids", "score": "16-14" }
+      ],
+      "standings_after": {
+        "1-0": ["M80", "Imperial", "FlyQuest", "PARIVISION", "Fluxo", "NRG", "FaZe", "Fnatic"],
+        "0-1": ["B8", "Rare Atom", "Legacy", "The Huns", "GamerLegion", "NIP", "Lynn Vision", "RED Canids"]
+      }
+    },
+    {
+      "round": 2,
+      "bo": "Bo1",
+      "buckets": { "1-0": 8, "0-1": 8 },
+      "matches": [
+        { "bucket": "1-0", "winner": "FlyQuest", "loser": "Imperial", "score": "13-6" },
+        { "bucket": "1-0", "winner": "M80", "loser": "PARIVISION", "score": "13-9" },
+        { "bucket": "1-0", "winner": "Fluxo", "loser": "Fnatic", "score": "13-9" },
+        { "bucket": "1-0", "winner": "NRG", "loser": "FaZe", "score": "13-10" },
+        { "bucket": "0-1", "winner": "Legacy", "loser": "Rare Atom", "score": "13-6" },
+        { "bucket": "0-1", "winner": "B8", "loser": "The Huns", "score": "13-11" },
+        { "bucket": "0-1", "winner": "RED Canids", "loser": "GamerLegion", "score": "13-6" },
+        { "bucket": "0-1", "winner": "NIP", "loser": "Lynn Vision", "score": "13-2" }
+      ],
+      "standings_after": {
+        "2-0": ["FlyQuest", "M80", "Fluxo", "NRG"],
+        "1-1": ["Imperial", "PARIVISION", "Fnatic", "FaZe", "Legacy", "B8", "RED Canids", "NIP"],
+        "0-2": ["Rare Atom", "The Huns", "GamerLegion", "Lynn Vision"]
+      },
+      "anchor_8_at_1_1_entering_r3": ["Imperial", "PARIVISION", "Fnatic", "FaZe", "Legacy", "B8", "RED Canids", "NIP"]
+    },
+    {
+      "round": 3,
+      "bo": "mixed",
+      "buckets": { "2-0": 4, "1-1": 8, "0-2": 4 },
+      "matches": [
+        { "bucket": "2-0", "bo": "Bo3", "winner": "FlyQuest", "loser": "Fluxo", "score": "2-0", "result": "FlyQuest -> 3-0 ADVANCE" },
+        { "bucket": "2-0", "bo": "Bo3", "winner": "M80", "loser": "NRG", "score": "2-0", "result": "M80 -> 3-0 ADVANCE" },
+        { "bucket": "1-1", "bo": "Bo1", "winner": "Legacy", "loser": "RED Canids", "score": "13-6" },
+        { "bucket": "1-1", "bo": "Bo1", "winner": "B8", "loser": "PARIVISION", "score": "13-11" },
+        { "bucket": "1-1", "bo": "Bo1", "winner": "Fnatic", "loser": "Imperial", "score": "13-3" },
+        { "bucket": "1-1", "bo": "Bo1", "winner": "NIP", "loser": "FaZe", "score": "13-8" },
+        { "bucket": "0-2", "bo": "Bo3", "winner": "GamerLegion", "loser": "Rare Atom", "score": "2-0", "result": "Rare Atom -> 0-3 ELIMINATED" },
+        { "bucket": "0-2", "bo": "Bo3", "winner": "The Huns", "loser": "Lynn Vision", "score": "2-0", "result": "Lynn Vision -> 0-3 ELIMINATED" }
+      ],
+      "standings_after": {
+        "3-0": ["FlyQuest", "M80"],
+        "2-1": ["Fluxo", "NRG", "Legacy", "B8", "Fnatic", "NIP"],
+        "1-2": ["RED Canids", "PARIVISION", "Imperial", "FaZe", "GamerLegion", "The Huns"],
+        "0-3": ["Rare Atom", "Lynn Vision"]
+      }
+    },
+    {
+      "round": 4,
+      "bo": "Bo3",
+      "buckets": { "2-1": 6, "1-2": 6 },
+      "matches": [
+        { "bucket": "2-1", "winner": "NIP", "loser": "Fluxo", "score": "2-0", "result": "NIP -> 3-1 ADVANCE" },
+        { "bucket": "2-1", "winner": "B8", "loser": "Legacy", "score": "2-0", "result": "B8 -> 3-1 ADVANCE" },
+        { "bucket": "2-1", "winner": "Fnatic", "loser": "NRG", "score": "2-1", "result": "Fnatic -> 3-1 ADVANCE" },
+        { "bucket": "1-2", "winner": "FaZe", "loser": "RED Canids", "score": "2-1", "result": "RED Canids -> 1-3 ELIMINATED" },
+        { "bucket": "1-2", "winner": "PARIVISION", "loser": "GamerLegion", "score": "2-0", "result": "GamerLegion -> 1-3 ELIMINATED" },
+        { "bucket": "1-2", "winner": "Imperial", "loser": "The Huns", "score": "2-0", "result": "The Huns -> 1-3 ELIMINATED" }
+      ],
+      "standings_after": {
+        "3-1": ["NIP", "B8", "Fnatic"],
+        "2-2": ["Fluxo", "Legacy", "NRG", "FaZe", "PARIVISION", "Imperial"],
+        "1-3": ["RED Canids", "GamerLegion", "The Huns"]
+      }
+    },
+    {
+      "round": 5,
+      "bo": "Bo3",
+      "buckets": { "2-2": 6 },
+      "matches": [
+        { "bucket": "2-2", "winner": "FaZe", "loser": "Fluxo", "score": "2-1", "result": "FaZe -> 3-2 ADVANCE; Fluxo -> 2-3 ELIMINATED" },
+        { "bucket": "2-2", "winner": "Imperial", "loser": "NRG", "score": "2-0", "result": "Imperial -> 3-2 ADVANCE; NRG -> 2-3 ELIMINATED" },
+        { "bucket": "2-2", "winner": "PARIVISION", "loser": "Legacy", "score": "2-1", "result": "PARIVISION -> 3-2 ADVANCE; Legacy -> 2-3 ELIMINATED" }
+      ]
+    }
+  ],
+  "final_standings": {
+    "advanced": {
+      "3-0": ["M80", "FlyQuest"],
+      "3-1": ["B8", "Fnatic", "NIP"],
+      "3-2": ["PARIVISION", "Imperial", "FaZe"]
+    },
+    "eliminated": {
+      "2-3": ["Fluxo", "NRG", "Legacy"],
+      "1-3": ["RED Canids", "GamerLegion", "The Huns"],
+      "0-3": ["Rare Atom", "Lynn Vision"]
+    }
+  },
+  "advancers": ["M80", "FlyQuest", "B8", "Fnatic", "NIP", "PARIVISION", "Imperial", "FaZe"],
+  "eliminated": ["Fluxo", "NRG", "Legacy", "RED Canids", "GamerLegion", "The Huns", "Rare Atom", "Lynn Vision"]
+}
