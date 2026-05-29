@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-stopped_at: Completed 01-04-PLAN.md (DEFERRED-GATE form)
-last_updated: "2026-05-29T05:11:03.036Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-05-29T07:55:23.046Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 17
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 50
 ---
 
 # Project State
@@ -21,11 +21,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase 01 (Engine + Backtest Gate) — executing
+**Current focus:** Phase --phase — 2
 
 ## Current Position
 
-Phase: 2
+Phase: 3
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-05-29
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 4
+- Total plans completed: 7
 - Average duration: — min
 - Total execution time: 0.0 hours
 
@@ -45,6 +45,7 @@ Progress: [██████████] 100%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 4 | - | - |
+| 02 | 3 | - | - |
 
 **Recent Trend:**
 
@@ -56,6 +57,9 @@ Progress: [██████████] 100%
 | Phase 01 P02 | 20 | 2 tasks | 3 files |
 | Phase 01 P03 | 20 | 2 tasks | 3 files |
 | Phase 01 P04 | 25 | DEFERRED-GATE | 3 files |
+| Phase 02 P01 | 8 | 3 tasks | 10 files |
+| Phase 02 P02 | 8 | 2 tasks | 4 files |
+| Phase 02 P03 | 12 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -73,6 +77,13 @@ Recent decisions affecting current work:
 - [Phase 1]: Team is @dataclass(eq=False) so opponent OBJECTS live in opps (difficulty() reads o.wins-o.losses); identity equality is correct per distinct stage entity.
 - [Phase 1]: simulate_stage(teams, ratings, S, rng, locked); ratings is optional {id:rating} override (None->team.rating), the Phase-5/MC seam.
 - [Phase 1, 2026-05-29 USER DECISION]: DEFER the full Budapest pairing-reproduction backtest (GATE-01). Budapest Stage 1 RESULTS reconciled + frozen, but the authoritative Valve 1-16 seed integers could not be sourced (HLTV Cloudflare-walled; Liquipedia/Wikipedia publish no seed integers) and the VRS world-rank order does NOT reproduce the actual R1/R2 pairings. Asserting a green backtest on guessed seeds = false pass/fail (T-04-01). Phase 1 gated on the green rulebook unit tests instead; Phase 2 unblocked WITH caveat (trust badge: "validated vs rulebook unit tests — full Budapest backtest pending seed data").
+- [Phase 2 P01]: Pattern 2 option B — session_state mc_cache keyed on (ratings_key,S,N,locked_key) gives single in-session compute + a real progress bar; run_mc_cached also primed for cross-session memo.
+- [Phase 2 P01]: locked_key is a REAL @st.cache_data key arg via freeze_locked (NOT the _locked escape) so Phase 4 locking moves >=1 P(advance) (RESIM-01 / Pitfall 13).
+- [Phase 2 P01]: Fixed seed 20260528; Live toggle deferred to plan 02 (this slice = Pre-stage controls+Run+probs); streamlit pin 1.57.* resolves 1.57.0 though 1.58.0 now current.
+- Phase 2 plan 02: STATUS palette locked colorblind-safe (advanced/live blue #3B82F6, eliminated amber #F59E0B); colour always paired with ASCII glyph + text label, never red/green (UI-06)
+- Phase 2 plan 02: hero number renders a placeholder stand-in (top-team P(advance)) so the 28px monospace accent slot is real now; Phase 3/4 fill the optimal-ballot P(>=5)
+- Phase 2 plan 03: BACKTEST_PASSED=False explicit constant gates the trust badge — it cannot drift to a green validated claim while GATE-01 is deferred; trust_badge_state validates only when BOTH BACKTEST_PASSED AND seeds_confirmed (Pitfall 6)
+- Phase 2 plan 03: INFERRED-seed banner + seed->team reconcile expander persists until the seeds_confirmed toggle (positive confirmation, no red) dismisses it; fail-soft odds-off banner uses os.environ only (no httpx/dotenv import — preserves zero-config first run)
 
 ### Pending Todos
 
@@ -101,8 +112,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-29T05:11:03.031Z
-Stopped at: Completed 01-04-PLAN.md (DEFERRED-GATE form — GATE-01/04 deferred to TODO)
+Last session: 2026-05-29T07:55:14.703Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
 
-**Planned Phase:** 1 (Engine + Backtest Gate) — 4 plans — 2026-05-29T04:40:49.038Z
+**Planned Phase:** 02 (streamlit-ui-shell) — 3 plans — 2026-05-29T07:14:15.798Z

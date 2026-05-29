@@ -4,8 +4,13 @@ version = "0.1.0"
 description = "Cologne 2026 Swiss Monte Carlo & Pick'Em Optimizer — pure compute core (Phase 1)"
 requires-python = ">=3.12"
 # numpy verified current 2.4.6 via `pip index versions numpy` (2026-05-28); pin the 2.4.x line.
+# streamlit verified 1.57.0 still available via `pip index versions streamlit` (2026-05-29);
+# pin the 1.57.x line per CLAUDE.md (1.58.0 is now current but the project pins 1.57.*).
+# AppTest (streamlit.testing.v1) ships inside streamlit — no extra test dep. Do NOT add
+# httpx/python-dotenv here (Phase 5 only — importing them breaks the zero-config first run).
 dependencies = [
     "numpy>=2.4,<2.5",
+    "streamlit>=1.57,<1.58",
 ]
 
 [dependency-groups]
@@ -20,4 +25,4 @@ testpaths = ["tests"]
 addopts = "-ra"
 
 [tool.setuptools]
-packages = ["engine"]
+packages = ["engine", "ui"]
