@@ -32,6 +32,7 @@ from ui.state import (
     FIXED_SEED,
     KEY_MC_CACHE,
     KEY_MODE,
+    KEY_N_INPUT,
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
@@ -171,7 +172,7 @@ with controls:
         max_value=MAX_N,  # cap mirrors the engine — absurd N can't hang the app (T-DOS)
         value=100_000,
         step=1000,
-        key="N_input",
+        key=KEY_N_INPUT,
     )
     run_clicked = st.button("Run ▶", key=KEY_RUN_BUTTON, type="primary")
     st.caption("~15s for 100k sims, no API key needed")
