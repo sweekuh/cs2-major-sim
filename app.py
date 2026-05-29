@@ -358,15 +358,18 @@ def _render_ballot_panel(result, cache_key) -> None:
         f"E[correct]: A {opt.e_correct_a:.2f} · B {opt.e_correct_b:.2f}"
     )
 
+    # Ballot A vs B side by side, differing picks marked (OPT-03).
+    name_of = {t.id: t.name for t in teams}
+
     # Correlated-pick warning (OPT-05) — st.warning is natively amber (colorblind-safe).
+    # opt.warning carries team IDs (optimizer space), so look names up by id via name_of —
+    # NOT the seed-keyed by_seed (id == seed only for the default fixture; don't couple to it).
     if opt.warning is not None:
         a_id, b_id = opt.warning
         st.warning(
-            correlated_pick_warning_text(by_seed[a_id].name, by_seed[b_id].name)
+            correlated_pick_warning_text(name_of[a_id], name_of[b_id])
         )
 
-    # Ballot A vs B side by side, differing picks marked (OPT-03).
-    name_of = {t.id: t.name for t in teams}
     st.markdown(
         ballot_columns(name_of, opt.ballot_a, opt.ballot_b, opt.diff),
         unsafe_allow_html=True,
