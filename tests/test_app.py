@@ -203,8 +203,9 @@ def test_ci_bars_on_every_cell_after_run():
     at.button(key="run_btn").click().run()
     assert not at.exception
     bar_markup = [m for m in at.markdown if "position:absolute" in m.value]
-    # 16 teams x 3 prob columns = 48 inline CI bars (a generous lower bound guards regressions).
-    assert len(bar_markup) >= 16
+    # 16 teams x 3 prob columns = 48 inline CI bars; >= 48 is the correct regression guard
+    # (>= 16 passed even if 2 of 3 columns silently lost their bars — WR-03).
+    assert len(bar_markup) >= 48
 
 
 def test_bad_rating_blocks_run():
