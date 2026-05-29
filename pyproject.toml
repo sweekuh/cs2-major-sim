@@ -1,0 +1,23 @@
+[project]
+name = "swiss-mc"
+version = "0.1.0"
+description = "Cologne 2026 Swiss Monte Carlo & Pick'Em Optimizer — pure compute core (Phase 1)"
+requires-python = ">=3.12"
+# numpy verified current 2.4.6 via `pip index versions numpy` (2026-05-28); pin the 2.4.x line.
+dependencies = [
+    "numpy>=2.4,<2.5",
+]
+
+[dependency-groups]
+# pytest verified current 9.0.3 via `pip index versions pytest` (2026-05-28).
+# Research assumed 8.x [ASSUMED]; live check shows 9.x is now current — pin the confirmed line.
+dev = [
+    "pytest>=9,<10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.setuptools]
+packages = ["engine"]
