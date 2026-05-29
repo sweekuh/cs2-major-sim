@@ -1,0 +1,12 @@
+# Streamlit 1.57 theme — Phase 2 UI Shell.
+# Source: docs.streamlit.io/develop/api-reference/configuration/config.toml [theme]
+# Tokens are the CONFIRMED (user 2026-05-29) UI-SPEC values: dark base, #7C5CFC violet
+# accent, monospace numbers. The VISUAL effect of this file is Manual-Only per VALIDATION;
+# its EXISTENCE + the four colors + codeFont is the must-have checked here.
+[theme]
+base = "dark"                          # #0E1117 dark base — dense monospace tables read best on dark
+primaryColor = "#7C5CFC"               # accent: Run CTA, hero number, active segment, focus ring
+backgroundColor = "#0E1117"            # dominant surface (60%)
+secondaryBackgroundColor = "#1A1D24"   # controls column / cards / banner strip (30%)
+font = "sans-serif"                    # body/UI default stack
+codeFont = "monospace"                 # ALL numbers (st.code / inline <code>) — UI-06
