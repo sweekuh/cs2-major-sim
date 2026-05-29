@@ -74,7 +74,7 @@
 
 - [ ] **V3-01**: Stage 2 Swiss simulated via the same engine
 - [ ] **V3-02**: Stage 3 Swiss simulated via the same engine
-- [ ] **V3-03**: Playoff single-elimination bracket simulated and optimized
+- [ ] **V3-03**: Playoff single-elimination bracket simulated and optimized. NOTE (confirmed from the live in-game Pick'Em, 2026-05-28): the Playoffs Pick'Em is a **7-prediction ballot** scored by round — 2 Quarterfinal picks, 1 Semifinal pick, 1 Grand Final pick (achievements: "Place all seven Pick'Em predictions for the Playoffs", "two correct Quarterfinals", "one correct Semifinals", "a correct Grand Final"). The optimizer objective for playoffs is therefore round-weighted, NOT the Swiss 2/6/2 E[correct] — model it as its own ballot type, not a reuse of the Swiss optimizer.
 - [ ] **V3-04**: Optional map-level Bo3 modeling — added only if backtest evidence demands it (otherwise single win prob per matchup)
 
 ### Interface & UX (Streamlit)
