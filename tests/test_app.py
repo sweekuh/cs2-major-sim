@@ -51,6 +51,40 @@ def test_cache_hit_is_instant():
     assert at.session_state["mc_cache"][key] is first_result
 
 
+def test_single_run_computes_mc_exactly_once(monkeypatch):
+    """CR-01 regression: a single Run computes the MC exactly ONCE on a cache miss.
+
+    The earlier code drove the progress generator AND then re-ran the full engine through
+    run_mc_cached to "prime" the cross-session memo (result discarded), doubling first-Run
+    wall-clock. We spy on engine.montecarlo.run_mc_progressive (the cache-miss compute path
+    app.py imports) and assert it fires exactly once per Run — never a hidden second N-sim
+    pass — and that the rendered/cached result is the progress path's own output.
+    """
+    import engine.montecarlo as mc
+
+    calls = {"n": 0}
+    real = mc.run_mc_progressive
+
+    def _counting(*args, **kwargs):
+        calls["n"] += 1
+        yield from real(*args, **kwargs)
+
+    # Patch at the source module BEFORE AppTest imports app.py (app does
+    # `from engine.montecarlo import run_mc_progressive` at import time, which AppTest
+    # triggers on .run()).
+    monkeypatch.setattr(mc, "run_mc_progressive", _counting)
+
+    at = _apptest()
+    at.run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    # Exactly one full MC compute for the single Run (no discarded priming re-run).
+    assert calls["n"] == 1
+    # The single computed result is the one cached and rendered (progress path output served).
+    cache = at.session_state["mc_cache"]
+    assert len(cache) == 1
+
+
 def test_locked_in_cache_key():
     """UI-02 / Phase 2x4 seam: two different `locked` dicts produce two distinct cache
     entries (locked IS in the key via freeze_locked, NOT underscore-escaped)."""

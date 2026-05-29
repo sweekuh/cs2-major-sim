@@ -24,7 +24,7 @@ import streamlit as st
 
 from engine.montecarlo import run_mc_progressive
 from engine.teams import load_teams
-from ui.cache import freeze_locked, freeze_ratings, run_mc_cached
+from ui.cache import freeze_locked, freeze_ratings
 from ui.render import ci_bar_html, hero_number_html, status_badge_html
 from ui.state import (
     BAD_RATING_MSG,
@@ -292,11 +292,14 @@ def _run_or_serve():
     if cache_key in cache:
         # CACHE HIT: serve the stored Result, no recompute (single compute per key).
         return cache[cache_key], None
-    # CACHE MISS: LOADING state — drive the bar over the generator, compute once.
+    # CACHE MISS: LOADING state — drive the bar over the generator, compute ONCE.
+    # In-session deduplication via the session_state cache (above) is sufficient for Phase 2:
+    # a unique input tuple computes the MC exactly once. The earlier cross-session
+    # @st.cache_data priming call was removed because it re-ran the full N-sim engine a
+    # second time (result discarded), doubling first-Run wall-clock with no user feedback
+    # (CR-01). Cross-session reuse can be wired correctly in a later phase if needed.
     result = _drive_progress(ratings, S, int(N), locked)
     cache[cache_key] = result
-    # Prime the cross-session @st.cache_data memo (Pattern 2 option B).
-    run_mc_cached(ratings_key, S, int(N), locked_key)
     return result, None
 
 
