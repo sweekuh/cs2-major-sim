@@ -227,5 +227,9 @@ def run_mc(
             next(gen)
     except StopIteration as stop:
         result = stop.value
-    assert result is not None  # generator always returns a Result on exhaustion
+    if result is None:
+        raise RuntimeError(
+            "run_mc_progressive exhausted without returning a Result — "
+            "this is an internal engine bug"
+        )
     return result
