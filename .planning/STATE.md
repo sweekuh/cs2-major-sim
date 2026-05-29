@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_execute
-stopped_at: Planned Phase 3 (03-01-PLAN.md, 03-02-PLAN.md)
+status: phase_complete
+stopped_at: Executed Phase 3 (03-01 + 03-02) — optimizer green, OPT-01..05 done
 last_updated: "2026-05-29T00:00:00.000Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 9
   percent: 50
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 
 ## Current Position
 
-Phase: 3 (pickem-optimizer)
-Plan: 03-01 + 03-02 planned (0/2 executed)
-Status: Ready to execute
+Phase: 3 (pickem-optimizer) — COMPLETE (2/2 plans executed)
+Plan: 03-01 + 03-02 executed; OPT-01..05 done
+Status: Phase complete — next is Phase 4 (conditional re-sim + live mode)
 Last activity: 2026-05-29
 
 Progress: [██████████] 100%
@@ -86,7 +86,9 @@ Recent decisions affecting current work:
 - [Phase 3 PLANNED 2026-05-29]: optimizer is a pure, RNG-free layer over `Result.sample` — Ballot A greedy is the EXACT E[correct] maximizer (no enumeration), Ballot B hill-climbs P(≥5) from the A seed (no ~10M brute force); P(≥5) vectorized via precomputed boolean outcome matrices so it never re-runs the MC (ROADMAP SC4).
 - [Phase 3 PLANNED 2026-05-29]: correlated-0-3-in-R1 detection REUSES `engine.swiss.build_round1_pairs` — no seed re-derivation (sidesteps the GATE-01 seed blocker); warning is reported for Ballot A (correlation-blind), Ballot B avoids the trap for free via the joint sample.
 - [Phase 3 PLANNED 2026-05-29]: pre-stage hero = recommended (Ballot B) P(≥5), filling the Phase-2 `_hero_slot` placeholder; Live-mode "P(≥5)-from-here" delta stays Phase 4. `optimize_cached` memoized on the SAME (ratings_key,S,N,locked_key) MC cache tuple (no recompute per rerun).
-- [Phase 3 NOTE]: `/gsd-plan-phase` slash command is not installed in the web session (no .claude/commands/); Phase 3 planning was authored by hand following GSD conventions on branch `phase-3-optimizer`.
+- [Phase 3 NOTE]: `/gsd-plan-phase` slash command is not installed in the web session (no .claude/commands/, GSD framework not cloned into the container); Phase 3 planning AND execution were done by hand following GSD conventions on branch `phase-3-optimizer`.
+- [Phase 3 EXECUTED 2026-05-29]: `engine/optimizer.py` shipped — Ballot A greedy, Ballot B hill-climb, vectorized `p_ge5` over `Result.sample`, `correlated_03_in_r1`, `optimize()` facade. 12 new tests (7 optimizer + 3 render + 2 AppTest); full suite 63 passed, 1 skipped. No engine mutation.
+- [Phase 3 EXECUTED 2026-05-29]: `optimize_cached(_result, ratings_key, S, N, locked_key)` memoizes on the MC cache tuple with `_result` underscore-EXCLUDED (correct here — Result is a pure function of the key, reused without re-running the MC; the deliberate inverse of the locked-in-key rule). `_hero_slot` kept for the LIVE Phase-4 placeholder; PRE-STAGE hero is the real recommended P(≥5).
 - Phase 2 plan 03: INFERRED-seed banner + seed->team reconcile expander persists until the seeds_confirmed toggle (positive confirmation, no red) dismisses it; fail-soft odds-off banner uses os.environ only (no httpx/dotenv import — preserves zero-config first run)
 
 ### Pending Todos
@@ -117,11 +119,12 @@ Items acknowledged and carried forward:
 ## Session Continuity
 
 Last session: 2026-05-29
-Stopped at: Planned Phase 3 (03-01-PLAN.md, 03-02-PLAN.md) on branch phase-3-optimizer
+Stopped at: Executed Phase 3 (03-01 + 03-02) on branch phase-3-optimizer — full suite 63 passed, 1 skipped
 Resume file: None
-Resume path: `/gsd-execute-phase 3` → 03-01 (engine/optimizer.py) then 03-02 (UI wiring)
+Resume path: Phase 4 — `/gsd-plan-phase 4` (conditional re-sim + live mode; reuses optimizer.p_ge5 for the P(≥5)-from-here delta)
 
-**Planned Phase:** 03 (pickem-optimizer) — 2 plans — 2026-05-29
+**Completed Phase:** 03 (pickem-optimizer) — 2 plans — 2026-05-29
 
-Next: execute 03-01 (pure optimizer core, TDD — owns test_greedy_is_e_correct_optimal +
-test_pge5_known_answer), then 03-02 (hero P(≥5) + dual-ballot panel + correlated-pick warning).
+Next: Phase 4 (conditional re-sim + live mode). The `locked` cache-key seam (Phase 2) and
+`engine.optimizer.p_ge5` (Phase 3) are the two pieces it builds on — re-sim fires for free
+via the locked key; the live hero (_hero_slot) gets the P(≥5)-from-here delta.

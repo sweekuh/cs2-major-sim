@@ -180,6 +180,56 @@ def test_hero_number_html_is_monospace_accent():
         hero_number_html("<script>")  # type: ignore[arg-type]
 
 
+# --- Plan 03: ballot panel render helpers (OPT-03 / OPT-05) ------------------------------
+
+
+def test_ballot_columns_lists_names_and_marks_diff():
+    """ballot_columns renders both ballots' 2/6/2 picks by name and marks the differing
+    picks with the ASCII DIFF_MARK (OPT-03) — colour is never the only signal (UI-06)."""
+    from engine.optimizer import Ballot
+    from ui.render import DIFF_MARK, ballot_columns
+
+    name_of = {i: f"T{i}" for i in range(1, 17)}
+    a = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))
+    b = Ballot((1, 2), (3, 4, 5, 6, 7, 11), (9, 10))  # differs only on 8 (A) vs 11 (B)
+    html = ballot_columns(name_of, a, b, diff_ids=(8, 11))
+
+    assert isinstance(html, str)
+    assert "Max E[correct]" in html  # Ballot A title
+    assert "Max P(>=5)" in html      # Ballot B title
+    for i in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
+        assert f"T{i}" in html
+    # Differing picks carry the diff mark; an agreed pick does not.
+    assert f"T8 {DIFF_MARK}" in html
+    assert f"T11 {DIFF_MARK}" in html
+    assert f"T1 {DIFF_MARK}" not in html
+
+
+def test_ballot_columns_escapes_team_names():
+    """Team names ARE interpolated into the ballot HTML, so they are HTML-escaped — a
+    free-text payload can never reach the unsafe_allow_html markup (T-03-XSS)."""
+    from engine.optimizer import Ballot
+    from ui.render import ballot_columns
+
+    name_of = {i: f"T{i}" for i in range(1, 17)}
+    name_of[1] = "<script>alert(1)</script>"
+    a = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))
+    html = ballot_columns(name_of, a, a, diff_ids=())
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html
+
+
+def test_correlated_pick_warning_text_format():
+    """The correlated-pick warning copy names both teams, mentions Round 1, and leads with
+    the ASCII '!' glyph — it relies on st.warning's amber + text, never red/green (OPT-05)."""
+    from ui.render import correlated_pick_warning_text
+
+    txt = correlated_pick_warning_text("GamerLegion", "NRG")
+    assert "GamerLegion" in txt and "NRG" in txt
+    assert "Round 1" in txt
+    assert txt.startswith("!")
+
+
 def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
     """run_mc_cached reconstructs dicts from frozen keys and calls the frozen run_mc
     with seed=FIXED_SEED and the default n_chunks=20, returning a Result (UI-02 seam)."""
