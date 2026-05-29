@@ -25,7 +25,8 @@
 **: No pair plays twice within a stage (no rematches); teams terminate at 3 wins (advance) or 3 losses (eliminated) with final record recorded
 - [x] **ENG-08
 **: Engine accepts `locked: dict[frozenset({id,id}) -> winner_id]` and uses locked winners deterministically (no sampling), respecting locked history in the no-rematch rule
-- [ ] **ENG-09**: RNG is injected as a `seed` param threaded through the MC for reproducible runs/backtests, using `numpy.random.SeedSequence.spawn` so reproducibility survives chunked execution
+- [x] **ENG-09
+**: RNG is injected as a `seed` param threaded through the MC for reproducible runs/backtests, using `numpy.random.SeedSequence.spawn` so reproducibility survives chunked execution
 
 ### Backtest gate (HARD GATE — blocks UI and trusted output)
 
@@ -39,11 +40,16 @@
 
 ### Monte Carlo runner
 
-- [ ] **MC-01**: Runs N stage simulations (default 100k) tallying per-team count of 3-0, advance (any 3-W), and 0-3
-- [ ] **MC-02**: Outputs per-team P(3-0)/P(advance)/P(0-3) with Wilson confidence bands
-- [ ] **MC-03**: Probability invariants hold every run within tolerance (±0.05 at N≥50k): Σ P(3-0)≈2, Σ P(0-3)≈2, Σ P(advance)≈8
-- [ ] **MC-04**: MC retains the full per-sim record sample (not just marginals) so the optimizer's P(≥5) and conditional re-sim can score against it
-- [ ] **MC-05**: MC is structured generator-first — yields incremental tally aggregates per chunk (e.g. 20×5k) to drive a progress bar — with a separate cached wrapper for the final result
+- [x] **MC-01
+**: Runs N stage simulations (default 100k) tallying per-team count of 3-0, advance (any 3-W), and 0-3
+- [x] **MC-02
+**: Outputs per-team P(3-0)/P(advance)/P(0-3) with Wilson confidence bands
+- [x] **MC-03
+**: Probability invariants hold every run within tolerance (±0.05 at N≥50k): Σ P(3-0)≈2, Σ P(0-3)≈2, Σ P(advance)≈8
+- [x] **MC-04
+**: MC retains the full per-sim record sample (not just marginals) so the optimizer's P(≥5) and conditional re-sim can score against it
+- [x] **MC-05
+**: MC is structured generator-first — yields incremental tally aggregates per chunk (e.g. 20×5k) to drive a progress bar — with a separate cached wrapper for the final result
 - [x] **MC-06
 **: Series win prob uses closed-form Bo3 `p²(3−2p)` as a single Bernoulli draw (no 3-map sampling); Bo1 = `p_map`
 
