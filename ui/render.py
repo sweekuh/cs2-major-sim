@@ -20,6 +20,21 @@ _TRACK = "#3A3D46"
 _DEFAULT_HUE = "#3B82F6"  # status: advanced blue (never red/green — UI-06)
 _HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
+# --- UI-06 status tokens -----------------------------------------------------------------
+# Colorblind-safe palette, LOCKED: advanced/live = blue #3B82F6, eliminated = amber #F59E0B.
+# NEVER red/green (~8% of men fail colour alone, so the glyph + label is the REAL signal and
+# colour is only reinforcement). Glyphs are ASCII (`/`, `o`, `x`) — NEVER `●`/`✓` (the Phase 1
+# Windows cp1252 console lesson, CLAUDE.md). Shape mirrors RESEARCH "Status glyph + label".
+_BLUE = "#3B82F6"
+_AMBER = "#F59E0B"
+_ACCENT = "#7C5CFC"  # the one reserved accent (CTA / hero number / active mode segment)
+
+STATUS: dict[str, tuple[str, str, str]] = {
+    "advanced": ("/", "secured", _BLUE),   # advanced / secured a slot
+    "live": ("o", "live", _BLUE),          # still alive, advancing
+    "eliminated": ("x", "dead", _AMBER),   # eliminated — amber, NEVER red
+}
+
 
 def fmt_pct(p: float, decimals: int = 1) -> str:
     """Format a probability 0..1 as a monospace-friendly percentage string (UI-06).
@@ -60,4 +75,39 @@ def ci_bar_html(p: float, lo: float, hi: float, hue: str = _DEFAULT_HUE) -> str:
         f'<div style="position:absolute;left:{left:.1f}%;width:{width:.1f}%;'
         f'height:4px;background:{hue};border-radius:2px"></div>'
         f"</div>"
+    )
+
+
+def status_badge_html(state: str) -> str:
+    """Return a colorblind-safe status badge: ASCII glyph + text label + hue (UI-06).
+
+    ``state`` MUST be one of the fixed STATUS keys (advanced/live/eliminated) — an unknown
+    value raises KeyError so NO free-text reaches the unsafe_allow_html markup (T-02-XSS).
+    Colour is ALWAYS paired with the glyph + label (the real signal); the hue is only
+    reinforcement. Glyphs are ASCII (`/`/`o`/`x`), never Unicode (cp1252 console lesson).
+    """
+    if not isinstance(state, str) or state not in STATUS:
+        raise KeyError(
+            f"status_badge_html state must be one of {sorted(STATUS)}, got {state!r} "
+            "(no free text — T-02-XSS)"
+        )
+    glyph, label, hue = STATUS[state]
+    return (
+        f'<span style="color:{hue};font-family:ui-monospace,monospace">'
+        f"{glyph} {label}</span>"
+    )
+
+
+def hero_number_html(pct: float) -> str:
+    """Return the one display-size hero number: 28px monospace in the reserved accent (UI-06).
+
+    ``pct`` is a probability 0..1 (e.g. the P(>=5) ballot headline). Accent ``#7C5CFC`` is
+    reserved for the CTA, the hero number, and the active mode segment ONLY — never status,
+    CI bars, or ordinary text (UI-SPEC Color). Numeric input only; a non-numeric value raises
+    TypeError so a free-text payload can never be embedded (T-02-XSS).
+    """
+    formatted = fmt_pct(pct)  # raises TypeError on non-numeric (XSS guard)
+    return (
+        f'<span style="font-size:28px;font-weight:600;'
+        f'font-family:ui-monospace,monospace;color:{_ACCENT}">{formatted}</span>'
     )

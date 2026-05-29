@@ -102,6 +102,81 @@ def test_ci_bar_html_is_xss_safe_numeric_only():
         ci_bar_html("<script>alert(1)</script>", 0.0, 1.0)  # type: ignore[arg-type]
 
 
+def test_status_palette_never_red_green():
+    """Every STATUS hue is colorblind-safe blue/amber — NEVER a red/green family (UI-06).
+
+    The locked palette is exactly {#3B82F6 blue, #F59E0B amber}. A red or green hue would
+    silently break the colorblind-safe contract (~8% of men) that the glyph/label backstop.
+    """
+    from ui.render import STATUS
+
+    allowed = {"#3B82F6", "#F59E0B"}
+    for state, (glyph, label, hue) in STATUS.items():
+        assert hue in allowed, f"STATUS[{state!r}] hue {hue} is not blue/amber"
+    # And the three locked states exist.
+    assert {"advanced", "live", "eliminated"} <= set(STATUS)
+
+
+def test_status_glyphs_are_ascii_only():
+    """Glyphs are ASCII (`/`, `o`, `x`) — never Unicode bullets/checks (Phase 1 cp1252)."""
+    from ui.render import STATUS
+
+    for state, (glyph, label, hue) in STATUS.items():
+        assert glyph.isascii(), f"STATUS[{state!r}] glyph {glyph!r} is not ASCII"
+        assert label.isascii(), f"STATUS[{state!r}] label {label!r} is not ASCII"
+
+
+def test_status_badge_html_pairs_glyph_and_label():
+    """status_badge_html(state) renders BOTH the ASCII glyph AND the text label + hue.
+
+    Colour is reinforcement, never the only signal (UI-06): glyph + label must both appear.
+    """
+    from ui.render import status_badge_html
+
+    html = status_badge_html("advanced")
+    assert isinstance(html, str)
+    assert "/" in html          # ASCII glyph
+    assert "secured" in html    # text label
+    assert "#3B82F6" in html    # blue hue, never red/green
+
+    elim = status_badge_html("eliminated")
+    assert "x" in elim
+    assert "dead" in elim
+    assert "#F59E0B" in elim     # amber
+
+    live = status_badge_html("live")
+    assert "o" in live
+    assert "live" in live
+    assert "#3B82F6" in live
+
+
+def test_status_badge_html_rejects_unknown_state():
+    """An unknown state raises (no free-text reaches the unsafe_allow_html markup)."""
+    from ui.render import status_badge_html
+
+    with pytest.raises((KeyError, ValueError)):
+        status_badge_html("<script>alert(1)</script>")  # type: ignore[arg-type]
+
+
+def test_hero_number_html_is_monospace_accent():
+    """hero_number_html(pct) renders a display-size monospace number in the accent colour.
+
+    The one hero number per UI-SPEC Typography — accent #7C5CFC, 28px, monospace; never a
+    status hue (blue/amber) and never red/green. Numeric input only (T-02-XSS).
+    """
+    from ui.render import hero_number_html
+
+    html = hero_number_html(0.58)
+    assert isinstance(html, str)
+    assert "58.0%" in html
+    assert "#7C5CFC" in html           # accent, reserved for the hero number
+    assert "28px" in html              # display size
+    assert "monospace" in html
+    # Numeric only — a free-text payload must raise, not embed.
+    with pytest.raises(TypeError):
+        hero_number_html("<script>")  # type: ignore[arg-type]
+
+
 def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
     """run_mc_cached reconstructs dicts from frozen keys and calls the frozen run_mc
     with seed=FIXED_SEED and the default n_chunks=20, returning a Result (UI-02 seam)."""
