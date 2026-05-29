@@ -32,8 +32,14 @@ Imports no streamlit/httpx/requests (functional-core / gate-ability invariant).
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 
-from engine.probs import difficulty  # canonical Buchholz — single source of truth (ENG-03)
+from engine.probs import difficulty, p_map, series  # canonical Buchholz + math (ENG-03)
+from engine.teams import (
+    ADVANCE_AT_WINS,
+    ELIMINATE_AT_LOSSES,
+    build_round1_pairs,
+)
 
 log = logging.getLogger(__name__)
 
@@ -172,3 +178,102 @@ def pair_within_group(group):
         )
         pairs = _least_disruptive_rematch(ranked)
     return pairs
+
+
+# ---------------------------------------------------------------------------
+# Full single-stage Valve Swiss simulator (ENG-06/07/08, MC-06)
+# ---------------------------------------------------------------------------
+
+
+def _is_bo3(a, b) -> bool:
+    """A match is Bo3 iff a team is at 2 wins (advancement) OR 2 losses (elimination).
+
+    Both teams in a record group share (wins, losses), so testing either side suffices
+    (ENG-06). One step from termination in EITHER direction promotes the match to Bo3.
+    """
+    return (
+        a.wins == ADVANCE_AT_WINS - 1
+        or a.losses == ELIMINATE_AT_LOSSES - 1
+        or b.wins == ADVANCE_AT_WINS - 1
+        or b.losses == ELIMINATE_AT_LOSSES - 1
+    )
+
+
+def _play(a, b, ratings, S, rng, locked):
+    """Resolve one match, returning (winner, loser). Mutates nothing.
+
+    If frozenset({a.id, b.id}) is in ``locked``, the locked winner is used
+    deterministically (no sampling; ENG-08). Otherwise a SINGLE Bernoulli draw against
+    the series win prob decides it — the Bo3 closed form p^2(3-2p) is one draw, never
+    three map samples (MC-06).
+    """
+    key = frozenset((a.id, b.id))
+    if key in locked:
+        winner_id = locked[key]
+        if winner_id == a.id:
+            return a, b
+        if winner_id == b.id:
+            return b, a
+        # Defensive: a locked key whose winner is neither participant is malformed
+        # (T-02-01). Do not silently mis-apply it.
+        raise ValueError(
+            f"locked winner {winner_id!r} for {key} is not one of the paired teams "
+            f"({a.id}, {b.id})"
+        )
+
+    ra = ratings.get(a.id, a.rating) if ratings else a.rating
+    rb = ratings.get(b.id, b.rating) if ratings else b.rating
+    p_a = series(p_map(ra, rb, S=S), _is_bo3(a, b))  # P(a beats b), single draw
+    if rng.random() < p_a:
+        return a, b
+    return b, a
+
+
+def simulate_stage(teams, ratings, S, rng, locked):
+    """Simulate one complete Valve Stage-1 Swiss and return {id: final Team}.
+
+    ``teams`` are the (mutable) per-stage team objects — pass a FRESH ``load_teams()``
+    per sim so state does not leak between runs. ``ratings`` is an optional
+    ``{id: rating}`` override (None -> use each team's own .rating; the Phase-5/MC seam).
+    ``S`` is the logistic spread (PROB-01). ``rng`` is an injected numpy Generator (the
+    only randomness source). ``locked`` is ``dict[frozenset({id, id}) -> winner_id]``;
+    a locked matchup uses its winner deterministically (no sampling) and is still recorded
+    in ``opps`` so the no-rematch rule respects locked history (ENG-08, the Phase-4 seam).
+
+    Round 1 uses the derived seed table (build_round1_pairs, NOT a re-fold; ENG-01).
+    Rounds 2+ run a SINGLE code path: group active teams by (wins, losses), rank each
+    group by (-difficulty, seed), pair via the priority-table/fold oracle, play, and
+    record opponents — until every team is at 3 wins or 3 losses (ENG-02/04/07). No pair
+    plays twice within a stage (the fold + priority table avoid rematches; locked history
+    counts).
+    """
+    by_id = {t.id: t for t in teams}
+
+    def _record_match(a, b):
+        winner, loser = _play(a, b, ratings, S, rng, locked)
+        winner.wins += 1
+        loser.losses += 1
+        # opps holds opponent OBJECTS (difficulty() reads o.wins/o.losses); the no-rematch
+        # check compares .id. Record both directions, including locked results.
+        a.opps.add(b)
+        b.opps.add(a)
+
+    # Round 1: fixed seed pairings (seed i vs i+8), not a fold.
+    for a, b in build_round1_pairs(teams):
+        _record_match(a, b)
+
+    # Rounds 2+: single code path until everyone terminates at 3W or 3L.
+    while True:
+        active = [
+            t for t in teams if t.wins < ADVANCE_AT_WINS and t.losses < ELIMINATE_AT_LOSSES
+        ]
+        if not active:
+            break
+        groups: dict[tuple[int, int], list] = defaultdict(list)
+        for t in active:
+            groups[(t.wins, t.losses)].append(t)
+        for record, group in groups.items():
+            for a, b in pair_within_group(group):
+                _record_match(a, b)
+
+    return by_id

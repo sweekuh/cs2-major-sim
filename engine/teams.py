@@ -47,12 +47,19 @@ _DEFAULT_FIXTURE: dict[int, tuple[str, int]] = {
 }
 
 
-@dataclass
+@dataclass(eq=False)
 class Team:
     """Per-team Swiss state (HANDOFF §4).
 
-    ``opps`` is the set of opponent ids faced this stage (drives the no-rematch rule and
-    the difficulty/Buchholz score). ``id`` defaults to ``seed`` for the Stage-1 fixture.
+    ``opps`` is the set of opponent TEAM OBJECTS faced this stage. It holds objects (not
+    ids) because the canonical difficulty()/Buchholz reads ``o.wins - o.losses`` over the
+    opponents; the no-rematch rule compares opponent ``.id``. ``id`` defaults to ``seed``
+    for the Stage-1 fixture.
+
+    ``eq=False`` gives identity-based equality + hashing so a Team can be stored in the
+    ``opps`` set (the default dataclass ``__eq__`` makes instances unhashable, which would
+    crash ``opps.add(team)``). Each Team is a distinct stage entity, so identity equality
+    is correct here.
     """
 
     id: int
@@ -61,7 +68,7 @@ class Team:
     rating: float
     wins: int = 0
     losses: int = 0
-    opps: set[int] = field(default_factory=set)
+    opps: set = field(default_factory=set)
 
 
 def _validate_fixture(rows: dict[int, tuple[str, float]]) -> None:
