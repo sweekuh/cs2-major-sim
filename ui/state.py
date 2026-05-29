@@ -71,6 +71,15 @@ TRUST_BADGE_CAVEATED = (
     "engine validated vs Valve rulebook unit tests — full backtest pending seed data"
 )
 
+# UI-07 VALIDATED badge text — used ONLY by the green st.success branch once BOTH
+# BACKTEST_PASSED is flipped True AND seeds are confirmed (currently unreachable). It MUST
+# NOT reuse the caveated "pending seed data" wording (a green box claiming "pending" is
+# self-contradicting — WR-02) and MUST NOT mention Budapest/Austin (CLAUDE.md trust-badge
+# rule): the round-by-round backtest is described generically.
+TRUST_BADGE_VALIDATED = (
+    "engine validated vs Valve rulebook unit tests + full round-by-round backtest"
+)
+
 # The session_state key the seeds-confirmed toggle binds to (the gate the badge reads).
 KEY_SEEDS_CONFIRMED = "seeds_confirmed"
 

@@ -40,6 +40,7 @@ from ui.state import (
     MAX_N,
     Mode,
     TRUST_BADGE_CAVEATED,
+    TRUST_BADGE_VALIDATED,
     odds_key_present,
     read_seeds_confirmed,
     trust_badge_state,
@@ -86,7 +87,10 @@ def _render_header_strip() -> None:
 
     # 1. Trust badge — caveated while BACKTEST_PASSED is False (UI-07, Pitfall 6: both, not one).
     if trust_badge_state(seeds_confirmed) == "validated":
-        st.success(f"/ {TRUST_BADGE_CAVEATED}")  # only reachable once GATE-01 lands AND seeds confirmed
+        # Green success box with its OWN consistent wording — never the caveated
+        # "pending seed data" string (WR-02). Only reachable once GATE-01 lands AND seeds
+        # are confirmed. No Budapest claim (CLAUDE.md trust-badge rule).
+        st.success(TRUST_BADGE_VALIDATED)
     else:
         # Caveated: render the EXACT string as a neutral caption — no green ✓, no Budapest claim.
         st.caption(TRUST_BADGE_CAVEATED)
