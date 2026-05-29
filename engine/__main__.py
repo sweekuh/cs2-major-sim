@@ -50,7 +50,12 @@ def _drain(teams, N: int) -> Result:
         while True:
             next(gen)
     except StopIteration as stop:
+        if stop.value is None:
+            raise RuntimeError("run_mc_progressive did not return a Result")
         return stop.value
+    raise RuntimeError(
+        "generator exhausted without StopIteration — internal engine bug"
+    )
 
 
 def _fmt_band(band: tuple[float, float]) -> str:
