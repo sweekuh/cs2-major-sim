@@ -9,7 +9,7 @@ no-rematch rule respects locked history.
 `opps` holds opponent OBJECTS (not ids): engine.probs.difficulty() iterates
 `o.wins - o.losses for o in t.opps`, so a team's opponent collection must expose
 .wins/.losses. The no-rematch check compares opponent .id. conftest.FakeTeam
-matches this contract (.id/.seed/.wins/.losses/.opps:list).
+matches this contract (.id/.seed/.wins/.losses/.opps:set).
 """
 
 from __future__ import annotations
@@ -96,8 +96,8 @@ def test_forced_rematch_pairing(make_team):
     teams = [make_team(id=i, seed=i, wins=1, losses=1) for i in range(1, 7)]
     by_id = {t.id: t for t in teams}
     # Force a rematch on positions (2,5): record that 2 and 5 already met.
-    by_id[2].opps.append(by_id[5])
-    by_id[5].opps.append(by_id[2])
+    by_id[2].opps.add(by_id[5])
+    by_id[5].opps.add(by_id[2])
 
     pairs = pair_within_group(teams)
     pair_ids = {frozenset((a.id, b.id)) for a, b in pairs}
@@ -118,8 +118,8 @@ def test_no_valid_matching_fallback(make_team, caplog):
 
     a = make_team(id=1, seed=1, wins=1, losses=1)
     b = make_team(id=2, seed=2, wins=1, losses=1)
-    a.opps.append(b)
-    b.opps.append(a)  # they already met -> any pairing is a rematch
+    a.opps.add(b)
+    b.opps.add(a)  # they already met -> any pairing is a rematch
 
     with caplog.at_level(logging.WARNING):
         pairs = pair_within_group([a, b])
