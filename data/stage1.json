@@ -1,0 +1,27 @@
+{
+  "_comment": "[INFERRED] Cologne 2026 Stage-1 seeds + default ratings (HANDOFF §3). Editable; reconcile against the official seed list at lock. M80=6, NRG=9, Liquid=13 confirmed; rest inferred from announced R1 pairings + HLTV late-May 2026 order. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here).",
+  "stage": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "GamerLegion", "rating": 92 },
+    { "seed": 2, "name": "B8", "rating": 78 },
+    { "seed": 3, "name": "HEROIC", "rating": 58 },
+    { "seed": 4, "name": "BetBoom", "rating": 72 },
+    { "seed": 5, "name": "BIG", "rating": 55 },
+    { "seed": 6, "name": "M80", "rating": 60 },
+    { "seed": 7, "name": "MIBR", "rating": 68 },
+    { "seed": 8, "name": "SINNERS", "rating": 46 },
+    { "seed": 9, "name": "NRG", "rating": 54 },
+    { "seed": 10, "name": "TYLOO", "rating": 50 },
+    { "seed": 11, "name": "Sharks", "rating": 49 },
+    { "seed": 12, "name": "Gaimin Gladiators", "rating": 47 },
+    { "seed": 13, "name": "Liquid", "rating": 57 },
+    { "seed": 14, "name": "Lynn Vision", "rating": 52 },
+    { "seed": 15, "name": "THUNDER dOWNUNDER", "rating": 42 },
+    { "seed": 16, "name": "FlyQuest", "rating": 40 }
+  ]
+}
