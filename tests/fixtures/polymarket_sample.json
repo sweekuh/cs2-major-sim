@@ -1,0 +1,12 @@
+{
+  "_comment": "[ASSUMED — verify once Cologne markets post] Recorded-shape Polymarket Gamma /events response. A Cologne per-match event (GamerLegion vs NRG) with outcomes/outcomePrices — keyless public read. outcomePrices are already ~probabilities (vig_type=market): NEVER two-way de-vig. Exact event slug + per-match-vs-tournament coverage is A4 [DEFERRED], reconciled at the 05-03 live-verify checkpoint.",
+  "events": [
+    {
+      "slug": "iem-cologne-2026-gamerlegion-vs-nrg",
+      "title": "IEM Cologne 2026: GamerLegion vs NRG",
+      "bo3": false,
+      "outcomes": ["GamerLegion", "NRG"],
+      "outcomePrices": ["0.71", "0.29"]
+    }
+  ]
+}

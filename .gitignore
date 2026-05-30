@@ -4,6 +4,11 @@ files.zip
 # Secrets (HANDOFF §8: never commit)
 .env
 
+# Fetched odds cache (a runtime artifact, not source — ODDS-07). Its ABSENCE is the normal
+# first-run state and is handled fail-soft (rating-only + banner). scripts/fetch_odds.py writes
+# it; the app only ever READS it via ui/odds_loader.py.
+data/odds_cache.json
+
 # Python
 __pycache__/
 *.py[cod]

@@ -90,14 +90,22 @@
 
 ### Odds ensemble (all three providers live)
 
-- [ ] **ODDS-01**: `OddsProvider` adapter interface (`get_quotes(matches) -> [OddsQuote]`) + `pool()`; providers OddsPapi (Pinnacle anchor), Polymarket, Kalshi all implemented live
-- [ ] **ODDS-02**: Per-source normalization — de-vig fixed-odds two-way `p_a = (1/o_a)/(1/o_a + 1/o_b)`; treat prediction-market price as ~probability adjusting only for spread/fees
-- [ ] **ODDS-03**: Liquidity- and sharpness-weighted log-opinion pool outputs blended p + cross-source variance; weight by originate-vs-copy not headcount; downweight thin/low-`n_sources` markets and quotes near Polymarket UMA resolution
-- [ ] **ODDS-04**: Ratings back-solve — invert each known-round series prob to per-map p (identity Bo1; invert `p²(3−2p)` for Bo3), fit per-team ratings via logistic least-squares at map level; live odds override the imminent round's known matchups
-- [ ] **ODDS-05**: Adapters discover Cologne fixtures/market slugs dynamically (markets don't exist until the bracket posts); CS2 sportId/series filtering
-- [ ] **ODDS-06**: Fetch is not streaming — manual "fetch now" button plus per-round triggers; keys read from env (`.env` gitignored, `.env.example` shipped)
-- [ ] **ODDS-07**: Odds fetch writes a read-only `data/odds_cache.json` contract that the app only ever reads (seam preserved for the v2 cron job); the app never calls `get_quotes()` on rerun
-- [ ] **ODDS-08**: Missing provider key → app runs rating-only with a one-line info banner; never crashes or hard-blocks (fail soft)
+- [x] **ODDS-01
+**: `OddsProvider` adapter interface (`get_quotes(matches) -> [OddsQuote]`) + `pool()`; providers OddsPapi (Pinnacle anchor), Polymarket, Kalshi all implemented live
+- [x] **ODDS-02
+**: Per-source normalization — de-vig fixed-odds two-way `p_a = (1/o_a)/(1/o_a + 1/o_b)`; treat prediction-market price as ~probability adjusting only for spread/fees
+- [x] **ODDS-03
+**: Liquidity- and sharpness-weighted log-opinion pool outputs blended p + cross-source variance; weight by originate-vs-copy not headcount; downweight thin/low-`n_sources` markets and quotes near Polymarket UMA resolution
+- [x] **ODDS-04
+**: Ratings back-solve — invert each known-round series prob to per-map p (identity Bo1; invert `p²(3−2p)` for Bo3), fit per-team ratings via logistic least-squares at map level; live odds override the imminent round's known matchups
+- [x] **ODDS-05
+**: Adapters discover Cologne fixtures/market slugs dynamically (markets don't exist until the bracket posts); CS2 sportId/series filtering
+- [x] **ODDS-06
+**: Fetch is not streaming — manual "fetch now" button plus per-round triggers; keys read from env (`.env` gitignored, `.env.example` shipped)
+- [x] **ODDS-07
+**: Odds fetch writes a read-only `data/odds_cache.json` contract that the app only ever reads (seam preserved for the v2 cron job); the app never calls `get_quotes()` on rerun
+- [x] **ODDS-08
+**: Missing provider key → app runs rating-only with a one-line info banner; never crashes or hard-blocks (fail soft)
 
 ### Full-Major scope (v3)
 
@@ -211,11 +219,11 @@ Which phases cover which requirements.
 | RESIM-02 | Phase 4 | Done |
 | RESIM-03 | Phase 4 | Done |
 | RESIM-04 | Phase 4 | Done |
-| ODDS-01 | Phase 5 | Pending |
-| ODDS-02 | Phase 5 | Pending |
-| ODDS-03 | Phase 5 | Pending |
+| ODDS-01 | Phase 5 | Done |
+| ODDS-02 | Phase 5 | Done |
+| ODDS-03 | Phase 5 | Done |
 | ODDS-04 | Phase 5 | Pending |
-| ODDS-05 | Phase 5 | Pending |
+| ODDS-05 | Phase 5 | Done |
 | ODDS-06 | Phase 5 | Pending |
 | ODDS-07 | Phase 5 | Pending |
 | ODDS-08 | Phase 5 | Pending |

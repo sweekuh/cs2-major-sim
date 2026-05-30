@@ -1,0 +1,30 @@
+{
+  "_comment": "[ASSUMED — verify once Cologne markets post] Recorded-shape OddsPapi /odds response. One CS2 Cologne matchup (GamerLegion vs NRG, a Bo1 Swiss opening match) with a bundle of two-way fixed-odds book prices: Pinnacle (the sharp originator) plus soft books that copy its line. Field names (bookmakerOdds / bookmaker / participantAName etc.) are A3 [DEFERRED] and will be reconciled at the 05-03 live-verify checkpoint. The parser collapses this whole bundle to ONE Pinnacle-anchored OddsQuote.",
+  "fixtureId": "cologne2026-swiss-r1-m3",
+  "tournament": "IEM Cologne 2026",
+  "bo3": false,
+  "participantAName": "GamerLegion",
+  "participantBName": "NRG",
+  "bookmakerOdds": [
+    {
+      "bookmaker": "Pinnacle",
+      "oddsA": 1.50,
+      "oddsB": 2.50
+    },
+    {
+      "bookmaker": "Thunderpick",
+      "oddsA": 1.53,
+      "oddsB": 2.45
+    },
+    {
+      "bookmaker": "GG.BET",
+      "oddsA": 1.48,
+      "oddsB": 2.55
+    },
+    {
+      "bookmaker": "Betway",
+      "oddsA": 1.55,
+      "oddsB": 2.40
+    }
+  ]
+}

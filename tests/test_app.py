@@ -15,6 +15,8 @@ falsely green.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 APP = "app.py"
@@ -679,3 +681,200 @@ def test_bracket_columns_html_is_columns_not_tree():
     # Names are html.escape-d (XSS defense-in-depth).
     assert "&lt;script&gt;B8" in html_out
     assert "<script>B8" not in html_out
+
+
+# --- Phase 5 (05-03): odds-cache read seam + fail-soft + no-network-on-rerun -------------
+#
+# These exercise the read-only cache seam (ui/odds_loader.py) wired into app.py: a present cache
+# feeds the back-solved ratings + epistemic blend/var into the existing run path so the odds move
+# the reported probabilities; an ABSENT cache (the normal first-run state) is fail-soft (rating-
+# only + the existing banner); the app makes NO provider/network call on a rerun (Pitfall 11); a
+# fresh fetch (new _meta.fetched_at) invalidates the memoized Result (T-05-STALEBAND).
+#
+# Wave-0 (Task 1) ships them RED via xfail(strict=True) for the AppTest cases that depend on the
+# app.py wiring; Task 2 wires app.py and removes the markers (strict xfail flips a passing test to
+# XPASS -> failure, so a stray un-removed marker can't hide a real pass). The loader fail-soft test
+# is a pure unit assertion (cheaper than an AppTest) and is GREEN from Task 1. N is kept small
+# (2000) per the latency budget.
+
+
+def test_cache_loader_failsoft(tmp_path):
+    """ODDS-08 / T-05-NOCACHE: load_odds_cache returns None on a missing path, malformed JSON, a
+    non-dict payload, and a wrong (_meta.version != 1) schema — never raises. A valid v1 cache
+    round-trips. Pure unit (no AppTest)."""
+    from ui.odds_loader import load_odds_cache
+
+    # Missing file -> None (the normal first-run state).
+    assert load_odds_cache(tmp_path / "nope.json") is None
+
+    # Malformed JSON -> None.
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not json", encoding="utf-8")
+    assert load_odds_cache(bad) is None
+
+    # Non-dict payload -> None.
+    arr = tmp_path / "arr.json"
+    arr.write_text("[1, 2, 3]", encoding="utf-8")
+    assert load_odds_cache(arr) is None
+
+    # Wrong version -> None (fails closed rather than feeding a foreign schema).
+    wrongver = tmp_path / "v2.json"
+    wrongver.write_text(
+        json.dumps({"_meta": {"version": 2}, "blended": {}}), encoding="utf-8"
+    )
+    assert load_odds_cache(wrongver) is None
+
+    # A valid v1 cache round-trips (the dict is returned intact).
+    good = tmp_path / "good.json"
+    payload = {
+        "_meta": {"fetched_at": "2026-05-29T00:00:00+00:00", "version": 1},
+        "blended": {"1-9": {"p": 0.71, "var": 0.004, "n_sources": 2, "bo3": False}},
+    }
+    good.write_text(json.dumps(payload), encoding="utf-8")
+    loaded = load_odds_cache(good)
+    assert loaded is not None
+    assert loaded["blended"]["1-9"]["p"] == 0.71
+
+
+def _write_cache(path, blended, *, fetched_at="2026-05-29T00:00:00+00:00"):
+    """Write a valid v1 odds cache to ``path`` for the AppTest cases (the schema the app reads)."""
+    payload = {
+        "_meta": {
+            "fetched_at": fetched_at,
+            "version": 1,
+            "providers_present": ["polymarket", "kalshi"],
+            "round_hint": 1,
+        },
+        "blended": blended,
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def test_no_odds_failsoft(monkeypatch):
+    """ODDS-08: with NO ODDSPAPI_KEY and NO data/odds_cache.json the app renders, runs rating-only,
+    shows the existing 'live odds off … manual ratings' banner, and never raises — the absent-cache
+    first run does not crash on the odds path."""
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
+    at = _run_small(_apptest().run())
+    assert not at.exception
+    assert any(
+        "live odds off" in i.value.lower() and "manual ratings" in i.value.lower()
+        for i in at.info
+    )
+    # Rating-only run still produced per-team probability content.
+    assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_zero_config_first_run_still_works(monkeypatch):
+    """DX-01: a fresh run with no key + no cache hits Run and produces per-team P(advance) — the
+    Phase-2 zero-config promise is unbroken by the Phase-5 wiring."""
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_cache_present_feeds_sim(monkeypatch, tmp_path):
+    """ODDS-04/05: a valid data/odds_cache.json present -> load_odds_cache returns it and the run
+    path uses the back-solved ratings + epistemic blend/var, so at least one reported P(advance)
+    differs from the pure rating-only run (the odds change the numbers)."""
+    from engine.montecarlo import run_mc
+    from engine.teams import load_teams
+    from ui.state import FIXED_SEED
+
+    # Rating-only baseline P(advance) (no cache).
+    teams = load_teams()
+    ratings = {t.seed: t.rating for t in teams}
+    base = run_mc(teams, ratings, 40.0, 2000, locked={}, seed=FIXED_SEED).p_advance()
+
+    # A cache that pushes the seed-1 vs seed-9 series hard with real cross-source variance.
+    import ui.odds_loader as loader
+
+    cache_file = tmp_path / "odds_cache.json"
+    _write_cache(cache_file, {"1-9": {"p": 0.95, "var": 0.02, "n_sources": 2, "bo3": False}})
+    _real_load = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: _real_load(cache_file))
+
+    at = _run_small(_apptest().run())
+    assert not at.exception
+    cache = at.session_state["mc_cache"]
+    assert cache, "a run must have produced a cached Result"
+    result = next(iter(cache.values()))
+    odds_p_adv = result.p_advance()
+    # The odds-fed run moved at least one team's P(advance) vs the rating-only baseline.
+    assert any(
+        abs(odds_p_adv.get(tid, 0.0) - base.get(tid, 0.0)) > 1e-9
+        for tid in set(base) | set(odds_p_adv)
+    )
+
+
+def test_app_makes_no_network_on_rerun(monkeypatch):
+    """Pitfall 11 / T-05-RERUN: the app makes NO provider/network call on a rerun. Monkeypatch
+    httpx to RAISE on any attribute access; the app still renders and runs — proving the render
+    path never touches httpx (only the explicit 'fetch now' button, not exercised here, would)."""
+    import httpx
+
+    class _Boom:
+        def __getattr__(self, name):
+            raise AssertionError(f"httpx.{name} called on a rerun — Pitfall 11 violation")
+
+    # Replace every httpx network entrypoint with a raiser.
+    for attr in ("get", "post", "request", "Client", "AsyncClient", "stream"):
+        monkeypatch.setattr(httpx, attr, _Boom(), raising=False)
+
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()  # a rerun
+    assert not at.exception
+    # The app still produced probability content despite httpx being booby-trapped.
+    assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_fresh_fetch_invalidates_cache(monkeypatch, tmp_path):
+    """T-05-STALEBAND: a fresh fetch that moves only `var` (not the back-solved ratings) still
+    invalidates the memoized Result. Write a cache, run (memoizes a Result); then write a SECOND
+    cache with the SAME `p` (same back-solved ratings) but a DIFFERENT `_meta.fetched_at` AND a
+    moved `var`; the next run must produce a NEW mc_cache key (the fetched_at is in the run cache
+    key) — not a stale serve."""
+    import ui.odds_loader as loader
+
+    cache_file = tmp_path / "odds_cache.json"
+
+    def _read(p=cache_file):
+        from pathlib import Path as _Path
+        raw = json.loads(_Path(p).read_text(encoding="utf-8"))
+        return raw if raw.get("_meta", {}).get("version") == 1 else None
+
+    # The app reads whatever the file currently holds (re-read each call so the second fetch shows).
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: _read())
+
+    # Same p, modest var, fetched_at #1.
+    _write_cache(
+        cache_file,
+        {"1-9": {"p": 0.8, "var": 0.001, "n_sources": 2, "bo3": False}},
+        fetched_at="2026-05-29T00:00:00+00:00",
+    )
+
+    at = _run_small(_apptest().run())
+    assert not at.exception
+    keys_after_first = set(at.session_state["mc_cache"].keys())
+    assert keys_after_first, "first run must memoize a Result"
+
+    # SECOND fetch: SAME p (same ratings) but moved var + a NEW fetched_at.
+    _write_cache(
+        cache_file,
+        {"1-9": {"p": 0.8, "var": 0.05, "n_sources": 2, "bo3": False}},
+        fetched_at="2026-05-29T12:00:00+00:00",
+    )
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    keys_after_second = set(at.session_state["mc_cache"].keys())
+    # A NEW cache key appeared because fetched_at is folded into the run cache key — the new var is
+    # recomputed, NOT stale-served from the first run's memoized Result.
+    assert keys_after_second - keys_after_first, (
+        "a fresh fetch (new _meta.fetched_at) must invalidate the memoized Result (T-05-STALEBAND)"
+    )
