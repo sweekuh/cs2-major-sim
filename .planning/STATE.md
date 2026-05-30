@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_planned
-stopped_at: Planned Phase 4 (04-01 pure core + 04-02 UI) — plan-checker PASS on iteration 2
-last_updated: "2026-05-29T00:00:00.000Z"
+status: phase_in_progress
+stopped_at: Executed 04-01 (engine/live.py pure core, TDD) — 11 new tests, full suite 79 passed, GATE-01 green
+last_updated: "2026-05-30T01:37:17.784Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 11
-  completed_plans: 9
-  percent: 50
+  completed_plans: 10
+  percent: 91
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase 4 — conditional re-sim + live mode (PLANNED, ready to execute)
+**Current focus:** Phase 4 — conditional re-sim + live mode (IN PROGRESS — 04-01 executed, 04-02 next)
 
 ## Current Position
 
-Phase: 4 (conditional-re-sim-live-mode) — PLANNED (2 plans written, plan-checker PASS)
-Plan: 04-01 (pure engine/live.py core, TDD, wave 1) + 04-02 (LIVE-mode UI wiring, wave 2) — not yet executed
-Status: Planned — next is `/gsd-execute-phase 4`
+Phase: 4 (conditional-re-sim-live-mode) — IN PROGRESS (04-01 executed; 04-02 remaining)
+Plan: 04-01 (pure engine/live.py core, TDD, wave 1) ✅ EXECUTED 2026-05-29 — 04-02 (LIVE-mode UI wiring, wave 2) not yet executed
+Status: In progress — next is `/gsd-execute-phase 4` (runs 04-02)
 Last activity: 2026-05-29
 
-Progress: [██████████] 100% (Phase 3 complete; Phase 4 planned)
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 100% (Phase 3 complete; Phase 4 plann
 | Phase 02 P01 | 8 | 3 tasks | 10 files |
 | Phase 02 P02 | 8 | 2 tasks | 4 files |
 | Phase 02 P03 | 12 | 3 tasks | 5 files |
+| Phase 04 P01 | 12 min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 3 EXECUTED 2026-05-29]: `optimize_cached(_result, ratings_key, S, N, locked_key)` memoizes on the MC cache tuple with `_result` underscore-EXCLUDED (correct here — Result is a pure function of the key, reused without re-running the MC; the deliberate inverse of the locked-in-key rule). `_hero_slot` kept for the LIVE Phase-4 placeholder; PRE-STAGE hero is the real recommended P(≥5).
 - [Phase 3 V&V 2026-05-29]: verdict PASS (66 passed, 1 skipped; see 03-VERIFICATION.md). Fixed a latent warning id/seed lookup. Key finding: the bucket-wise greedy is NOT the global E[correct] maximizer (brute-force-confirmed +0.86 case) and Ballot B couldn't re-bucket to escape it. Resolved (user: "you choose" → option 2): broadened Ballot B's hill-climb with re-bucketing moves (`_neighbors`/`_rebucket`) and softened OPT-01 / `ballot_a` wording from "E[correct]-optimal" to "greedy per-bucket marginal baseline". Ballot A stays the literal greedy; Ballot B is the real P(≥5) recommendation.
 - Phase 2 plan 03: INFERRED-seed banner + seed->team reconcile expander persists until the seeds_confirmed toggle (positive confirmation, no red) dismisses it; fail-soft odds-off banner uses os.environ only (no httpx/dotenv import — preserves zero-config first run)
+- [Phase 4 P01 EXECUTED 2026-05-29]: `engine/live.py` shipped — pure, streamlit-free live-mode core over the FROZEN engine (no engine mutation; GATE-01 Budapest backtest still green). `locked_dict_from_results` (D1), `validate_lock` with 5 EXACT reason strings keyed on id (D3/RESIM-03), `classify_pick` secured/dead/live via exact P==1/P==0 against the conditional `build_outcome_matrices` (D4/RESIM-02), `pge5_delta` as two `p_ge5` calls on ONE fixed anchor ballot (D5/RESIM-02), `derive_bracket`/`legal_pairings_for_round` replaying `simulate_stage(..., pairings_out=[])` (D6/RESIM-04).
+- [Phase 4 P01 EXECUTED 2026-05-29]: BLOCKER-2 rng-invariance guard — `legal_pairings_for_round` REQUIRES a fully-locked prefix (compares each prior round's locked set to the engine's `pairings_out[r]`) and raises `LivePrefixIncomplete` rather than return a single-RNG-draw artifact; `test_legal_pairings_requires_full_prefix` proves the returned set is invariant across two differently-seeded replays. 11 new tests (incl. 3 CRITICALs); full suite 79 passed.
 
 ### Pending Todos
 
@@ -120,12 +123,15 @@ Items acknowledged and carried forward:
 ## Session Continuity
 
 Last session: 2026-05-29
-Stopped at: Executed Phase 3 (03-01 + 03-02) on branch phase-3-optimizer — full suite 63 passed, 1 skipped
+Stopped at: Executed Phase 4 plan 04-01 (engine/live.py pure core, TDD) on branch phase-4-live-mode — 11 new tests, full suite 79 passed, GATE-01 green
 Resume file: None
-Resume path: Phase 4 — `/gsd-plan-phase 4` (conditional re-sim + live mode; reuses optimizer.p_ge5 for the P(≥5)-from-here delta)
+Resume path: Phase 4 — execute plan 04-02 (LIVE-mode UI wiring) which consumes the 04-01 pure core
 
 **Completed Phase:** 03 (pickem-optimizer) — 2 plans — 2026-05-29
+**In-progress Phase:** 04 (conditional-re-sim-live-mode) — 04-01 done, 04-02 remaining
 
-Next: Phase 4 (conditional re-sim + live mode). The `locked` cache-key seam (Phase 2) and
-`engine.optimizer.p_ge5` (Phase 3) are the two pieces it builds on — re-sim fires for free
-via the locked key; the live hero (_hero_slot) gets the P(≥5)-from-here delta.
+Next: Phase 4 plan 04-02 (LIVE-mode UI wiring). It wires `engine.live`'s `validate_lock`,
+`classify_pick`, `pge5_delta`, `derive_bracket`, and `legal_pairings_for_round` into `app.py`
+— the lock list flows through the existing `freeze_locked`→`cache_key` path so re-sim fires
+for free, the `_hero_slot` gets the P(≥5)-from-here delta, and `_render_bracket` becomes the
+record-bucket columns (solid-locked / faint-simulated). No further engine change.
