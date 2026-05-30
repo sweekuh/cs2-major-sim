@@ -34,7 +34,10 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 
-from engine.probs import difficulty, p_map, series  # canonical Buchholz + math (ENG-03)
+from engine.probs import (  # canonical Buchholz + math (ENG-03)
+    difficulty,
+    series_prob,
+)
 from engine.teams import (
     ADVANCE_AT_WINS,
     ELIMINATE_AT_LOSSES,
@@ -199,13 +202,26 @@ def _is_bo3(a, b) -> bool:
     )
 
 
-def _play(a, b, ratings, S, rng, locked):
+def _play(a, b, ratings, S, rng, locked, *, market_overrides=None):
     """Resolve one match, returning (winner, loser). Mutates nothing.
 
     If frozenset({a.id, b.id}) is in ``locked``, the locked winner is used
-    deterministically (no sampling; ENG-08). Otherwise a SINGLE Bernoulli draw against
-    the series win prob decides it — the Bo3 closed form p^2(3-2p) is one draw, never
-    three map samples (MC-06).
+    deterministically (no sampling; ENG-08) — a locked result is a known FACT and takes
+    precedence over any market override. Otherwise a SINGLE Bernoulli draw against the
+    series win prob decides it — the Bo3 closed form p^2(3-2p) is one draw, never three
+    map samples (MC-06).
+
+    ``market_overrides`` (keyword-only, the Phase-5 odds seam — default None = unchanged):
+    ``dict[str, float]`` keyed by the id-bucket ``f"{min(a.id, b.id)}-{max(a.id, b.id)}"``
+    carrying ``p`` = P(LOWER-id team wins the SERIES). CRITICAL ORIENTATION (T-05-ORIENT):
+    this ``_play`` receives ``(a, b)`` in DIFFICULTY-RANKED (high, low) order from
+    ``pair_within_group`` (NOT id-sorted), while ``p`` is stored relative to the LOWER id.
+    So we look the override up by the id-bucket (NOT an arg-order tuple) and orient it to
+    the FIRST arg via ``p_a = p if a.id < b.id else (1 - p)`` BEFORE drawing — assuming the
+    arg order matches id order would silently invert the favorite on every (high-id,
+    low-id) pair. The override flows through ``series_prob(market_series_prob=p_a)`` which
+    is used DIRECTLY: series()/Bo3 is NOT re-applied (the market already prices the series,
+    PROB-02).
     """
     key = frozenset((a.id, b.id))
     if key in locked:
@@ -223,13 +239,27 @@ def _play(a, b, ratings, S, rng, locked):
 
     ra = ratings.get(a.id, a.rating) if ratings else a.rating
     rb = ratings.get(b.id, b.rating) if ratings else b.rating
-    p_a = series(p_map(ra, rb, S=S), _is_bo3(a, b))  # P(a beats b), single draw
+
+    market_p_a = None
+    if market_overrides:
+        bucket = f"{min(a.id, b.id)}-{max(a.id, b.id)}"
+        p = market_overrides.get(bucket)
+        if p is not None:
+            # `p` = P(lower-id wins); orient to the FIRST arg `a` (which may be the higher
+            # id — pair arrives difficulty-ranked, NOT id-sorted). T-05-ORIENT.
+            market_p_a = p if a.id < b.id else (1.0 - p)
+
+    # series_prob honors a market override DIRECTLY (Bo3 NOT re-applied, PROB-02); with no
+    # override it falls back to series(p_map(...), bo3) — byte-identical to the prior path.
+    p_a = series_prob(
+        ra=ra, rb=rb, bo3=_is_bo3(a, b), market_series_prob=market_p_a, S=S
+    )  # P(a beats b), single draw
     if rng.random() < p_a:
         return a, b
     return b, a
 
 
-def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None):
+def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None, market_overrides=None):
     """Simulate one complete Valve Stage-1 Swiss and return {id: final Team}.
 
     ``teams`` are the (mutable) per-stage team objects — pass a FRESH ``load_teams()``
@@ -258,11 +288,19 @@ def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None):
     ``frozenset({a.id, b.id})`` for the pairings it GENERATED that round (Round 1 first).
     This is the exact shipped pairing path the GATE-01 backtest asserts against — it does
     not alter simulation results.
+
+    ``market_overrides`` (keyword-only, the Phase-5 odds seam — default None = no behavior
+    change): ``dict[str, float]`` keyed by the id-bucket ``f"{min,max}"`` carrying P(lower-id
+    team wins the series) for the imminent round's KNOWN matchups; threaded straight to
+    ``_play`` which orients it to the lower-id team and uses it directly (Bo3 NOT re-applied,
+    PROB-02). Default None reproduces the rating-only path byte-identically (GATE-01).
     """
     by_id = {t.id: t for t in teams}
 
     def _record_match(a, b):
-        winner, loser = _play(a, b, ratings, S, rng, locked)
+        winner, loser = _play(
+            a, b, ratings, S, rng, locked, market_overrides=market_overrides
+        )
         winner.wins += 1
         loser.losses += 1
         # opps holds opponent OBJECTS (difficulty() reads o.wins/o.losses); the no-rematch

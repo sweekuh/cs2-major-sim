@@ -75,19 +75,28 @@ def _targets():
 def test_rating_roundtrip():
     """CRITICAL: feeding fit_ratings KNOWN map probs recovers the known ratings.
 
-    The model depends only on rating DIFFERENCES (an additive gauge), so we anchor team 1
-    at its known value and assert the recovered ratings REPRICE every target matchup
-    within tolerance (the strongest invariant), and that the absolute ratings match.
+    The model depends only on rating DIFFERENCES (an additive gauge): adding a constant to
+    every rating leaves all targets unchanged, so absolute ratings are recoverable only up
+    to the anchor's chosen gauge (here the anchor team's seed rating from the fixture, not
+    the hypothetical 90). We assert the two GAUGE-INVARIANT, fully-recoverable quantities:
+      (1) the recovered ratings REPRICE every target matchup within tolerance, and
+      (2) the recovered DIFFERENCES (r_i - r_anchor) match the known differences.
     """
     teams = _known_teams()
     targets = _targets()
     anchor_id = 1
     recovered = fit_ratings(targets, teams, _S, anchor_id)
 
+    # (1) Reprice every target matchup (the strongest, gauge-invariant invariant).
     for (i, j), tgt in targets.items():
         assert p_map(recovered[i], recovered[j], S=_S) == pytest.approx(tgt, abs=1e-3)
+
+    # (2) Recovered DIFFERENCES vs the anchor match the known differences exactly (the
+    # additive gauge cancels in a difference).
     for tid, true_r in _KNOWN.items():
-        assert recovered[tid] == pytest.approx(true_r, abs=0.5)
+        rec_diff = recovered[tid] - recovered[anchor_id]
+        true_diff = true_r - _KNOWN[anchor_id]
+        assert rec_diff == pytest.approx(true_diff, abs=0.5)
 
 
 def test_gauge_anchor_removes_null_space():
