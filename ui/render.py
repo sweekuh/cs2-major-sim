@@ -168,6 +168,69 @@ def ballot_columns(
     )
 
 
+# --- Phase 4: record-bucket bracket (D6 / RESIM-04) --------------------------------------
+# Swiss teams reconverge BY RECORD, so the bracket is record-bucket COLUMNS, never a tree
+# (HANDOFF §10.5). Canonical column order: 0-0 -> 1-0/0-1 -> 2-0/1-1/0-2 -> 2-1/1-2 ->
+# 3-0 (advanced) / 0-3 (eliminated). Each column is a vertical stack of team chips placed by
+# current (wins, losses); a chip from a LOCKED result is solid (opacity 1), a simulated-only
+# chip is faint (opacity ~0.5). Team names are html.escape-d (T-04-XSS, like _ballot_card_html).
+
+# (wins, losses) -> human column label, in canonical left->right order.
+_BRACKET_BUCKETS: tuple[tuple[tuple[int, int], str], ...] = (
+    ((0, 0), "0-0"),
+    ((1, 0), "1-0"),
+    ((0, 1), "0-1"),
+    ((2, 0), "2-0"),
+    ((1, 1), "1-1"),
+    ((0, 2), "0-2"),
+    ((2, 1), "2-1"),
+    ((1, 2), "1-2"),
+    ((3, 0), "3-0 adv"),
+    ((0, 3), "0-3 elim"),
+)
+
+
+def bracket_columns_html(bracket_view, name_of: dict[int, str]) -> str:
+    """Render a BracketView as record-bucket COLUMNS — never a tree (D6 / RESIM-04).
+
+    One ``<div>`` column per canonical (wins, losses) bucket, laid out in a ``display:flex``
+    row; each column is a vertical stack of team chips placed by their record from
+    ``bracket_view.records`` (``{id: (wins, losses)}``). A team that appears in any LOCKED
+    edge (``bracket_view.locked_edges``) renders solid (``opacity:1``); a simulated-only team
+    renders faint (``opacity:0.5``). Team names are HTML-escaped via ``name_of`` (XSS
+    defense-in-depth, like ``_ballot_card_html``). No streamlit, no tree/connector markup.
+    """
+    # Team ids that are "locked" (appear in at least one locked pair) -> solid chip.
+    locked_team_ids: set[int] = set()
+    for edge in getattr(bracket_view, "locked_edges", set()):
+        locked_team_ids |= set(edge)
+
+    # Group team ids by their current record.
+    by_record: dict[tuple[int, int], list[int]] = {}
+    for tid, rec in bracket_view.records.items():
+        by_record.setdefault(tuple(rec), []).append(tid)
+
+    columns: list[str] = []
+    for record, label in _BRACKET_BUCKETS:
+        chips: list[str] = []
+        for tid in sorted(by_record.get(record, []), key=lambda t: name_of.get(t, str(t))):
+            name = html.escape(str(name_of.get(tid, tid)))
+            opacity = "1" if tid in locked_team_ids else "0.5"
+            chips.append(
+                f'<div style="opacity:{opacity};font-family:ui-monospace,monospace;'
+                f'font-size:12px;padding:2px 0">{name}</div>'
+            )
+        body = "".join(chips) if chips else (
+            '<div style="opacity:0.3;font-size:11px">—</div>'
+        )
+        columns.append(
+            f'<div data-bucket="{label}" style="flex:1;min-width:90px">'
+            f'<div style="font-weight:600;font-size:11px;opacity:0.65;'
+            f'margin-bottom:4px">{label}</div>{body}</div>'
+        )
+    return f'<div style="display:flex;gap:12px;overflow-x:auto">{"".join(columns)}</div>'
+
+
 def correlated_pick_warning_text(name_a: str, name_b: str) -> str:
     """Plain-text copy for the correlated-0-3-in-R1 warning (OPT-05), rendered via st.warning
     (natively amber — colorblind-safe, never red/green; the leading ``!`` is the ASCII glyph).

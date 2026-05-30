@@ -50,6 +50,20 @@ KEY_S_SLIDER = "S_slider"
 KEY_N_INPUT = "N_input"
 KEY_RUN_BUTTON = "run_btn"
 
+# --- Phase 4 LIVE-mode keys (RESIM-01..04) -----------------------------------------------
+# KEY_LOCKED holds the ordered source-of-truth list of locked results:
+#   list[(round_idx, winner_id, loser_id)]  (0-based round; R1 == 0).
+# The engine-facing ``locked`` dict {frozenset((w,l)): w} is a DERIVED projection (D1) fed
+# through the EXISTING freeze_locked->locked_key->cache_key path so re-sim fires for free.
+KEY_LOCKED = "locked_results"
+# The fixed anchor ballot (OptimizerOutput.recommended / Ballot B) captured at the FIRST Run
+# from the EMPTY-locked pre_key Result; stored once so the delta arrow never re-optimizes (D5).
+KEY_LIVE_ANCHOR = "live_anchor_ballot"
+# The pending (round_idx, winner_id, loser_id) the user selected in the lock controls, read by
+# the "Lock result" button handler. It is validated via engine.live.validate_lock BEFORE being
+# committed to KEY_LOCKED (D3/RESIM-03) — an illegal pending lock surfaces st.error and is dropped.
+KEY_PENDING_LOCK = "pending_lock"
+
 # UI-05 canonical inline error copy (UI-SPEC Copywriting Contract — do not drift).
 BAD_RATING_MSG = "Ratings must be numbers. Fix the highlighted cell, then Run."
 
@@ -164,3 +178,46 @@ def validate_ratings(rows: list[dict]) -> list[int]:
         ):
             offenders.append(seed)
     return offenders
+
+
+# --- Phase 4 pure lock-list helpers (D1) -------------------------------------------------
+# list-in / list-out, NO session_state coupling, so they unit-test directly (mirroring
+# validate_ratings). app.py holds st.session_state[KEY_LOCKED]; these operate on that list.
+
+def add_lock(
+    locked_results: list[tuple[int, int, int]],
+    round_idx: int,
+    winner_id: int,
+    loser_id: int,
+) -> list[tuple[int, int, int]]:
+    """Return a NEW lock list with ``(round_idx, winner_id, loser_id)`` appended.
+
+    Never mutates the input (reruns stay predictable). Validation is the caller's job
+    (engine.live.validate_lock runs BEFORE this in app.py — D3/RESIM-03).
+    """
+    return [*locked_results, (round_idx, winner_id, loser_id)]
+
+
+def remove_last_lock(
+    locked_results: list[tuple[int, int, int]],
+) -> list[tuple[int, int, int]]:
+    """Return a NEW lock list with the LAST lock dropped ("undo last lock"). Empty -> empty."""
+    return list(locked_results[:-1])
+
+
+def locks_for_round(
+    locked_results: list[tuple[int, int, int]], round_idx: int
+) -> list[tuple[int, int, int]]:
+    """Return the lock entries entered at ``round_idx`` (used to gate round-R controls on R-1)."""
+    return [entry for entry in locked_results if entry[0] == round_idx]
+
+
+def locked_dict(locked_results: list[tuple[int, int, int]]) -> dict:
+    """Project the lock list into the engine ``locked`` dict — delegates to engine.live (D1).
+
+    Imported lazily so ui.state stays cheap to import (and keeps no import-time engine cost);
+    state.py is streamlit-free either way — engine.live imports no streamlit.
+    """
+    from engine.live import locked_dict_from_results
+
+    return locked_dict_from_results(list(locked_results))
