@@ -778,7 +778,6 @@ def test_zero_config_first_run_still_works(monkeypatch):
     assert any("advance" in m.value.lower() for m in at.markdown)
 
 
-@pytest.mark.xfail(strict=True, reason="app.py odds wiring lands in Task 2 (05-03)")
 def test_cache_present_feeds_sim(monkeypatch, tmp_path):
     """ODDS-04/05: a valid data/odds_cache.json present -> load_odds_cache returns it and the run
     path uses the back-solved ratings + epistemic blend/var, so at least one reported P(advance)
@@ -835,7 +834,6 @@ def test_app_makes_no_network_on_rerun(monkeypatch):
     assert any("advance" in m.value.lower() for m in at.markdown)
 
 
-@pytest.mark.xfail(strict=True, reason="app.py odds wiring lands in Task 2 (05-03)")
 def test_fresh_fetch_invalidates_cache(monkeypatch, tmp_path):
     """T-05-STALEBAND: a fresh fetch that moves only `var` (not the back-solved ratings) still
     invalidates the memoized Result. Write a cache, run (memoizes a Result); then write a SECOND

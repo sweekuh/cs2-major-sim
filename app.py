@@ -24,6 +24,7 @@ import html
 
 import streamlit as st
 
+from engine.backsolve import fit_ratings, invert_series
 from engine.live import (
     classify_pick,
     derive_bracket,
@@ -35,6 +36,7 @@ from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
 from engine.teams import load_teams
 from ui.cache import freeze_locked, freeze_ratings, optimize_cached
+from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
 from ui.render import (
     ballot_columns,
     bracket_columns_html,
@@ -210,22 +212,62 @@ with controls:
     run_clicked = st.button("Run ▶", key=KEY_RUN_BUTTON, type="primary")
     st.caption("~15s for 100k sims, no API key needed")
 
+    # --- Live-odds fetch (ODDS-05/06/07, Pitfall 11) -------------------------------------
+    # The ONE path that contacts the providers: an explicit USER action, OUT of the render
+    # path. The handler LAZY-imports scripts.fetch_odds (which pulls httpx/dotenv) INSIDE the
+    # click branch ONLY — so a plain rerun never imports the network deps (DX-01/T-05-APPIMPORT).
+    # On a normal rerun this button is NOT clicked, so scripts.fetch_odds is never imported.
+    st.divider()
+    st.caption("Live odds (optional)")
+    if st.button("Fetch odds now", key="fetch_odds_btn"):
+        try:
+            from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
 
-def _drive_progress(ratings: dict, S: float, N: int, locked: dict):
+            cache = _fetch_odds_main()
+            n_blended = len(cache.get("blended", {}))
+            if n_blended:
+                st.success(
+                    f"Fetched {n_blended} market(s) from "
+                    f"{', '.join(cache['_meta'].get('providers_present', [])) or 'no providers'}."
+                )
+            else:
+                # A valid empty fetch (no Cologne market posted yet) is fail-soft, not an error.
+                st.info(
+                    "No live markets found yet (Cologne markets may not have posted) — "
+                    "still running rating-only."
+                )
+        except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
+            st.error(f"Odds fetch failed (running rating-only): {exc}")
+        st.rerun()
+
+
+def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=None):
     """Cache-MISS path: iterate the FROZEN run_mc_progressive to drive st.progress.
 
     Each Partial(done, total, running_p_adv) advances the bar with a running sim counter
     (NEVER a blank spinner — UI-03). Do NOT override n_chunks (stays 20 — Phase 1x2
     reproducibility). Returns the final Result captured via StopIteration.value.
+
+    ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
+    ``dict["lo-hi" -> (p, var)]`` of the market-priced matchups; var>0 drives the K-Beta
+    epistemic OUTER loop, var all-zero / None is the exact no-op (GATE-01 byte-identical).
     """
     bar = st.progress(0.0, text="Simulating…")
-    gen = run_mc_progressive(teams, ratings, S, N, locked, seed=FIXED_SEED)
+    gen = run_mc_progressive(
+        teams, ratings, S, N, locked, seed=FIXED_SEED, market_blend=market_blend
+    )
     result = None
     try:
         while True:
             p = next(gen)
-            frac = p.done / p.total
-            bar.progress(frac, text=f"Simulating… {p.done:,} / {p.total:,}")
+            # Clamp into [0, 1]: under the Phase-5 epistemic OUTER loop (market_blend var>0) the
+            # generator's running ``done`` tally can momentarily overshoot ``total`` across the K
+            # draws, and st.progress raises on a fraction outside [0, 1]. The bar is cosmetic, so
+            # clamp defensively rather than crash the run (Rule 1 — the engine tally is not ours
+            # to change here; this keeps the odds-fed run from ever throwing on the progress bar).
+            frac = p.done / p.total if p.total else 0.0
+            frac = min(1.0, max(0.0, frac))
+            bar.progress(frac, text=f"Simulating… {min(p.done, p.total):,} / {p.total:,}")
     except StopIteration as stop:
         result = stop.value
     bar.empty()
@@ -347,25 +389,84 @@ def _render_bracket() -> None:
             row[2].markdown(b.name if b else EM_DASH)
 
 
-def _cache_key_for(ratings: dict, locked: dict):
-    """The ``(ratings_key, S, int(N), locked_key)`` cache tuple for a given ratings+locked."""
-    return (freeze_ratings(ratings), S, int(N), freeze_locked(locked))
+def _odds_from_cache(base_ratings: dict):
+    """Derive (ratings, market_blend, fetched_at) from data/odds_cache.json — fail-soft (ODDS-04/05).
+
+    Reads the read-only cache via the json-only loader (NO httpx/dotenv — DX-01). When a valid cache
+    loads with a non-empty ``blended`` map:
+      - back-solve per-team ratings from the market series probs (engine.backsolve.fit_ratings):
+        each ``blended["lo-hi"] = {p, var, bo3}`` is INVERTED to a MAP-level prob via
+        ``invert_series(p, bo3)`` (Pitfall 9 — invert series->map BEFORE fitting) and used as the
+        target P(lower-id beats higher-id on a map); the top-seed team is the gauge anchor;
+      - build ``market_blend = {"lo-hi": (p, var)}`` (SERIES p + raw var) for the epistemic OUTER
+        loop (engine.probs.epistemic_draws clamps var via beta_moment_fit downstream, never here).
+    Returns ``(base_ratings, None, None)`` unchanged when the cache is absent / invalid / empty —
+    the rating-only path (no behavior change, the existing banner stays).
+
+    ``fetched_at`` (``_meta.fetched_at``) is returned so the run cache key can fold it in: a fresh
+    fetch that moves only ``var`` (not the back-solved ratings) still invalidates the memoized
+    Result — no stale epistemic band (T-05-STALEBAND).
+    """
+    cache = load_odds_cache()
+    if not cache:
+        return base_ratings, None, None
+    blended = cache.get("blended") or {}
+    if not blended:
+        # A valid EMPTY cache (no market posted) is fail-soft -> rating-only, but still fold its
+        # fetched_at into the key so a later non-empty fetch re-runs (the var changes the band).
+        return base_ratings, None, cache.get("_meta", {}).get("fetched_at")
+
+    # Build MAP-level back-solve targets: invert each SERIES prob to a map prob (Pitfall 9).
+    targets: dict[tuple[int, int], float] = {}
+    market_blend: dict[str, tuple[float, float]] = {}
+    for key, b in blended.items():
+        try:
+            lo_s, hi_s = key.split("-")
+            lo, hi = int(lo_s), int(hi_s)
+            p = float(b["p"])
+            var = float(b.get("var", 0.0))
+            bo3 = bool(b.get("bo3", False))
+        except (ValueError, KeyError, TypeError):
+            continue  # a malformed entry is skipped, never crashes the run (fail-soft)
+        targets[(lo, hi)] = invert_series(p, bo3)  # P(lower-id beats higher-id on a MAP)
+        market_blend[key] = (p, var)
+
+    if not targets:
+        return base_ratings, None, cache.get("_meta", {}).get("fetched_at")
+
+    # Gauge anchor: the top seed (id == min seed) holds its rating fixed so the fit is identifiable.
+    anchor_id = min(t.id for t in teams)
+    ratings = fit_ratings(targets, teams, float(S), anchor_id)
+    return ratings, market_blend, cache.get("_meta", {}).get("fetched_at")
 
 
-def _compute_or_serve(ratings: dict, locked: dict):
-    """Get-or-compute the MC Result for ``(ratings, S, N, locked)`` — returns (result, cache_key).
+def _cache_key_for(ratings: dict, locked: dict, fetched_at=None):
+    """The ``(ratings_key, S, int(N), locked_key, fetched_at)`` cache tuple.
+
+    ``fetched_at`` (the cache's ``_meta.fetched_at``, or None when rating-only) is folded into the
+    key so a FRESH fetch that moves only the epistemic ``var`` (not the back-solved ratings) still
+    invalidates the memoized Result — no stale epistemic band is served (T-05-STALEBAND).
+    """
+    return (freeze_ratings(ratings), S, int(N), freeze_locked(locked), fetched_at)
+
+
+def _compute_or_serve(ratings: dict, locked: dict, market_blend=None, fetched_at=None):
+    """Get-or-compute the MC Result for the run key — returns (result, cache_key).
 
     Single source for BOTH the current Run and the LIVE empty-locked anchor compute. A cache
     HIT serves the stored Result (no recompute); a MISS drives the progress bar over
     run_mc_progressive ONCE and memoizes it. Each DISTINCT key computes at most once, so the
     CR-01 single-compute guard stays green even when LIVE mode also computes the empty-locked
     pre_key (a different key from the locked run).
+
+    ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at`` is folded
+    into the cache key so a fresh fetch (moved var) invalidates the memoized Result (T-05-STALEBAND).
     """
-    cache_key = _cache_key_for(ratings, locked)
+    cache_key = _cache_key_for(ratings, locked, fetched_at)
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         return cache[cache_key], cache_key
-    result = _drive_progress(ratings, S, int(N), locked)
+    result = _drive_progress(ratings, S, int(N), locked, market_blend)
     cache[cache_key] = result
     # Evict oldest entries so the retained per-sim samples can't grow unbounded across
     # a long session of re-runs (insertion-ordered dict → pop oldest first).
@@ -389,12 +490,18 @@ def _run_or_serve():
         # ERROR state (UI-05): block Run, engine NEVER called.
         return None, BAD_RATING_MSG, None
     ratings = {r["seed"]: float(r["rating"]) for r in edited}
+    # Phase 5 odds seam (ODDS-04/05): if a valid data/odds_cache.json is present, REPLACE the
+    # manual ratings with the back-solved ones AND carry the market blend/var into the epistemic
+    # outer loop; the cache's _meta.fetched_at folds into the cache key (T-05-STALEBAND). Absent /
+    # invalid / empty cache -> (ratings, None, None) unchanged: the rating-only path, no behavior
+    # change, the existing 'live odds off' banner stays (DX-01/ODDS-08).
+    ratings, market_blend, fetched_at = _odds_from_cache(ratings)
     # Phase 4 fill point: the engine ``locked`` dict is DERIVED from KEY_LOCKED (the ordered
     # lock list) via the pure projection, then flows through the UNCHANGED freeze_locked ->
     # locked_key -> cache_key path so a non-empty lock changes the key and re-sims (RESIM-01).
     # In PRE_STAGE / first-run the list is empty -> locked == {} (no behavior change).
     locked = locked_dict(st.session_state.get(KEY_LOCKED, []))
-    result, cache_key = _compute_or_serve(ratings, locked)
+    result, cache_key = _compute_or_serve(ratings, locked, market_blend, fetched_at)
     return result, None, cache_key
 
 
@@ -411,8 +518,15 @@ def _live_anchor(ratings: dict, ids: list[int]):
 
     The anchor is re-served from session_state on later reruns; only a first-ever capture runs
     the optimizer. ``pre_lock_result`` is returned so ``before`` is read off the pre_key sample.
+
+    Phase 5: the pre_key uses the SAME odds-fed ratings + blend/var + fetched_at as the locked run
+    (via _odds_from_cache) so the empty-locked baseline is consistent with the odds-fed numbers and
+    the pre_key matches a real cache entry (no separate rating-only baseline under live odds).
     """
-    pre_lock_result, pre_key = _compute_or_serve(ratings, {})  # empty-locked = pre_key
+    ratings, market_blend, fetched_at = _odds_from_cache(ratings)
+    pre_lock_result, pre_key = _compute_or_serve(
+        ratings, {}, market_blend, fetched_at
+    )  # empty-locked = pre_key
     anchor = st.session_state.get(KEY_LIVE_ANCHOR)
     if anchor is None:
         anchor = optimize_cached(pre_lock_result, *pre_key).recommended

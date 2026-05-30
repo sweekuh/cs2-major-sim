@@ -67,15 +67,22 @@ def run_mc_cached(
 
 @st.cache_data(show_spinner=False)
 def optimize_cached(
-    _result: Result, ratings_key: tuple, S: float, N: int, locked_key: tuple
+    _result: Result,
+    ratings_key: tuple,
+    S: float,
+    N: int,
+    locked_key: tuple,
+    fetched_at=None,
 ) -> OptimizerOutput:
     """Cached Pick'Em optimizer output (OPT-01..05), memoized on the MC cache tuple.
 
-    Cache key = ``(ratings_key, S, N, locked_key)`` — the SAME key as ``run_mc_cached``, so
-    the recommendation recomputes only when the run does (and, in Phase 4, when ``locked``
-    changes). ``_result`` carries the leading underscore so it is EXCLUDED from the key:
-    that is correct HERE (and the opposite of the ``locked`` rule) because the Result is a
-    pure function of the key, so the already-computed Result can be reused without re-running
-    the N-sim MC — the optimizer only scores ``_result.sample`` (ROADMAP SC4, never re-sims).
+    Cache key = ``(ratings_key, S, N, locked_key, fetched_at)`` — the SAME key as the app's run
+    cache_key, so the recommendation recomputes only when the run does (when ``locked`` changes in
+    Phase 4, or when a fresh odds fetch moves ``_meta.fetched_at`` in Phase 5 — T-05-STALEBAND).
+    ``_result`` carries the leading underscore so it is EXCLUDED from the key: that is correct HERE
+    (and the opposite of the ``locked`` rule) because the Result is a pure function of the key, so
+    the already-computed Result can be reused without re-running the N-sim MC — the optimizer only
+    scores ``_result.sample`` (ROADMAP SC4, never re-sims). ``fetched_at`` defaults None so the
+    pre-Phase-5 rating-only call sites are unchanged.
     """
     return optimize(_result, load_teams())
