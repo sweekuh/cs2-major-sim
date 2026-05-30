@@ -74,19 +74,37 @@ def difficulty(t) -> int:
 def epistemic_draws(
     blend: Sequence[float],
     var: Sequence[float],
+    *,
+    k: int = 1,
+    rng=None,
 ) -> Iterator[Sequence[float]]:
-    """Epistemic OUTER-loop generator (PROB-03).
+    """Epistemic OUTER-loop generator (PROB-03/04/05).
 
-    Phase 1 has exactly one probability source (ratings), so this yields EXACTLY ONE
-    point p-vector (the blend, a single-source no-op). Because the spread across draws is
-    zero, the reported band collapses to the inner Wilson (aleatoric) band (PROB-05).
+    Yields ``k`` per-element draws of the p-vector. The draw lives ONLY here (the OUTER
+    loop); burying it in the inner per-sim loop would fold epistemic spread into aleatoric
+    noise and make the Wilson band falsely tight at large N (Pitfall 4).
 
-    The loop is structured OUTER now so Phase 5 fills K Beta draws
-    (``rng.beta(*beta_moment_fit(mean, v))`` per element) without a rewrite — burying the
-    Beta draw in the inner per-sim loop would fold epistemic into aleatoric noise and make
-    the Wilson band falsely tight at large N (Pitfall 4).
+    NO-OP PATH (GATE guard, T-05-GATE): if ``rng is None`` OR every ``var`` element is
+    ``<= 0`` (the rating-only / single-source case), yield ``list(blend)`` EXACTLY ``k``
+    times. With the defaults ``k=1, rng=None`` this is a single ``yield list(blend)`` —
+    BYTE-IDENTICAL to the Phase-1 stub, so the rating-only counts are unchanged and GATE-01
+    stays green.
+
+    BETA PATH (real cross-source disagreement, ``var > 0`` with an ``rng``): each draw
+    perturbs every element with ``var > 0`` via ``rng.beta(*beta_moment_fit(mean, v))`` —
+    the OUTER epistemic spread (PROB-03/04). The variance clamp is the EXISTING
+    ``beta_moment_fit`` (var < mean*(1-mean)); it is CALLED here, never re-implemented
+    (Pitfall 5 / T-05-CLAMP) so a thin-liquidity high-var match never crashes ``rng.beta``.
     """
-    yield list(blend)
+    if rng is None or all(v <= 0.0 for v in var):
+        for _ in range(k):
+            yield list(blend)
+        return
+    for _ in range(k):
+        yield [
+            float(rng.beta(*beta_moment_fit(m, v))) if v > 0.0 else m
+            for m, v in zip(blend, var)
+        ]
 
 
 def beta_moment_fit(mean: float, var: float) -> tuple[float, float]:

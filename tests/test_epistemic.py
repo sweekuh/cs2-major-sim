@@ -88,9 +88,11 @@ def test_band_stable_in_N():
     w1 = _band_width(epi1.band_advance, lo_id)
     w2 = _band_width(epi2.band_advance, lo_id)
 
-    # Pure Wilson at N2 (the aleatoric-only reference) shrinks ~1/sqrt(N).
-    wilson_n2 = wilson(epi2.counts_advance[lo_id], N2)
-    wilson_n2_width = wilson_n2[1] - wilson_n2[0]
+    # Pure Wilson at N2 (the aleatoric-only reference): a SINGLE-draw rating-only run at N2.
+    # var=0 collapses epistemic_draws to one draw, so band_advance IS the inner Wilson band
+    # at N2 (it shrinks ~1/sqrt(N)). This is the genuine no-epistemic comparison.
+    wilson_ref = run_mc(teams, None, 40.0, N2, {}, seed=11, market_blend=None)
+    wilson_n2_width = _band_width(wilson_ref.band_advance, lo_id)
 
     # Epistemic band is N-invariant: w2 is within a small factor of w1 (does not collapse).
     assert w2 > 0.5 * w1, (

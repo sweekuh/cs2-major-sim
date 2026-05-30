@@ -42,6 +42,10 @@ from engine.teams import ADVANCE_AT_WINS, ELIMINATE_AT_LOSSES, Team
 
 DEFAULT_N = 100_000
 DEFAULT_N_CHUNKS = 20
+# Number of epistemic OUTER draws when real cross-source variance is present (PROB-03/04).
+# Small (like DEFAULT_N_CHUNKS) — total sims = K * N. The rating-only / zero-var path uses
+# exactly ONE draw so its counts stay byte-identical to the pre-Phase-5 hot path.
+DEFAULT_EPISTEMIC_DRAWS = 12
 
 
 def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
@@ -120,6 +124,29 @@ def _chunk_sizes(n: int, n_chunks: int) -> list[int]:
     return [base + (1 if i < rem else 0) for i in range(n_chunks)]
 
 
+def _epistemic_inputs(teams, market_blend):
+    """Build the (blend, var, match_keys) vectors the OUTER loop draws over.
+
+    ``market_blend`` (the Phase-5 odds seam) is ``dict[str, tuple[float, float]]`` keyed by
+    the id-bucket ``"lo-hi"`` carrying ``(p, var)`` for the imminent round's KNOWN matchups
+    — ``p`` = P(lower-id team wins the series), ``var`` = raw cross-source variance (clamped
+    downstream by ``beta_moment_fit``). None / empty -> a zero-var single-element vector,
+    which the no-op guard in ``epistemic_draws`` collapses to a single ``list(blend)`` draw
+    (the rating-only path, byte-identical counts).
+
+    Returns (blend, var, keys): parallel lists where ``keys[i]`` is the id-bucket string the
+    drawn ``p_vec[i]`` overrides; an empty market_blend yields a 1-element placeholder vector
+    with var 0.0 and key None (no override).
+    """
+    if not market_blend:
+        # Single-source no-op placeholder (matches the pre-Phase-5 behavior).
+        return [0.0], [0.0], [None]
+    keys = sorted(market_blend.keys())
+    blend = [float(market_blend[k][0]) for k in keys]
+    var = [float(market_blend[k][1]) for k in keys]
+    return blend, var, keys
+
+
 def run_mc_progressive(
     teams: list[Team],
     ratings: dict[int, float] | None,
@@ -129,6 +156,8 @@ def run_mc_progressive(
     *,
     seed: int,
     n_chunks: int = DEFAULT_N_CHUNKS,
+    market_blend: dict[str, tuple[float, float]] | None = None,
+    k_epistemic: int = DEFAULT_EPISTEMIC_DRAWS,
 ) -> Iterator[Partial]:
     """Run N stage sims generator-first; yield a Partial per chunk, return the Result.
 
@@ -138,12 +167,24 @@ def run_mc_progressive(
     logistic spread, ``N`` the sim count, ``locked`` the deterministic-winner dict (Phase-4
     seam), ``seed`` the only randomness source, ``n_chunks`` PINNED (default 20).
 
-    Structure (RESEARCH Pattern 1/2/3):
-      OUTER epistemic loop -> single point draw in Phase 1 (PROB-03/05);
-      INNER aleatoric loop -> per chunk, per sim, call simulate_stage with that chunk's rng;
+    ``market_blend`` (keyword-only, the Phase-5 odds seam — default None = unchanged):
+    ``dict["lo-hi" -> (p, var)]`` of the imminent round's market-priced matchups, ``p`` =
+    P(lower-id team wins the series), ``var`` = raw cross-source (epistemic) variance.
+
+    Structure (RESEARCH Pattern 1/2/3 + D6):
+      OUTER epistemic loop -> ``epistemic_draws`` yields K perturbed p-vectors when real
+        var is present (each drawn p becomes that draw's per-match ``market_overrides``),
+        and EXACTLY ONE no-op draw when var is all-zero / no market_blend (so the
+        rating-only counts are byte-identical and GATE-01 stays green; PROB-03/04);
+      INNER aleatoric loop -> per chunk, per sim, call simulate_stage with that chunk's rng
+        AND that draw's market_overrides;
       tally per-team 3-0/advance/0-3 (MC-01) AND append the per-sim record vector (MC-04);
-      yield Partial(done, total, running_p_adv) after each chunk (MC-05);
-      finally aggregate per-team P with hand-coded Wilson bands (MC-02) and ``return`` it.
+      yield Partial after each chunk (MC-05);
+      the reported per-team band is the UNION of each draw's inner Wilson interval across
+        the K draws — so it ⊇ a single Wilson band and does NOT shrink with N on a
+        high-disagreement match (the across-draw spread is N-invariant; only each draw's
+        Wilson half-width narrows with N). With one no-op draw it collapses to exactly the
+        single Wilson interval (PROB-05).
     """
     if N <= 0:
         raise ValueError(f"N must be a positive integer, got {N!r}")
@@ -158,44 +199,84 @@ def run_mc_progressive(
 
     sizes = _chunk_sizes(N, n_chunks)
 
-    # OUTER epistemic loop (PROB-03/05): Phase 1 yields exactly one point draw, so the
-    # spread across draws is zero and the reported band collapses to the inner Wilson band.
-    # blend/var are single-source placeholders; Phase 5 supplies real per-source values.
-    blend = [t.rating for t in teams]
-    var = [0.0] * len(teams)
-    for _p_vec in epistemic_draws(blend, var):
+    # OUTER epistemic loop (PROB-03/04/05). Build the (blend, var) the draws perturb from
+    # the market disagreement (D6: draw at the blended-MATCH level). var all-zero -> the
+    # no-op guard yields exactly ONE draw -> byte-identical rating-only counts.
+    blend, var, match_keys = _epistemic_inputs(teams, market_blend)
+    has_epistemic = any(v > 0.0 for v in var)
+    k = k_epistemic if has_epistemic else 1
+    # A DISTINCT child SeedSequence per outer draw so the Beta perturbations are reproducible
+    # AND the inner chunk RNG differs per draw (reproducibility survives the K draws).
+    draw_ss = np.random.SeedSequence(seed).spawn(k) if has_epistemic else [None]
+    beta_rng = np.random.default_rng(np.random.SeedSequence(seed).spawn(1)[0]) if has_epistemic else None
+
+    # Per-draw per-team counts so the final band is the across-draw union of Wilson intervals.
+    per_draw_adv: list[dict[int, int]] = []
+    per_draw_30: list[dict[int, int]] = []
+    per_draw_03: list[dict[int, int]] = []
+
+    draw_idx = 0
+    for p_vec in epistemic_draws(blend, var, k=k, rng=beta_rng):
+        # Translate this draw's p-vector into the per-match market_overrides dict
+        # (id-bucket keyed, p = P(lower-id wins)); None keys (no market_blend) -> no override.
+        overrides = None
+        if has_epistemic:
+            overrides = {
+                key: float(p_vec[i])
+                for i, key in enumerate(match_keys)
+                if key is not None
+            }
+
+        # Per-DRAW counts (accumulate the global counts across draws for the live tally).
+        d_30 = {i: 0 for i in ids}
+        d_adv = {i: 0 for i in ids}
+        d_03 = {i: 0 for i in ids}
+
         # INNER aleatoric loop: pinned chunks, one child Generator each (chunk-safe repro).
-        ss = np.random.SeedSequence(seed)
-        child_seeds = ss.spawn(n_chunks)
+        # Each outer draw uses its own child SeedSequence so the K draws do not share a stream.
+        base_ss = draw_ss[draw_idx] if has_epistemic else np.random.SeedSequence(seed)
+        child_seeds = base_ss.spawn(n_chunks)
         done = 0
         for chunk_idx, chunk_n in enumerate(sizes):
             # When n_chunks > N, _chunk_sizes emits trailing zero-sized chunks. Skip them
             # so they neither emit a spurious no-progress Partial (which would mislead the
             # Phase-2 UI) nor risk a divide-by-zero in running_p_adv before any sim lands.
-            # Skipping is reproducibility-safe: a zero-sized chunk consumes no RNG draws,
-            # so leaving its pinned child seed unused does not shift any other chunk.
             if chunk_n == 0:
                 continue
             rng = np.random.default_rng(child_seeds[chunk_idx])
             for _ in range(chunk_n):
-                by_id = simulate_stage(_fresh_teams(teams), ratings, S, rng, locked)
+                by_id = simulate_stage(
+                    _fresh_teams(teams), ratings, S, rng, locked,
+                    market_overrides=overrides,
+                )
                 rec: dict[int, tuple[int, int]] = {}
                 for tid, t in by_id.items():
                     rec[tid] = (t.wins, t.losses)
                     if t.wins >= ADVANCE_AT_WINS:
                         counts_advance[tid] += 1
+                        d_adv[tid] += 1
                         if t.losses == 0:
                             counts_30[tid] += 1
+                            d_30[tid] += 1
                     if t.losses >= ELIMINATE_AT_LOSSES and t.wins == 0:
                         counts_03[tid] += 1
+                        d_03[tid] += 1
                 sample.append(rec)
                 done += 1
-            running_p_adv = {i: counts_advance[i] / done for i in ids}
-            yield Partial(done=done, total=N, running_p_adv=running_p_adv)
+            total_done = sum(sum(d.values()) for d in per_draw_adv) + done
+            running_p_adv = {i: counts_advance[i] / max(1, total_done) for i in ids}
+            yield Partial(done=total_done, total=N * k, running_p_adv=running_p_adv)
 
-    band_30 = {i: wilson(counts_30[i], N) for i in ids}
-    band_advance = {i: wilson(counts_advance[i], N) for i in ids}
-    band_03 = {i: wilson(counts_03[i], N) for i in ids}
+        per_draw_30.append(d_30)
+        per_draw_adv.append(d_adv)
+        per_draw_03.append(d_03)
+        draw_idx += 1
+
+    # Reported band = UNION of each draw's inner Wilson interval across the K draws. With one
+    # no-op draw it is exactly the single Wilson interval (byte-identical band, PROB-05).
+    band_30 = _union_band(per_draw_30, N, ids)
+    band_advance = _union_band(per_draw_adv, N, ids)
+    band_03 = _union_band(per_draw_03, N, ids)
 
     return Result(
         n=N,
@@ -209,6 +290,26 @@ def run_mc_progressive(
     )
 
 
+def _union_band(per_draw_counts, N, ids):
+    """Per-team band = union of each draw's inner Wilson interval (the epistemic band).
+
+    For each team, lo = min over draws of that draw's Wilson lo, hi = max over draws of that
+    draw's Wilson hi. With a single draw this is exactly ``wilson(count, N)`` (so the
+    rating-only band is byte-identical). With K draws over a high-disagreement match the
+    across-draw spread of the point estimates inflates the union beyond a single Wilson band
+    and does NOT shrink with N (only each draw's Wilson half-width narrows; PROB-05).
+    """
+    band: dict[int, tuple[float, float]] = {}
+    for i in ids:
+        los, his = [], []
+        for d in per_draw_counts:
+            lo, hi = wilson(d[i], N)
+            los.append(lo)
+            his.append(hi)
+        band[i] = (min(los), max(his))
+    return band
+
+
 def run_mc(
     teams: list[Team],
     ratings: dict[int, float] | None,
@@ -218,15 +319,22 @@ def run_mc(
     *,
     seed: int,
     n_chunks: int = DEFAULT_N_CHUNKS,
+    market_blend: dict[str, tuple[float, float]] | None = None,
+    k_epistemic: int = DEFAULT_EPISTEMIC_DRAWS,
 ) -> Result:
     """Drain run_mc_progressive and return the final Result (the cache-wrapper seam).
 
     This is the function Phase 2 decorates with ``@st.cache_data`` (key includes ``locked``
     so re-sim does not serve stale numbers). It imports no streamlit — it only drains the
     generator, discarding the per-chunk Partials and capturing the generator's return value.
+
+    ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
+    ``dict["lo-hi" -> (p, var)]`` of the imminent round's market-priced matchups; var>0
+    drives the K-Beta epistemic outer loop, var all-zero / None is the exact no-op (GATE-01).
     """
     gen = run_mc_progressive(
-        teams, ratings, S, N, locked or {}, seed=seed, n_chunks=n_chunks
+        teams, ratings, S, N, locked or {}, seed=seed, n_chunks=n_chunks,
+        market_blend=market_blend, k_epistemic=k_epistemic,
     )
     result: Result | None = None
     try:
