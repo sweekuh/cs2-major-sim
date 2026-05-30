@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_planned
-stopped_at: Phase 4 merged to master (PR #4 squash cf5a84f). Planned Phase 5 (Odds Ensemble) — 3 plans, plan-checker PASS + 3 warnings hardened
-last_updated: "2026-05-30T01:54:07.922Z"
+status: In Progress — Phase 5 executing (05-01 done; next 05-02)
+stopped_at: Executed Phase 5 plan 05-01 (pure odds core, TDD) on branch phase-5-odds — odds/ package shipped; 10 new odds tests, full suite 99 passed, GATE-01 green, httpx kept out of import path
+last_updated: "2026-05-29T00:00:00.000Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 14
-  completed_plans: 11
-  percent: 79
+  completed_plans: 13
+  percent: 93
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 
 ## Current Position
 
-Phase: 5 (odds-ensemble) — PLANNED (3 plans written, plan-checker PASS, 3 warnings hardened)
-Plan: 05-01 (pure odds core, TDD, wave 1) ∥ 05-02 (back-solve + epistemic fill, TDD, wave 1) → 05-03 (fetch + cache + UI, AppTest, wave 2) — not yet executed
-Status: Planned — next is `/gsd-execute-phase 5`
+Phase: 5 (odds-ensemble) — IN PROGRESS (05-01 EXECUTED; 05-02 ∥ next, 05-03 wave 2)
+Plan: 05-01 (pure odds core, TDD, wave 1) DONE ∥ 05-02 (back-solve + epistemic fill, TDD, wave 1) → 05-03 (fetch + cache + UI, AppTest, wave 2)
+Status: In Progress — next is execute 05-02
 Last activity: 2026-05-29
 
-Progress: [████████░░] 79% (4/6 phases complete; Phase 5 planned). Phase 4 merged to master as cf5a84f.
+Progress: [█████████▌] 93%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [████████░░] 79% (4/6 phases complete; Phase 5 pla
 | Phase 02 P03 | 12 | 3 tasks | 5 files |
 | Phase 04 P01 | 12 min | 3 tasks | 2 files |
 | Phase 04 P02 | 22 min | 2 tasks | 4 files |
+| Phase 05 P01 | 25 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Recent decisions affecting current work:
 - [Phase 4 P01 EXECUTED 2026-05-29]: `engine/live.py` shipped — pure, streamlit-free live-mode core over the FROZEN engine (no engine mutation; GATE-01 Budapest backtest still green). `locked_dict_from_results` (D1), `validate_lock` with 5 EXACT reason strings keyed on id (D3/RESIM-03), `classify_pick` secured/dead/live via exact P==1/P==0 against the conditional `build_outcome_matrices` (D4/RESIM-02), `pge5_delta` as two `p_ge5` calls on ONE fixed anchor ballot (D5/RESIM-02), `derive_bracket`/`legal_pairings_for_round` replaying `simulate_stage(..., pairings_out=[])` (D6/RESIM-04).
 - [Phase 4 P01 EXECUTED 2026-05-29]: BLOCKER-2 rng-invariance guard — `legal_pairings_for_round` REQUIRES a fully-locked prefix (compares each prior round's locked set to the engine's `pairings_out[r]`) and raises `LivePrefixIncomplete` rather than return a single-RNG-draw artifact; `test_legal_pairings_requires_full_prefix` proves the returned set is invariant across two differently-seeded replays. 11 new tests (incl. 3 CRITICALs); full suite 79 passed.
 - [Phase 4 P02 EXECUTED 2026-05-29]: LIVE-mode UI wired into `app.py` — the `locked={}` fill point in `_run_or_serve` became `locked_dict(st.session_state[KEY_LOCKED])` flowing through the EXISTING `freeze_locked`→`cache_key` path (no new key, no `_locked` escape), so a non-empty lock re-sims for free and ≥1 P(advance) moves (RESIM-01). New `ui/state.py` keys `KEY_LOCKED`/`KEY_LIVE_ANCHOR`/`KEY_PENDING_LOCK` + pure list-in/list-out helpers (`add_lock`/`remove_last_lock`/`locks_for_round`/`locked_dict`). `ui/render.py` `bracket_columns_html` = record-bucket flex columns, solid-locked/faint-simulated, escaped names, never a tree (RESIM-04).
+- [Phase 5 P01 EXECUTED 2026-05-29]: `odds/` package shipped (TDD) — `base.py` PURE numpy (OddsQuote/BlendedProb, `devig_fixed_two_way` two-way overround for vig_type=fixed, `normalize_market_price` for vig_type=market NEVER two-way de-vigged [Pitfall 8], `pool()` originate/liquidity-weighted log-opinion geometric-mean-in-logit + delta-method cross-source var). `oddspapi.py` pre-pools the soft-book bundle to ONE Pinnacle-anchored opinion (originate Pinnacle=1.0/soft=0.3) so `pool()` never headcounts [Pitfall 7]. `polymarket.py`/`kalshi.py` keyless; empty market -> []. httpx LAZY-imported inside `fetch()` only — verified NOT in sys.modules after import+parse (D1/DX-01). Added `odds/_match.py` (Rule-3 structural) to isolate the lone `engine.teams` import and keep base.py engine-free. 10 new odds tests; full suite 99 passed; GATE-01 green; zero engine/app/ui mutation. ODDS-01/02/03/05 complete.
 - [Phase 4 P02 EXECUTED 2026-05-29]: BLOCKER-1 anchor flow — `_compute_or_serve` extracted as the shared get-or-compute; the delta anchor (Ballot B) is captured ONCE from the EMPTY-locked `pre_key=(ratings_key,S,int(N),freeze_locked({}))` Result via `optimize_cached(pre_lock_result,*pre_key).recommended`, stored in `KEY_LIVE_ANCHOR`, never re-optimized; `pge5_delta`'s `before` reads the pre_key Result's OWN sample. The empty-locked pre_key is a DISTINCT key from the locked run, so CR-01 single-compute stays green. Round-R controls gated on R-1 fully entered (BLOCKER-2 in the UI). +5 live AppTests +1 pure bracket assertion; full suite 85 passed, GATE-01 green, no engine mutation. Phase 4 COMPLETE.
 
 ### Pending Todos
@@ -126,12 +128,12 @@ Items acknowledged and carried forward:
 ## Session Continuity
 
 Last session: 2026-05-29
-Stopped at: Executed Phase 4 plan 04-02 (LIVE-mode UI wiring) on branch phase-4-live-mode — Phase 4 COMPLETE; +5 live AppTests +1 pure bracket assertion, full suite 85 passed, GATE-01 green
+Stopped at: Executed Phase 5 plan 05-01 (pure odds core, TDD) on branch phase-5-odds — odds/ package shipped; 10 new odds tests, full suite 99 passed, GATE-01 green, httpx kept out of the import path
 Resume file: None
-Resume path: Phase 4 done — next is `/gsd-plan-phase 5` (Odds Ensemble) and `/gsd-verify-work 4`
+Resume path: 05-01 done — next is execute 05-02 (back-solve + epistemic fill, TDD, wave 1) then 05-03 (fetch + cache + UI)
 
 **Completed Phase:** 04 (conditional-re-sim-live-mode) — 2 plans — 2026-05-29
-**Next Phase:** 05 (odds-ensemble) — not yet planned
+**Current Phase:** 05 (odds-ensemble) — IN PROGRESS (05-01 of 3 done)
 
 Next: Phase 5 (Odds Ensemble) — live multi-provider market odds blended into honestly-banded
 probabilities, back-solved into per-team ratings; fail-soft (never gates, first run needs no
