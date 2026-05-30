@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Engine + Backtest Gate** - Headless Valve Swiss engine + generator-first MC; round-by-round backtest is a hard blocking gate
 - [ ] **Phase 2: Streamlit UI Shell** - Two-mode app with `locked`-keyed cache, CI mini-bars, [INFERRED]-seed banner, zero-config first run
 - [x] **Phase 3: Pick'Em Optimizer** - Ballot A (E[correct]) + Ballot B (P(≥5)) against the stored sim sample, with correlated-pick warning
-- [ ] **Phase 4: Conditional Re-Sim + Live Mode** - Round-by-round result locking, live/dead/secured status with P(≥5) delta, record-bucket bracket
+- [x] **Phase 4: Conditional Re-Sim + Live Mode** - Round-by-round result locking, live/dead/secured status with P(≥5) delta, record-bucket bracket (✅ 2026-05-29 — both plans executed, full suite 85 passed, GATE-01 green)
 - [ ] **Phase 5: Odds Ensemble** - Three-provider log-opinion pool, ratings back-solve, epistemic outer loop, read-only cache seam; fails soft, never gates
 - [ ] **Phase 6: Full-Major v3** - Stages 2–3 Swiss + playoff single-elim via the same engine; optional map-level Bo3 only if backtest demands
 
@@ -111,7 +111,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The bracket renders as record-bucket columns (HLTV/Liquipedia convention, never a tree) with locked/real results solid and simulated branches faint (RESIM-04).
 **Plans**: 2 plans
 - [x] 04-01-PLAN.md — `engine/live.py` pure core (TDD): lock-list↔`locked`-dict projection, `validate_lock` (rematch/terminated/non-pairing/double-booking/winner-not-in-pair reasons), `classify_pick` live/dead/secured against the conditional sample, `pge5_delta` reusing `optimizer.p_ge5` on a fixed anchor ballot, `derive_bracket`/`legal_pairings_for_round` replaying `simulate_stage(..., pairings_out=[])` (full-locked-prefix precondition) + `tests/test_live.py`. No engine mutation (RESIM-02/03/04) — ✅ EXECUTED 2026-05-29: 11 tests, full suite 79 passed, GATE-01 green
-- [ ] 04-02-PLAN.md — LIVE-mode UI wiring: round-by-round lock controls → `KEY_LOCKED` → existing `freeze_locked`→`cache_key` path (re-sim fires for free), from-here delta filling `_hero_slot`, per-pick status chips, record-bucket bracket (solid-locked/faint-simulated columns), `validate_lock` gating with `st.error` reason + AppTest (RESIM-01/02/03/04)
+- [x] 04-02-PLAN.md — LIVE-mode UI wiring: round-by-round lock controls → `KEY_LOCKED` → existing `freeze_locked`→`cache_key` path (re-sim fires for free), from-here delta filling `_hero_slot`, per-pick status chips, record-bucket bracket (solid-locked/faint-simulated columns), `validate_lock` gating with `st.error` reason + AppTest (RESIM-01/02/03/04) — ✅ EXECUTED 2026-05-29: +5 live AppTests +1 pure bracket assertion, full suite 85 passed, GATE-01 green, no engine mutation
 **UI hint**: yes
 
 **Note:** This phase is primarily UI additions and classification logic — re-sim fires for free because `locked` is already in the cache key from Phase 2 and honored by swiss.py from Phase 1. If those Phase 1×2 seams were skipped, this becomes a re-architecture.

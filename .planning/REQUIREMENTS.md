@@ -79,7 +79,8 @@
 
 ### Conditional re-simulation & live mode (killer feature)
 
-- [ ] **RESIM-01**: User locks actual results round by round; MC re-runs conditioned on current standings/Buchholz/rematch history; re-sim fires via the cache key including `locked`
+- [x] **RESIM-01
+**: User locks actual results round by round; MC re-runs conditioned on current standings/Buchholz/rematch history; re-sim fires via the cache key including `locked`
 - [x] **RESIM-02
 **: Each locked pick is shown as live / dead / secured with a P(≥5)-from-here delta (e.g. `71% → 58%`)
 - [x] **RESIM-03
@@ -206,10 +207,10 @@ Which phases cover which requirements.
 | OPT-03 | Phase 3 | Done |
 | OPT-04 | Phase 3 | Done |
 | OPT-05 | Phase 3 | Done |
-| RESIM-01 | Phase 4 | Pending |
-| RESIM-02 | Phase 4 | Pending |
-| RESIM-03 | Phase 4 | Pending |
-| RESIM-04 | Phase 4 | Pending |
+| RESIM-01 | Phase 4 | Done |
+| RESIM-02 | Phase 4 | Done |
+| RESIM-03 | Phase 4 | Done |
+| RESIM-04 | Phase 4 | Done |
 | ODDS-01 | Phase 5 | Pending |
 | ODDS-02 | Phase 5 | Pending |
 | ODDS-03 | Phase 5 | Pending |
