@@ -1,0 +1,18 @@
+{
+  "_comment": "[ASSUMED — verify once Cologne markets post] Recorded-shape Kalshi trade-api/v2/markets response. A Cologne per-match market (GamerLegion to win vs NRG) quoted yes_bid/yes_ask in CENTS (0-100) — keyless public read. The yes-mid is ~a probability (vig_type=market): NEVER two-way de-vig. The CS2 series ticker is A5 [DEFERRED] and Kalshi esports coverage is sparse, so an empty markets:[] (no market posted) is a legitimate fail-soft path — see the 'empty' variant. Reconciled at the 05-03 live-verify checkpoint.",
+  "markets": [
+    {
+      "ticker": "KXCS2COLOGNE-26-GLNRG-GL",
+      "title": "Will GamerLegion beat NRG at IEM Cologne 2026?",
+      "team_a": "GamerLegion",
+      "team_b": "NRG",
+      "bo3": false,
+      "yes_bid": 66,
+      "yes_ask": 70
+    }
+  ],
+  "empty": {
+    "_comment": "no Cologne market posted yet — the fail-soft empty-market variant (ODDS-05). get_quotes must return [] here, never raise.",
+    "markets": []
+  }
+}
