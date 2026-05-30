@@ -2,15 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: In Progress — Phase 5 executing (05-01 done; next 05-02)
-stopped_at: Executed Phase 5 plan 05-01 (pure odds core, TDD) on branch phase-5-odds — odds/ package shipped; 10 new odds tests, full suite 99 passed, GATE-01 green, httpx kept out of import path
-last_updated: "2026-05-29T00:00:00.000Z"
-last_activity: 2026-05-29
+current_phase: 05 (odds-ensemble) — IN PROGRESS (05-02 of 3 done)
+status: executing
+stopped_at: Executed Phase 5 plan 05-02 (back-solve + epistemic outer loop, TDD) on branch phase-5-odds — engine/backsolve.py shipped + epistemic_draws/market_overrides filled; 8 new tests, full suite 107 passed, GATE-01 green, rating-only path byte-identical
+last_updated: "2026-05-30T06:50:00.000Z"
+last_activity: 2026-05-30
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 93
 ---
 
@@ -25,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-05-28)
 
 ## Current Position
 
-Phase: 5 (odds-ensemble) — IN PROGRESS (05-01 EXECUTED; 05-02 ∥ next, 05-03 wave 2)
-Plan: 05-01 (pure odds core, TDD, wave 1) DONE ∥ 05-02 (back-solve + epistemic fill, TDD, wave 1) → 05-03 (fetch + cache + UI, AppTest, wave 2)
-Status: In Progress — next is execute 05-02
-Last activity: 2026-05-29
+Phase: 5 (odds-ensemble) — IN PROGRESS (05-01 + 05-02 EXECUTED; 05-03 wave 2 next)
+Plan: 05-01 (pure odds core) DONE ∥ 05-02 (back-solve + epistemic fill) DONE → 05-03 (fetch + cache + UI, AppTest, wave 2)
+Status: In Progress — next is execute 05-03
+Last activity: 2026-05-30
 
-Progress: [█████████▌] 93%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -63,6 +64,7 @@ Progress: [█████████▌] 93%
 | Phase 04 P01 | 12 min | 3 tasks | 2 files |
 | Phase 04 P02 | 22 min | 2 tasks | 4 files |
 | Phase 05 P01 | 25 min | 3 tasks | 10 files |
+| Phase 05 P02 | 75 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -98,6 +100,7 @@ Recent decisions affecting current work:
 - [Phase 4 P01 EXECUTED 2026-05-29]: BLOCKER-2 rng-invariance guard — `legal_pairings_for_round` REQUIRES a fully-locked prefix (compares each prior round's locked set to the engine's `pairings_out[r]`) and raises `LivePrefixIncomplete` rather than return a single-RNG-draw artifact; `test_legal_pairings_requires_full_prefix` proves the returned set is invariant across two differently-seeded replays. 11 new tests (incl. 3 CRITICALs); full suite 79 passed.
 - [Phase 4 P02 EXECUTED 2026-05-29]: LIVE-mode UI wired into `app.py` — the `locked={}` fill point in `_run_or_serve` became `locked_dict(st.session_state[KEY_LOCKED])` flowing through the EXISTING `freeze_locked`→`cache_key` path (no new key, no `_locked` escape), so a non-empty lock re-sims for free and ≥1 P(advance) moves (RESIM-01). New `ui/state.py` keys `KEY_LOCKED`/`KEY_LIVE_ANCHOR`/`KEY_PENDING_LOCK` + pure list-in/list-out helpers (`add_lock`/`remove_last_lock`/`locks_for_round`/`locked_dict`). `ui/render.py` `bracket_columns_html` = record-bucket flex columns, solid-locked/faint-simulated, escaped names, never a tree (RESIM-04).
 - [Phase 5 P01 EXECUTED 2026-05-29]: `odds/` package shipped (TDD) — `base.py` PURE numpy (OddsQuote/BlendedProb, `devig_fixed_two_way` two-way overround for vig_type=fixed, `normalize_market_price` for vig_type=market NEVER two-way de-vigged [Pitfall 8], `pool()` originate/liquidity-weighted log-opinion geometric-mean-in-logit + delta-method cross-source var). `oddspapi.py` pre-pools the soft-book bundle to ONE Pinnacle-anchored opinion (originate Pinnacle=1.0/soft=0.3) so `pool()` never headcounts [Pitfall 7]. `polymarket.py`/`kalshi.py` keyless; empty market -> []. httpx LAZY-imported inside `fetch()` only — verified NOT in sys.modules after import+parse (D1/DX-01). Added `odds/_match.py` (Rule-3 structural) to isolate the lone `engine.teams` import and keep base.py engine-free. 10 new odds tests; full suite 99 passed; GATE-01 green; zero engine/app/ui mutation. ODDS-01/02/03/05 complete.
+- [Phase 5 P02 EXECUTED 2026-05-30]: `engine/backsolve.py` shipped (TDD) — `invert_series` exact Bo3 inverse by bisection (identity Bo1, `0.648→0.6`, round-trips 1e-6) + `fit_ratings` hand-rolled numpy Gauss-Newton logistic LS, gauge-anchored, NO scipy (recovers known ratings up to the gauge, reprices targets). FILLED `engine/probs.py:epistemic_draws(blend, var, *, k=1, rng=None)` — K Beta draws via the EXISTING `beta_moment_fit` clamp; `var=0`/`rng=None`/`k=1` is the exact Phase-1 single-point no-op (byte-identical). Threaded keyword-only `market_overrides` `simulate_stage→_play`, oriented to LOWER-id (`p_a = p if a.id<b.id else 1-p`, since pairs arrive difficulty-ranked high/low NOT id-sorted) and routed via `series_prob` (Bo3 NOT re-applied, PROB-02). Added `market_blend` `{"lo-hi":(p,var)}` seam on `run_mc`/`run_mc_progressive`; var>0 drives K=DEFAULT_EPISTEMIC_DRAWS(12) outer draws (distinct child SeedSequence each), reported band = across-draw UNION of Wilson intervals (⊋ inner Wilson, N-invariant on disagreement), var=0 collapses to one draw. 8 new tests (5 backsolve + 3 epistemic incl. orientation guard + band-wider [CRITICAL]); full suite 107 passed; GATE-01 green; rating-only path byte-identical (additive defaults None). ODDS-04/PROB-03/04/05 complete.
 - [Phase 4 P02 EXECUTED 2026-05-29]: BLOCKER-1 anchor flow — `_compute_or_serve` extracted as the shared get-or-compute; the delta anchor (Ballot B) is captured ONCE from the EMPTY-locked `pre_key=(ratings_key,S,int(N),freeze_locked({}))` Result via `optimize_cached(pre_lock_result,*pre_key).recommended`, stored in `KEY_LIVE_ANCHOR`, never re-optimized; `pge5_delta`'s `before` reads the pre_key Result's OWN sample. The empty-locked pre_key is a DISTINCT key from the locked run, so CR-01 single-compute stays green. Round-R controls gated on R-1 fully entered (BLOCKER-2 in the UI). +5 live AppTests +1 pure bracket assertion; full suite 85 passed, GATE-01 green, no engine mutation. Phase 4 COMPLETE.
 
 ### Pending Todos
@@ -127,13 +130,13 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-05-29
-Stopped at: Executed Phase 5 plan 05-01 (pure odds core, TDD) on branch phase-5-odds — odds/ package shipped; 10 new odds tests, full suite 99 passed, GATE-01 green, httpx kept out of the import path
+Last session: 2026-05-30
+Stopped at: Executed Phase 5 plan 05-02 (back-solve + epistemic outer loop, TDD) on branch phase-5-odds — engine/backsolve.py shipped + epistemic_draws/market_overrides filled; 8 new tests, full suite 107 passed, GATE-01 green, rating-only path byte-identical
 Resume file: None
-Resume path: 05-01 done — next is execute 05-02 (back-solve + epistemic fill, TDD, wave 1) then 05-03 (fetch + cache + UI)
+Resume path: 05-01 + 05-02 done — next is execute 05-03 (fetch script + read-only cache + UI fetch button + fail-soft, AppTest, wave 2)
 
 **Completed Phase:** 04 (conditional-re-sim-live-mode) — 2 plans — 2026-05-29
-**Current Phase:** 05 (odds-ensemble) — IN PROGRESS (05-01 of 3 done)
+**Current Phase:** 05 (odds-ensemble) — IN PROGRESS (05-02 of 3 done)
 
 Next: Phase 5 (Odds Ensemble) — live multi-provider market odds blended into honestly-banded
 probabilities, back-solved into per-team ratings; fail-soft (never gates, first run needs no

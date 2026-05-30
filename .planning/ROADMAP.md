@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: Streamlit UI Shell** - Two-mode app with `locked`-keyed cache, CI mini-bars, [INFERRED]-seed banner, zero-config first run
 - [x] **Phase 3: Pick'Em Optimizer** - Ballot A (E[correct]) + Ballot B (P(≥5)) against the stored sim sample, with correlated-pick warning
 - [x] **Phase 4: Conditional Re-Sim + Live Mode** - Round-by-round result locking, live/dead/secured status with P(≥5) delta, record-bucket bracket (✅ 2026-05-29 — both plans executed, full suite 85 passed, GATE-01 green)
-- [ ] **Phase 5: Odds Ensemble** - Three-provider log-opinion pool, ratings back-solve, epistemic outer loop, read-only cache seam; fails soft, never gates (🔄 IN PROGRESS — 05-01 of 3 done 2026-05-29)
+- [ ] **Phase 5: Odds Ensemble** - Three-provider log-opinion pool, ratings back-solve, epistemic outer loop, read-only cache seam; fails soft, never gates (🔄 IN PROGRESS — 05-02 of 3 done 2026-05-30)
 - [ ] **Phase 6: Full-Major v3** - Stages 2–3 Swiss + playoff single-elim via the same engine; optional map-level Bo3 only if backtest demands
 
 ## Phase Details
@@ -129,7 +129,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Adapters discover Cologne fixtures/slugs dynamically; the fetch writes a read-only `data/odds_cache.json` the app only ever reads, and the app never calls `get_quotes()` on a rerun (ODDS-05/ODDS-06/ODDS-07).
 **Plans**: 3 plans
 - [x] 05-01-PLAN.md — pure `odds/` core (TDD): `OddsProvider` adapters (OddsPapi/Polymarket/Kalshi over recorded fixtures), de-vig routed on `vig_type`, OddsPapi bundle pre-pooled to one Pinnacle opinion, liquidity/sharpness-weighted log-opinion `pool()` → `BlendedProb(p,var,n_sources)`. httpx confined to `odds/`. No engine/app mutation (ODDS-01/02/03/05) — ✅ EXECUTED 2026-05-29: 10 new odds tests, full suite 99 passed, GATE-01 green, httpx verified out of the import path
-- [ ] 05-02-PLAN.md — `engine/backsolve.py` (TDD): invert series→map (Bo1 identity, bisection-invert `p²(3−2p)`) + numpy-only Gauss-Newton logistic rating fit (gauge-anchored, no scipy); fill `epistemic_draws` with K Beta draws (k=1+var=0 = byte-identical no-op); additive keyword-only `market_overrides` threaded `simulate_stage`→`_play` (lower-id orientation). Band ⊇ Wilson, N-stable. GATE-01 stays green (ODDS-04/PROB-03/04/05)
+- [x] 05-02-PLAN.md — `engine/backsolve.py` (TDD): invert series→map (Bo1 identity, bisection-invert `p²(3−2p)`) + numpy-only Gauss-Newton logistic rating fit (gauge-anchored, no scipy); fill `epistemic_draws` with K Beta draws (k=1+var=0 = byte-identical no-op); additive keyword-only `market_overrides` threaded `simulate_stage`→`_play` (lower-id orientation). Band ⊇ Wilson, N-stable. GATE-01 stays green (ODDS-04/PROB-03/04/05) — ✅ EXECUTED 2026-05-30: 8 new tests (5 backsolve + 3 epistemic), full suite 107 passed, GATE-01 green, rating-only path byte-identical
 - [ ] 05-03-PLAN.md — fetch + cache + UI: `scripts/fetch_odds.py` (button AND v2 cron, ODDS-07) writing read-only `data/odds_cache.json`; `ui/odds_loader.py` json-only read path; "fetch now" button + fail-soft preservation (no key → rating-only + banner, zero-config first run intact); app never calls providers on rerun. Live slug/ticker confirm = deferred /browse checkpoint (AppTest) (ODDS-05/06/07/08)
 **UI hint**: yes
 

@@ -96,7 +96,8 @@
 **: Per-source normalization — de-vig fixed-odds two-way `p_a = (1/o_a)/(1/o_a + 1/o_b)`; treat prediction-market price as ~probability adjusting only for spread/fees
 - [x] **ODDS-03
 **: Liquidity- and sharpness-weighted log-opinion pool outputs blended p + cross-source variance; weight by originate-vs-copy not headcount; downweight thin/low-`n_sources` markets and quotes near Polymarket UMA resolution
-- [ ] **ODDS-04**: Ratings back-solve — invert each known-round series prob to per-map p (identity Bo1; invert `p²(3−2p)` for Bo3), fit per-team ratings via logistic least-squares at map level; live odds override the imminent round's known matchups
+- [x] **ODDS-04
+**: Ratings back-solve — invert each known-round series prob to per-map p (identity Bo1; invert `p²(3−2p)` for Bo3), fit per-team ratings via logistic least-squares at map level; live odds override the imminent round's known matchups
 - [x] **ODDS-05
 **: Adapters discover Cologne fixtures/market slugs dynamically (markets don't exist until the bracket posts); CS2 sportId/series filtering
 - [ ] **ODDS-06**: Fetch is not streaming — manual "fetch now" button plus per-round triggers; keys read from env (`.env` gitignored, `.env.example` shipped)
