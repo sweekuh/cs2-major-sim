@@ -27,7 +27,12 @@ This file owns four contracts the Plan-02 UI consumes:
 
 from __future__ import annotations
 
-from engine.optimizer import Matrices
+from dataclasses import dataclass, field
+
+import numpy as np
+
+from engine.optimizer import Ballot, Matrices, build_outcome_matrices, p_ge5
+from engine.swiss import simulate_stage
 from engine.teams import ADVANCE_AT_WINS, ELIMINATE_AT_LOSSES, Team
 
 # ---------------------------------------------------------------------------
@@ -167,3 +172,145 @@ def classify_pick(team_id: int, bucket: str, matrices: Matrices) -> str:
     if p <= 0.0:
         return "eliminated"
     return "live"
+
+
+# ===========================================================================
+# D5 — pge5_delta: the from-here arrow as two p_ge5 calls on ONE fixed ballot (RESIM-02)
+# ===========================================================================
+def pge5_delta(
+    anchor_ballot: Ballot,
+    pre_lock_result,
+    post_lock_result,
+    ids: list[int],
+) -> tuple[float, float]:
+    """The P(>=5)-from-here delta as ``(before, after)`` (D5).
+
+    Two ``engine.optimizer.p_ge5`` calls on the SAME fixed anchor ballot against TWO samples
+    (pre-lock and post-lock), both matrices built with the SAME ``ids``:
+
+      before = p_ge5(anchor_ballot, build_outcome_matrices(pre_lock_result.sample, ids))
+      after  = p_ge5(anchor_ballot, build_outcome_matrices(post_lock_result.sample, ids))
+
+    The ballot NEVER re-optimizes — the question is "how is *my* locked-in ballot doing as
+    results come in," so the anchor is fixed and only the sample changes. Reads ``.sample``
+    only; never re-runs the MC. ``pre_lock_result`` / ``post_lock_result`` may be a real
+    ``engine.montecarlo.Result`` or any object exposing ``.sample``.
+    """
+    pre_matrices = build_outcome_matrices(pre_lock_result.sample, ids)
+    post_matrices = build_outcome_matrices(post_lock_result.sample, ids)
+    before = p_ge5(anchor_ballot, pre_matrices)
+    after = p_ge5(anchor_ballot, post_matrices)
+    return before, after
+
+
+# ===========================================================================
+# D6 — derive_bracket / legal_pairings_for_round: replay the engine (RESIM-04)
+# ===========================================================================
+class LivePrefixIncomplete(Exception):
+    """Raised by ``legal_pairings_for_round`` when a prior round is not fully locked.
+
+    The live-mode invariant forbids opening round R before round R-1 is fully entered, because
+    ``simulate_stage`` computes round-R pairings from start-of-round standings — which depend
+    on the SAMPLED winners of any unlocked prior game. With an incomplete prefix the round-R
+    pairing set is a single-RNG-draw artifact, so the validator must never accept/reject a lock
+    against it; we raise instead.
+    """
+
+
+@dataclass(frozen=True)
+class BracketView:
+    """The record-bucket bracket derived from one engine replay (D6).
+
+    ``legal_pairings`` is one entry per round (R1 first), each a list of ``frozenset((a,b))``
+    the engine GENERATED that round given the locks-so-far. ``records`` is ``{id: (wins,
+    losses)}`` after the (partially locked) replay. ``locked_edges`` marks which pairings are
+    LOCKED (solid edge) vs simulated-only (faint) — the UI renders solid/faint off this. No
+    streamlit.
+    """
+
+    legal_pairings: list[list[frozenset]]
+    records: dict[int, tuple[int, int]]
+    locked_edges: set[frozenset] = field(default_factory=set)
+
+
+def _fresh_teams(template: list[Team]) -> list[Team]:
+    """Rebuild a clean per-replay team set from the template's identity fields.
+
+    ``simulate_stage`` mutates wins/losses/opps, so the replay must own its Team objects and
+    never leak state into the caller's ``teams``. Mirrors ``engine.montecarlo._fresh_teams``
+    (re-implemented locally so we do not import a private helper). Only id/name/seed/rating
+    carry over; counters/opps reset.
+    """
+    return [Team(id=t.id, name=t.name, seed=t.seed, rating=t.rating) for t in template]
+
+
+def derive_bracket(teams: list[Team], locked: dict[frozenset, int], S: float) -> BracketView:
+    """Replay ``simulate_stage`` once with the current ``locked`` to derive the bracket (D6).
+
+    ONE ``simulate_stage`` call (not N) with a fixed throwaway rng — collect ``pairings_out``
+    into per-round ``legal_pairings`` and the final standings into ``records``. Mark each
+    pairing solid (locked) or faint (simulated-only). No cache (D7). Tolerates a PARTIAL
+    prefix — this is the read-only render/standings path; the validator-feeding
+    ``legal_pairings_for_round`` enforces the full-prefix precondition separately.
+    """
+    pairings_out: list[list[frozenset]] = []
+    rng = np.random.default_rng(0)  # throwaway: pairings are format-determined; locked teams deterministic
+    by_id = simulate_stage(_fresh_teams(teams), None, S, rng, dict(locked), pairings_out=pairings_out)
+
+    records = {tid: (t.wins, t.losses) for tid, t in by_id.items()}
+    locked_edges = set(locked.keys())
+    return BracketView(
+        legal_pairings=[list(round_pairs) for round_pairs in pairings_out],
+        records=records,
+        locked_edges=locked_edges,
+    )
+
+
+def legal_pairings_for_round(
+    teams: list[Team],
+    locked_results: list[tuple[int, int, int]],
+    S: float,
+    round_idx: int,
+) -> set[frozenset]:
+    """The validator's ``legal_pairings`` for round ``round_idx`` (0-based, R1 == 0) — D6/BLOCKER2.
+
+    PRECONDITION: every round ``r < round_idx`` must be FULLY locked — the count of locked
+    pairings at round r must equal the number of pairings the engine generated for round r in
+    the replay, and every generated pairing must be present in the locks. Otherwise round
+    ``round_idx``'s pairings are computed from start-of-round standings that depend on a
+    sampled prior winner — a single-RNG-draw artifact — so we raise ``LivePrefixIncomplete``
+    rather than return a draw the validator could (wrongly) accept/reject against.
+
+    When the precondition holds the entire prefix takes ``_play``'s deterministic locked
+    branch, so round ``round_idx``'s pairings are rng-invariant — exactly the set the
+    validator needs. Returns ``set(pairings_out[round_idx])``.
+    """
+    locked = locked_dict_from_results(locked_results)
+    pairings_out: list[list[frozenset]] = []
+    rng = np.random.default_rng(0)  # throwaway: the full prefix makes the prefix deterministic
+    simulate_stage(_fresh_teams(teams), None, S, rng, dict(locked), pairings_out=pairings_out)
+
+    # Locks grouped by round index (the user-entered round each lock belongs to).
+    locks_by_round: dict[int, set[frozenset]] = {}
+    for (r, w, ell) in locked_results:
+        locks_by_round.setdefault(r, set()).add(frozenset((w, ell)))
+
+    for r in range(round_idx):
+        if r >= len(pairings_out):
+            raise LivePrefixIncomplete(
+                f"round {r} has no pairings in the replay — cannot open round {round_idx}"
+            )
+        engine_round = set(pairings_out[r])
+        locked_round = locks_by_round.get(r, set())
+        if locked_round != engine_round:
+            raise LivePrefixIncomplete(
+                f"round {r} is not fully locked ({len(locked_round)} of "
+                f"{len(engine_round)} pairings) — cannot open round {round_idx}"
+            )
+
+    if round_idx >= len(pairings_out):
+        raise LivePrefixIncomplete(
+            f"round {round_idx} does not exist in the replay (stage has "
+            f"{len(pairings_out)} rounds)"
+        )
+    return set(pairings_out[round_idx])
