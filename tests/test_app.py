@@ -571,6 +571,25 @@ def test_live_status_chips_render():
     assert "tree" not in html_blobs.lower()
 
 
+def test_live_round_progress_caption_shows_remaining():
+    """ISSUE-2: the open round shows a 'N of M matches locked — lock all M to open the next
+    round' progress hint, so the round-gating is discoverable (it stuck a UAT tester)."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # Partially lock Round 1 (1 of 8) — the caption must surface the remaining count.
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    text = _all_text(at)
+    assert "of 8 matches locked" in text
+    assert "lock all 8 to open the next round" in text.lower()
+
+
 def test_live_delta_table_shows_per_team_change():
     """RESIM-02 / ISSUE-1: the LIVE 'Delta probabilities' table shows the per-team CHANGE vs
     pre-lock (signed '+/-pp' tags), not just absolute values — so the user can see what moved.

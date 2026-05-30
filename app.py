@@ -331,9 +331,9 @@ def _render_delta_table(pre_result, post_result) -> None:
 
 def _render_bracket() -> None:
     """Bracket as a COLLAPSED expander — seeded Round 1 `(seed, seed+8)` table only (UI-SPEC
-    bracket empty state). Record-bucket columns + locked/simulated styling are Phase 4."""
+    bracket empty state). Switch to Live mode for the full record-bucket bracket."""
     with st.expander("Bracket — seeded Round 1", expanded=False):
-        st.caption("Round 1 pairings (seed vs seed+8). Record buckets fill in Phase 4.")
+        st.caption("Round 1 pairings (seed vs seed+8). Switch to Live to see the record-bucket bracket.")
         bh = st.columns([1, 3, 3])
         bh[0].markdown("**Match**")
         bh[1].markdown("**Team A**")
@@ -514,6 +514,14 @@ def _render_lock_controls(name_of: dict[int, str]) -> None:
     open_pairs = sorted(
         (p for p in legal if p not in already), key=lambda p: sorted(p)
     )
+    # Progress hint (ISSUE-2): the next round is gated on THIS round being fully locked, so tell
+    # the user how many remain — otherwise the gating is correct but undiscoverable.
+    total = len(legal)
+    if total and open_pairs:
+        st.caption(
+            f"Round {round_idx + 1}: {len(already)} of {total} matches locked — "
+            f"lock all {total} to open the next round."
+        )
     if not open_pairs:
         st.caption("All matches this round are entered — the next round's pairings unlock.")
     for pair in open_pairs:
