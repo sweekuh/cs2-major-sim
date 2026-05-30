@@ -229,7 +229,7 @@ def _play(a, b, ratings, S, rng, locked):
     return b, a
 
 
-def simulate_stage(teams, ratings, S, rng, locked):
+def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None):
     """Simulate one complete Valve Stage-1 Swiss and return {id: final Team}.
 
     ``teams`` are the (mutable) per-stage team objects — pass a FRESH ``load_teams()``
@@ -246,6 +246,18 @@ def simulate_stage(teams, ratings, S, rng, locked):
     record opponents — until every team is at 3 wins or 3 losses (ENG-02/04/07). No pair
     plays twice within a stage (the fold + priority table avoid rematches; locked history
     counts).
+
+    Buchholz integrity: each round's pairings are computed for ALL groups from the
+    standings as of the previous round, THEN every match is played. Computing a later
+    group's difficulty after an earlier group already played this round would read
+    mid-round (post-this-round) opponent records and corrupt the Buchholz seeding
+    (GATE-01 regression — caught by the Budapest backtest). So: rank+pair first, play after.
+
+    ``pairings_out`` (keyword-only, observability — default None = no behavior change):
+    when a list is passed, the engine appends one entry per round, each a list of
+    ``frozenset({a.id, b.id})`` for the pairings it GENERATED that round (Round 1 first).
+    This is the exact shipped pairing path the GATE-01 backtest asserts against — it does
+    not alter simulation results.
     """
     by_id = {t.id: t for t in teams}
 
@@ -259,7 +271,10 @@ def simulate_stage(teams, ratings, S, rng, locked):
         b.opps.add(a)
 
     # Round 1: fixed seed pairings (seed i vs i+8), not a fold.
-    for a, b in build_round1_pairs(teams):
+    r1_pairs = build_round1_pairs(teams)
+    if pairings_out is not None:
+        pairings_out.append([frozenset((a.id, b.id)) for a, b in r1_pairs])
+    for a, b in r1_pairs:
         _record_match(a, b)
 
     # Rounds 2+: single code path until everyone terminates at 3W or 3L.
@@ -272,8 +287,14 @@ def simulate_stage(teams, ratings, S, rng, locked):
         groups: dict[tuple[int, int], list] = defaultdict(list)
         for t in active:
             groups[(t.wins, t.losses)].append(t)
+        # Compute every group's pairings from start-of-round standings BEFORE playing any
+        # (Buchholz integrity — see docstring). Then play them all.
+        round_pairs = []
         for record, group in groups.items():
-            for a, b in pair_within_group(group):
-                _record_match(a, b)
+            round_pairs.extend(pair_within_group(group))
+        if pairings_out is not None:
+            pairings_out.append([frozenset((a.id, b.id)) for a, b in round_pairs])
+        for a, b in round_pairs:
+            _record_match(a, b)
 
     return by_id

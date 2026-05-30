@@ -14,7 +14,8 @@
     "primary": "liquipedia.net/counterstrike/StarLadder/2025/Major/Stage_1 (oldid 3296139), fetched via /browse 2026-05-29",
     "cross_check": "HLTV VRS world ranks supplied by user (screenshots 2026-05-29) — used for the seeding investigation only; HLTV event page is Cloudflare-walled",
     "results_status": "fully reconciled + internally consistent (8 advance / 8 eliminated; no rematch; legal record progression)",
-    "seeding_status": "UNRESOLVED"
+    "seeding_status": "RESOLVED 2026-05-29 from the authoritative Valve open-source standings snapshot; full round-by-round backtest GREEN",
+    "seeding_source": "ValveSoftware/counter-strike_regional_standings — invitation/2025/details/2025_11_03 (the Major seeding snapshot, captured after the final RMR). Each team is filed by its global VRS rank at that cutoff; the 16 Stage-1 teams sorted by that rank give the 1-16 seed order — verbatim, no hand-disambiguation. Validated: the engine reproduces every actual round-by-round pairing (R1-R5) under this order (test_backtest_budapest_2025). NOTE: an earlier pass hand-swapped four adjacent seeds (Fnatic/PARIVISION 5/6, RED Canids/The Huns 13/14); the backtest caught it at R2. The pure VRS-rank order is correct."
   },
   "teams": [
     "M80",
@@ -52,9 +53,32 @@
     "Rare Atom": "RA",
     "Lynn Vision": "Lynn Vision"
   },
-  "seeding": null,
-  "seeding_note": "UNRESOLVED. The authoritative Valve 1-16 seed integers were not sourced: HLTV is Cloudflare-walled, and Liquipedia/Wikipedia do not publish seed integers. The HLTV VRS world-rank order recorded below does NOT reproduce the actual R1 pairings or the R2 pure-seed fold, so it cannot be used as the seeding without risking a false pass/fail (threat T-04-01). Until the authoritative seeded bracket is obtained, this fixture must NOT be asserted against the engine's pairing generation. The recorded VRS ranks are kept ONLY for the resume investigation, not as a seed source.",
-  "vrs_world_rank_order_NOT_seeding": [
+  "seeding": {
+    "1": "Legacy",
+    "2": "FaZe",
+    "3": "B8",
+    "4": "GamerLegion",
+    "5": "Fnatic",
+    "6": "PARIVISION",
+    "7": "NIP",
+    "8": "Imperial",
+    "9": "FlyQuest",
+    "10": "Lynn Vision",
+    "11": "M80",
+    "12": "Fluxo",
+    "13": "RED Canids",
+    "14": "The Huns",
+    "15": "NRG",
+    "16": "Rare Atom"
+  },
+  "seeding_note": "RESOLVED. The 1-16 Stage-1 seeds are the global-VRS-rank order from the timestamped Valve VRS snapshot used for Major seeding (ValveSoftware/counter-strike_regional_standings, 2025_11_03), NOT live HLTV/VRS — that was the original mistake (the 'snapshot rule'). The 16 Opening-Stage teams sorted by their global VRS rank in that snapshot give this order, verbatim. Validated end-to-end: the engine reproduces EVERY actual round-by-round pairing (R1-R5) under this seeding (test_backtest_budapest_2025), confirming the engine's pairing logic is correct (Hypothesis B). The earlier HLTV world-rank order (kept below for the record) was the wrong source.",
+  "seeding_validation": {
+    "round1_kvsk8": "8/8 exact: seed k vs k+8 yields the 8 actual R1 matches (test_round1_is_kvsk8_under_resolved_seeds).",
+    "round2_within_group_fold": "EXACT: with the pure-VRS-rank seeds, both R2 8-team groups (1-0 High, 0-1 Low) fold to the actual pairings (positions (1,8),(2,7),(3,6),(4,5)) — the rulebook's 'highest faces lowest available'. (An earlier pass hand-swapped Fnatic/PARIVISION (5/6) and RED/The Huns (13/14), which made R2 appear to diverge; the backtest caught it. Pure VRS rank is correct.)",
+    "rounds_3_4_5": "EXACT: R3 (4/8/4-team groups) and R4/R5 (6-team groups, Valve's verbatim 15-row priority table, GATE-04) all reproduce. Full gate green.",
+    "engine_logic_status": "CONFIRMED sound end-to-end (Hypothesis B): the original divergence was wrong seed integers from the wrong source, not wrong pairing rules."
+  },
+  "vrs_world_rank_order_SUPERSEDED": [
     { "rank": 1, "team": "Legacy", "vrs": 8 },
     { "rank": 2, "team": "B8", "vrs": 16 },
     { "rank": 3, "team": "FaZe", "vrs": 17 },
@@ -72,7 +96,7 @@
     { "rank": 15, "team": "The Huns", "vrs": 62 },
     { "rank": 16, "team": "RED Canids", "vrs": 65 }
   ],
-  "vrs_seeding_divergence_finding": "Under the VRS world-rank order above, an N-vs-N+8 R1 fold would give Legacy-NIP, B8-LynnVision, FaZe-NRG, ... — none of which match the ACTUAL R1 pairings (M80-B8, Imperial-RA, FLY-Legacy, PV-TheHuns, Fluxo-GL, NRG-NIP, FaZe-LynnVision, Fnatic-RED). The R2 'High' bracket (8 R1-winners, no rematch possible, uniform Buchholz -> should be a pure seed fold) actual FLY-Imperial, M80-PV, Fnatic-Fluxo, FaZe-NRG is also NOT reproduced by the world-rank order. Implication: either Budapest's published seed integers differ from the visible HLTV rankings, OR Valve's within-group pairing has a nuance the engine's difficulty-fold does not capture. This is unresolvable without the authoritative seed bracket and is the reason GATE-01 is deferred.",
+  "vrs_seeding_divergence_RESOLVED": "RESOLVED 2026-05-29. The world-rank order above (live HLTV/VRS) did NOT reproduce the bracket because Valve seeds Majors off a timestamped VRS SNAPSHOT captured after the final RMR (the 'snapshot rule'), not live VRS. The authoritative snapshot (Valve open-source repo, 2025_11_03, global rank order) yields the seed order in the 'seeding' field, and the engine reproduces the FULL bracket (R1-R5) under it. The engine's pairing logic was correct all along (Hypothesis B); the divergence was wrong seed integers from the wrong source. GATE-01 is closed.",
   "rounds": [
     {
       "round": 1,

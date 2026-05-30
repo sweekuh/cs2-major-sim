@@ -43,11 +43,15 @@ These are the load-bearing facts; getting any wrong silently corrupts every prob
 
 - **Buchholz / Difficulty Score = `Σ(opp.wins − opp.losses)`**, NOT `Σ opp.wins`. (ENG-03)
 - **Within-group fold sorts on the difficulty-ranked order, not raw seed.** (ENG-04)
-- **The Phase 1 round-by-round backtest is a HARD GATE** — it reproduces a real past
-  Major stage's pairings exactly. No UI is built and no sim output is trusted until it
-  passes. Invariant tests (Σ P=2/8/2) pass even when the engine is wrong, so the
-  backtest is the only real check. Pull Valve's 15-row priority table verbatim from
-  `major-supplemental-rulebook.md`; don't approximate. (GATE-01..05)
+- **The Phase 1 round-by-round backtest is a HARD GATE — now GREEN (2026-05-29).** It
+  reproduces StarLadder Budapest 2025 Stage 1's actual pairings EXACTLY (R1-R5;
+  `test_backtest_budapest_2025`). Invariant tests (Σ P=2/8/2) pass even when the engine is
+  wrong, so this backtest is the only real check — keep it green; if it ever fails, the
+  engine pairing logic is broken, do not loosen it. Seeds come from the authoritative Valve
+  VRS **snapshot** (`counter-strike_regional_standings`, `invitation/.../2025_11_03`, global
+  rank order — the "snapshot rule", NOT live HLTV/VRS). The 15-row priority table is verbatim
+  from `major-supplemental-rulebook.md`. `BACKTEST_PASSED=True`; the trust badge reads
+  "validated" once the user also confirms the [INFERRED] Cologne seeds. (GATE-01..05)
 - **Bo3 = closed form `p²(3−2p)` as a single Bernoulli draw** — never sample 3 maps. (MC-06)
 - **Epistemic (source-disagreement) variance is an OUTER loop**, never folded into
   per-sim sampling; clamp `variance < p(1−p)` before the Beta fit or it crashes on the
