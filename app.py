@@ -40,6 +40,7 @@ from ui.render import (
     bracket_columns_html,
     ci_bar_html,
     correlated_pick_warning_text,
+    delta_tag_html,
     fmt_pct,
     hero_number_html,
     status_badge_html,
@@ -285,6 +286,47 @@ def _render_probs_empty() -> None:
         c[1].markdown(EM_DASH)
         c[2].markdown(EM_DASH)
         c[3].markdown(EM_DASH)
+
+
+def _render_delta_table(pre_result, post_result) -> None:
+    """LIVE 'Delta probabilities' (RESIM-02 — show the CHANGE, not a new static number).
+
+    Each cell renders the post-lock value (CI bar) PLUS a signed percentage-point delta vs
+    the pre-lock (empty-locked) baseline via delta_tag_html — so the user SEES what moved
+    (ISSUE-1: the section was previously rendering absolute values under a 'Delta' header).
+    Sorted by post-lock P(advance); the delta sign (+/-) is colorblind-safe (UI-06).
+    """
+    pre_adv, pre_30, pre_03 = pre_result.p_advance(), pre_result.p_30(), pre_result.p_03()
+    post_adv, post_30, post_03 = (
+        post_result.p_advance(),
+        post_result.p_30(),
+        post_result.p_03(),
+    )
+    order = sorted(by_seed, key=lambda s: post_adv.get(s, 0.0), reverse=True)
+    st.caption("Post-lock odds with the change vs pre-lock (+/-pp) — blue up, amber down.")
+    hdr = st.columns([3, 2, 2, 2])
+    hdr[0].markdown("**Team**")
+    hdr[1].markdown("**P(advance)**")
+    hdr[2].markdown("**P(3-0)**")
+    hdr[3].markdown("**P(0-3)**")
+    for seed in order:
+        t = by_seed[seed]
+        c = st.columns([3, 2, 2, 2])
+        c[0].markdown(f"{t.name}")
+        lo_a, hi_a = post_result.band_advance.get(seed, (0.0, 0.0))
+        lo_3, hi_3 = post_result.band_30.get(seed, (0.0, 0.0))
+        lo_0, hi_0 = post_result.band_03.get(seed, (0.0, 0.0))
+        cells = (
+            (c[1], post_adv, pre_adv, lo_a, hi_a),
+            (c[2], post_30, pre_30, lo_3, hi_3),
+            (c[3], post_03, pre_03, lo_0, hi_0),
+        )
+        for col, post_p, pre_p, lo, hi in cells:
+            col.markdown(
+                ci_bar_html(post_p.get(seed, 0.0), lo, hi, HUE_ADVANCE)
+                + delta_tag_html(post_p.get(seed, 0.0), pre_p.get(seed, 0.0)),
+                unsafe_allow_html=True,
+            )
 
 
 def _render_bracket() -> None:
@@ -646,6 +688,8 @@ with main:
             st.caption("Lock a result, then Run to see how each team's odds move.")
             _render_probs_empty()
         else:
-            _render_probs_table(result)
+            # pre_lock_result (empty-locked baseline) was assigned above under the SAME
+            # (result is not None and not error) condition — show the per-team change.
+            _render_delta_table(pre_lock_result, result)
 
         _render_bracket_live(name_of)

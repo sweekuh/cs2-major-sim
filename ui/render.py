@@ -79,6 +79,36 @@ def ci_bar_html(p: float, lo: float, hi: float, hue: str = _DEFAULT_HUE) -> str:
     )
 
 
+def delta_tag_html(post: float, pre: float, *, eps: float = 0.0005) -> str:
+    """Return a small signed percentage-POINT delta tag: ``post`` vs ``pre`` (both 0..1).
+
+    For the LIVE "Delta probabilities" table (RESIM-02 — show the CHANGE, not a new static
+    number). Colorblind-safe (UI-06): the ``+``/``-`` SIGN is the real signal; hue is only
+    reinforcement — increase = blue, decrease = amber, no-change = muted grey. ASCII only
+    (no Unicode arrows — the cp1252 lesson, CLAUDE.md). Both args MUST be numeric floats; a
+    non-numeric value raises TypeError so no free-text reaches the unsafe_allow_html markup
+    (T-02-XSS). ``eps`` (in 0..1 units) is the dead-band below which the change reads as flat.
+    """
+    for name, val in (("post", post), ("pre", pre)):
+        if isinstance(val, bool) or not isinstance(val, (int, float)):
+            raise TypeError(
+                f"delta_tag_html expects numeric {name}, got {type(val).__name__} "
+                "(team names / free text must NEVER reach this HTML — T-02-XSS)"
+            )
+    dpp = (post - pre) * 100.0  # percentage points
+    if abs(post - pre) < eps:
+        return (
+            '<span style="color:#8A8F98;font-family:ui-monospace,monospace;font-size:11px">'
+            "+0.0pp</span>"
+        )
+    hue = _BLUE if dpp > 0 else _AMBER
+    sign = "+" if dpp > 0 else "-"
+    return (
+        f'<span style="color:{hue};font-family:ui-monospace,monospace;font-size:11px">'
+        f"{sign}{abs(dpp):.1f}pp</span>"
+    )
+
+
 def status_badge_html(state: str) -> str:
     """Return a colorblind-safe status badge: ASCII glyph + text label + hue (UI-06).
 

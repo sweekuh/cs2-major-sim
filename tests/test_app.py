@@ -571,6 +571,30 @@ def test_live_status_chips_render():
     assert "tree" not in html_blobs.lower()
 
 
+def test_live_delta_table_shows_per_team_change():
+    """RESIM-02 / ISSUE-1: the LIVE 'Delta probabilities' table shows the per-team CHANGE vs
+    pre-lock (signed '+/-pp' tags), not just absolute values — so the user can see what moved.
+    The locked winner's P(advance) tag is a positive delta (its R1 result is now certain)."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    text = _all_text(at)
+    html_blobs = "\n".join(m.value for m in at.markdown)
+    # The section still exists, now with the clarifying caption (no longer a bare 'Delta' label).
+    assert "Delta probabilities" in text
+    assert "change vs pre-lock" in text
+    # Signed percentage-point delta tags render (the fix's signal) — at least one positive/blue.
+    assert "pp</span>" in html_blobs
+    assert "+" in html_blobs and "#3B82F6" in html_blobs  # an increase rendered in blue
+
+
 def test_live_delta_anchor_uses_pre_key():
     """BLOCKER 1 / T-04-ANCHOR: the delta hero's anchor ballot is captured ONCE from the
     EMPTY-locked pre_key Result via optimize_cached(pre_lock_result, *pre_key).recommended and
