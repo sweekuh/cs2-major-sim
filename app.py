@@ -174,7 +174,7 @@ if mode is Mode.PRE_STAGE:
 else:
     st.caption(
         "Live — lock results round-by-round and re-sim from here. "
-        "(Result locking lands in Phase 4.)"
+        "Each pick shows live / dead / secured with a P(≥5)-from-here delta."
     )
 
 controls, main = st.columns([1, 3], gap="medium")
