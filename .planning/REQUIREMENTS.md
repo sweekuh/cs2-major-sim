@@ -100,9 +100,12 @@
 **: Ratings back-solve — invert each known-round series prob to per-map p (identity Bo1; invert `p²(3−2p)` for Bo3), fit per-team ratings via logistic least-squares at map level; live odds override the imminent round's known matchups
 - [x] **ODDS-05
 **: Adapters discover Cologne fixtures/market slugs dynamically (markets don't exist until the bracket posts); CS2 sportId/series filtering
-- [ ] **ODDS-06**: Fetch is not streaming — manual "fetch now" button plus per-round triggers; keys read from env (`.env` gitignored, `.env.example` shipped)
-- [ ] **ODDS-07**: Odds fetch writes a read-only `data/odds_cache.json` contract that the app only ever reads (seam preserved for the v2 cron job); the app never calls `get_quotes()` on rerun
-- [ ] **ODDS-08**: Missing provider key → app runs rating-only with a one-line info banner; never crashes or hard-blocks (fail soft)
+- [x] **ODDS-06
+**: Fetch is not streaming — manual "fetch now" button plus per-round triggers; keys read from env (`.env` gitignored, `.env.example` shipped)
+- [x] **ODDS-07
+**: Odds fetch writes a read-only `data/odds_cache.json` contract that the app only ever reads (seam preserved for the v2 cron job); the app never calls `get_quotes()` on rerun
+- [x] **ODDS-08
+**: Missing provider key → app runs rating-only with a one-line info banner; never crashes or hard-blocks (fail soft)
 
 ### Full-Major scope (v3)
 
