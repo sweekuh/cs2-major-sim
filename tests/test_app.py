@@ -467,7 +467,6 @@ def _go_live_small(at, n=2000):
     return at
 
 
-@pytest.mark.xfail(strict=True, reason="Task 2 wires app.py LIVE lock controls")
 def test_live_lock_changes_cache_key():
     """RESIM-01 / T-04-STALE: committing one legal lock makes the post-lock cache_key (with the
     derived non-empty locked_key) differ from the unlocked key — a NEW mc_cache entry appears."""
@@ -491,7 +490,6 @@ def test_live_lock_changes_cache_key():
     assert any(k[3] != () for k in new_keys)
 
 
-@pytest.mark.xfail(strict=True, reason="Task 2 wires app.py LIVE lock controls")
 def test_live_lock_moves_p_advance():
     """RESIM-01: after a legal lock + re-sim, at least one team's P(advance) differs from the
     pre-lock value — read the two Results from the session mc_cache on their respective keys."""
@@ -518,7 +516,6 @@ def test_live_lock_moves_p_advance():
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Task 2 wires app.py LIVE lock-gating")
 def test_impossible_lock_shows_reason():
     """RESIM-03 / T-04-BADLOCK: an illegal lock (a rematch of an already-locked pair) surfaces
     an st.error with the validate_lock reason, leaves KEY_LOCKED unchanged, and adds NO mc_cache
@@ -548,7 +545,6 @@ def test_impossible_lock_shows_reason():
     assert dict(at.session_state["mc_cache"]) == cache_before
 
 
-@pytest.mark.xfail(strict=True, reason="Task 2 wires app.py LIVE status chips + bracket")
 def test_live_status_chips_render():
     """RESIM-02/04: a lock that secures a pick renders glyph+label status badges
     ('/ secured' / 'o live' / 'x dead'), and the bracket renders record-bucket COLUMNS (bucket
@@ -575,7 +571,6 @@ def test_live_status_chips_render():
     assert "tree" not in html_blobs.lower()
 
 
-@pytest.mark.xfail(strict=True, reason="Task 2 wires app.py LIVE delta anchor")
 def test_live_delta_anchor_uses_pre_key():
     """BLOCKER 1 / T-04-ANCHOR: the delta hero's anchor ballot is captured ONCE from the
     EMPTY-locked pre_key Result via optimize_cached(pre_lock_result, *pre_key).recommended and

@@ -20,13 +20,24 @@ at import, no ``if __name__ == "__main__"`` side effects. The engine runs only o
 
 from __future__ import annotations
 
+import html
+
 import streamlit as st
 
+from engine.live import (
+    classify_pick,
+    derive_bracket,
+    legal_pairings_for_round,
+    pge5_delta,
+    validate_lock,
+)
 from engine.montecarlo import run_mc_progressive
+from engine.optimizer import build_outcome_matrices
 from engine.teams import load_teams
 from ui.cache import freeze_locked, freeze_ratings, optimize_cached
 from ui.render import (
     ballot_columns,
+    bracket_columns_html,
     ci_bar_html,
     correlated_pick_warning_text,
     fmt_pct,
@@ -37,9 +48,12 @@ from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
     FIXED_SEED,
+    KEY_LIVE_ANCHOR,
+    KEY_LOCKED,
     KEY_MC_CACHE,
     KEY_MODE,
     KEY_N_INPUT,
+    KEY_PENDING_LOCK,
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
@@ -48,8 +62,12 @@ from ui.state import (
     Mode,
     TRUST_BADGE_CAVEATED,
     TRUST_BADGE_VALIDATED,
+    add_lock,
+    locked_dict,
+    locks_for_round,
     odds_key_present,
     read_seeds_confirmed,
+    remove_last_lock,
     trust_badge_state,
     validate_ratings,
 )
@@ -287,6 +305,33 @@ def _render_bracket() -> None:
             row[2].markdown(b.name if b else EM_DASH)
 
 
+def _cache_key_for(ratings: dict, locked: dict):
+    """The ``(ratings_key, S, int(N), locked_key)`` cache tuple for a given ratings+locked."""
+    return (freeze_ratings(ratings), S, int(N), freeze_locked(locked))
+
+
+def _compute_or_serve(ratings: dict, locked: dict):
+    """Get-or-compute the MC Result for ``(ratings, S, N, locked)`` — returns (result, cache_key).
+
+    Single source for BOTH the current Run and the LIVE empty-locked anchor compute. A cache
+    HIT serves the stored Result (no recompute); a MISS drives the progress bar over
+    run_mc_progressive ONCE and memoizes it. Each DISTINCT key computes at most once, so the
+    CR-01 single-compute guard stays green even when LIVE mode also computes the empty-locked
+    pre_key (a different key from the locked run).
+    """
+    cache_key = _cache_key_for(ratings, locked)
+    cache = st.session_state[KEY_MC_CACHE]
+    if cache_key in cache:
+        return cache[cache_key], cache_key
+    result = _drive_progress(ratings, S, int(N), locked)
+    cache[cache_key] = result
+    # Evict oldest entries so the retained per-sim samples can't grow unbounded across
+    # a long session of re-runs (insertion-ordered dict → pop oldest first).
+    while len(cache) > MAX_CACHE_ENTRIES:
+        cache.pop(next(iter(cache)))
+    return result, cache_key
+
+
 def _run_or_serve():
     """Validate + dispatch the engine (cache hit / miss). Returns (result, error_msg, cache_key).
 
@@ -302,43 +347,196 @@ def _run_or_serve():
         # ERROR state (UI-05): block Run, engine NEVER called.
         return None, BAD_RATING_MSG, None
     ratings = {r["seed"]: float(r["rating"]) for r in edited}
-    locked: dict = {}  # Phase 4 fills this; the key shape is final now.
-    ratings_key = freeze_ratings(ratings)
-    locked_key = freeze_locked(locked)
-    cache_key = (ratings_key, S, int(N), locked_key)
-    cache = st.session_state[KEY_MC_CACHE]
-    if cache_key in cache:
-        # CACHE HIT: serve the stored Result, no recompute (single compute per key).
-        return cache[cache_key], None, cache_key
-    # CACHE MISS: LOADING state — drive the bar over the generator, compute ONCE.
-    # In-session deduplication via the session_state cache (above) is sufficient for Phase 2:
-    # a unique input tuple computes the MC exactly once. The earlier cross-session
-    # @st.cache_data priming call was removed because it re-ran the full N-sim engine a
-    # second time (result discarded), doubling first-Run wall-clock with no user feedback
-    # (CR-01). Cross-session reuse can be wired correctly in a later phase if needed.
-    result = _drive_progress(ratings, S, int(N), locked)
-    cache[cache_key] = result
-    # Evict oldest entries so the retained per-sim samples can't grow unbounded across
-    # a long session of re-runs (insertion-ordered dict → pop oldest first).
-    while len(cache) > MAX_CACHE_ENTRIES:
-        cache.pop(next(iter(cache)))
+    # Phase 4 fill point: the engine ``locked`` dict is DERIVED from KEY_LOCKED (the ordered
+    # lock list) via the pure projection, then flows through the UNCHANGED freeze_locked ->
+    # locked_key -> cache_key path so a non-empty lock changes the key and re-sims (RESIM-01).
+    # In PRE_STAGE / first-run the list is empty -> locked == {} (no behavior change).
+    locked = locked_dict(st.session_state.get(KEY_LOCKED, []))
+    result, cache_key = _compute_or_serve(ratings, locked)
     return result, None, cache_key
 
 
-def _hero_slot(result, label: str) -> None:
-    """Render the one display-size hero number (UI-SPEC Typography/Color — accent reserved).
+def _live_anchor(ratings: dict, ids: list[int]):
+    """The FIXED anchor ballot (Ballot B) for the LIVE delta + status chips (D5/BLOCKER 1).
 
-    Used by LIVE mode for the Phase-4 "P(>=5) from here" delta, still a placeholder here
-    (top-team P(advance) stand-in) so the 28px monospace accent slot is real. The PRE-STAGE
-    hero is the real recommended-ballot P(>=5) — see _render_ballot_panel (Phase 3, OPT-04).
+    Captured ONCE, from the EMPTY-locked pre_key Result, and stored in KEY_LIVE_ANCHOR so it
+    NEVER re-optimizes per round (the arrow would be meaningless otherwise). Returns
+    ``(anchor_ballot, pre_lock_result)``:
+      pre_key       = (freeze_ratings(ratings), S, int(N), freeze_locked({}))
+      pre_lock_result = mc_cache[pre_key] if present else ONE explicit compute on pre_key
+                        (memoized — a DISTINCT key from the locked run, so CR-01 stays green)
+      anchor        = optimize_cached(pre_lock_result, *pre_key).recommended  (Ballot B)
+
+    The anchor is re-served from session_state on later reruns; only a first-ever capture runs
+    the optimizer. ``pre_lock_result`` is returned so ``before`` is read off the pre_key sample.
     """
-    if result is None:
+    pre_lock_result, pre_key = _compute_or_serve(ratings, {})  # empty-locked = pre_key
+    anchor = st.session_state.get(KEY_LIVE_ANCHOR)
+    if anchor is None:
+        anchor = optimize_cached(pre_lock_result, *pre_key).recommended
+        st.session_state[KEY_LIVE_ANCHOR] = anchor
+    return anchor, pre_lock_result
+
+
+def _render_live_hero(post_lock_result, anchor, pre_lock_result, ids: list[int]) -> None:
+    """LIVE 'P(>=5) from here' delta hero: ``before% -> after%`` on the FIXED anchor (RESIM-02).
+
+    Two p_ge5 calls on the SAME anchor ballot against the pre-lock and post-lock samples
+    (engine.live.pge5_delta). ``before`` reads the pre_key Result's OWN sample (not the
+    post-lock result with a mismatched key — BLOCKER 1). Rendered as a hero arrow in the
+    reserved accent; no placeholder caption.
+    """
+    before, after = pge5_delta(anchor, pre_lock_result, post_lock_result, ids)
+    st.markdown("**P(>=5) from here**")
+    st.markdown(
+        f"{hero_number_html(before)}"
+        '<span style="font-size:24px;margin:0 8px;opacity:0.6">&rarr;</span>'
+        f"{hero_number_html(after)}",
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        f"Your locked-in ballot's coin odds, before -> after this stage's locks "
+        f"({fmt_pct(before)} -> {fmt_pct(after)})."
+    )
+
+
+def _open_round_idx(locked_results: list[tuple[int, int, int]], name_of: dict[int, str]) -> int:
+    """The lowest round index whose prior rounds are ALL fully entered — the only round whose
+    controls may render (the live-mode invariant, BLOCKER 2 / T-04-PREFIX).
+
+    Round R is "open" once round R-1 is fully locked: the count of locks at R-1 equals the
+    number of legal pairings the engine generates for R-1. R1 (idx 0) is always open. We probe
+    rounds upward via legal_pairings_for_round (which only succeeds on a fully-locked prefix),
+    so legal_pairings_for_round is never CALLED on a partial prefix from the controls path.
+    """
+    r = 0
+    while True:
+        try:
+            pairings = legal_pairings_for_round(teams, locked_results, S, r)
+        except Exception:
+            # The prefix for round r is not fully locked (or the stage has no round r) — the
+            # previous round is the open one. Defensive: never raise into the UI.
+            return r
+        entered = len(locks_for_round(locked_results, r))
+        if entered < len(pairings):
+            return r  # round r itself is the open (partially/empty) round
+        r += 1
+
+
+def _commit_lock(pending: tuple[int, int, int]) -> None:
+    """Validate ``(round_idx, winner_id, loser_id)`` and commit it, or show the reason (D3/RESIM-03).
+
+    Runs engine.live.validate_lock against the round's legal pairings; on a reason -> st.error
+    and DO NOT mutate KEY_LOCKED or the cache; else append via add_lock. Keyed on team id.
+    """
+    round_idx, winner_id, loser_id = pending
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    try:
+        legal = legal_pairings_for_round(teams, locked_results, S, round_idx)
+    except Exception as exc:  # incomplete prefix — should not happen from the gated controls
+        st.error(str(exc))
         return
-    p_adv = result.p_advance()
-    top = max(p_adv.values()) if p_adv else 0.0
-    st.markdown(f"**{label}**")
-    st.markdown(hero_number_html(top), unsafe_allow_html=True)
-    st.caption("Placeholder hero — Phase 4 fills the live P(>=5)-from-here delta.")
+    reason = validate_lock(
+        (winner_id, loser_id), round_idx, locked_results, teams, legal
+    )
+    if reason is not None:
+        # Illegal lock — block it. KEY_LOCKED + mc_cache stay untouched (RESIM-03).
+        st.error(reason)
+    else:
+        st.session_state[KEY_LOCKED] = add_lock(
+            locked_results, round_idx, winner_id, loser_id
+        )
+
+
+def _render_lock_controls(name_of: dict[int, str]) -> None:
+    """Round-by-round winner pickers writing KEY_LOCKED (D1/RESIM-01); round R gated on R-1.
+
+    Renders the open round's legal pairings (each a winner radio) + a 'Lock result' button and
+    an 'Undo last lock'. Round-R controls appear ONLY once R-1 is fully entered, so
+    legal_pairings_for_round is never called on a partial prefix (BLOCKER 2). All keyed on id.
+
+    Commit contract (testable): on a 'Lock result' click the handler commits KEY_PENDING_LOCK
+    (the staged selection). The radio selection re-stages KEY_PENDING_LOCK on every render, so
+    the normal UI path commits the user's pick; a test may inject KEY_PENDING_LOCK directly to
+    exercise the validate_lock gate (the button click does NOT overwrite an out-of-round pick).
+    """
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    round_idx = _open_round_idx(locked_results, name_of)
+    try:
+        legal = legal_pairings_for_round(teams, locked_results, S, round_idx)
+    except Exception:
+        legal = set()
+
+    st.markdown(f"**Lock Round {round_idx + 1} results**")
+    already = {frozenset((w, ell)) for (r, w, ell) in locked_results if r == round_idx}
+    open_pairs = sorted(
+        (p for p in legal if p not in already), key=lambda p: sorted(p)
+    )
+    if not open_pairs:
+        st.caption("All matches this round are entered — the next round's pairings unlock.")
+    for pair in open_pairs:
+        a_id, b_id = sorted(pair)
+        st.radio(
+            f"{name_of.get(a_id, a_id)} vs {name_of.get(b_id, b_id)} — winner",
+            options=[a_id, b_id],
+            format_func=lambda tid: name_of.get(tid, str(tid)),
+            key=f"live_winner_r{round_idx}_{a_id}_{b_id}",
+            horizontal=True,
+        )
+
+    lock_clicked = st.button("Lock result", key="live_lock_btn")
+    if lock_clicked:
+        # Prefer an already-staged/injected pending lock (a test injects KEY_PENDING_LOCK to
+        # exercise the validate_lock gate). Otherwise derive the pick from the FIRST open
+        # pairing's radio (the normal UI path: one match locked per click).
+        pending = st.session_state.get(KEY_PENDING_LOCK)
+        if pending is None and open_pairs:
+            a_id, b_id = sorted(open_pairs[0])
+            winner = st.session_state.get(f"live_winner_r{round_idx}_{a_id}_{b_id}", a_id)
+            loser = b_id if winner == a_id else a_id
+            pending = (round_idx, winner, loser)
+        if pending is not None:
+            _commit_lock(pending)
+        st.session_state[KEY_PENDING_LOCK] = None
+    if locked_results:
+        if st.button("Undo last lock", key="live_undo_btn"):
+            st.session_state[KEY_LOCKED] = remove_last_lock(locked_results)
+
+
+def _render_status_chips(anchor, post_lock_result, ids: list[int], name_of: dict[int, str]) -> None:
+    """Per-pick live/dead/secured chips on the anchor ballot, by bucket (D4/RESIM-02/UI-06).
+
+    Build the outcome matrices ONCE off the post-lock sample, then walk the anchor's picks WITH
+    their bucket label and classify each (team, bucket) via engine.live.classify_pick -> a
+    STATUS key -> the existing status_badge_html (blue/amber + glyph + label, never red/green).
+    """
+    matrices = build_outcome_matrices(post_lock_result.sample, ids)
+    buckets = (
+        (anchor.picks_30, "picks_30", "3-0"),
+        (anchor.picks_adv, "picks_adv", "Advance"),
+        (anchor.picks_03, "picks_03", "0-3"),
+    )
+    for picks, bucket_label, human in buckets:
+        st.markdown(f"*{human}*")
+        for team_id in picks:
+            state = classify_pick(team_id, bucket_label, matrices)
+            name = html.escape(str(name_of.get(team_id, team_id)))
+            st.markdown(
+                f"{name} &nbsp; {status_badge_html(state)}",
+                unsafe_allow_html=True,
+            )
+
+
+def _render_bracket_live(name_of: dict[int, str]) -> None:
+    """LIVE bracket: record-bucket COLUMNS from the engine replay (D6/RESIM-04), never a tree.
+
+    Derives a BracketView by replaying simulate_stage with the current locks and renders it as
+    solid-locked / faint-simulated record-bucket columns via bracket_columns_html.
+    """
+    locked = locked_dict(st.session_state.get(KEY_LOCKED, []))
+    view = derive_bracket(teams, locked, S)
+    with st.expander("Bracket — record buckets", expanded=True):
+        st.markdown(bracket_columns_html(view, name_of), unsafe_allow_html=True)
 
 
 def _render_ballot_panel(result, cache_key) -> None:
@@ -411,8 +609,15 @@ with main:
 
         _render_bracket()
     else:
-        # LIVE order: (1) locked-pick status placeholder + hero + status legend,
-        # (2) delta-probs area, (3) collapsed bracket.
+        # LIVE order: (1) round-by-round lock controls, (2) locked-pick status + from-here
+        # delta hero + status legend, (3) delta-probs area, (4) record-bucket bracket.
+        # name_of / ids are built ONCE here (NOT reused from _render_ballot_panel's local).
+        name_of = {t.id: t.name for t in teams}
+        ids = [t.id for t in teams]
+
+        st.subheader("Lock results")
+        _render_lock_controls(name_of)
+
         st.subheader("Your picks — status")
         if error_msg:
             st.error(error_msg)
@@ -424,19 +629,23 @@ with main:
             )
             st.markdown(legend, unsafe_allow_html=True)
         else:
-            _hero_slot(result, "P(>=5) from here")
+            # The current run's ratings (same expression as _run_or_serve — keyed by seed==id).
+            ratings = {r["seed"]: float(r["rating"]) for r in edited}
+            anchor, pre_lock_result = _live_anchor(ratings, ids)
+            _render_live_hero(result, anchor, pre_lock_result, ids)
             legend = " &nbsp; ".join(
                 status_badge_html(state) for state in ("live", "eliminated", "advanced")
             )
             st.markdown(legend, unsafe_allow_html=True)
+            _render_status_chips(anchor, result, ids, name_of)
 
         st.subheader("Delta probabilities")
         if error_msg:
             pass
         elif result is None:
-            st.caption("Lock a result to see how each team's odds move (Phase 4).")
+            st.caption("Lock a result, then Run to see how each team's odds move.")
             _render_probs_empty()
         else:
             _render_probs_table(result)
 
-        _render_bracket()
+        _render_bracket_live(name_of)
