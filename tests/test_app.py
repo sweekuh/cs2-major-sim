@@ -241,12 +241,12 @@ def _run_small(at, n=2000):
 
 
 def test_ballot_panel_renders_after_run():
-    """OPT-03: after a Run the pre-stage panel shows Ballot A (Max E[correct]) and Ballot B
+    """OPT-03: after a Run the pre-stage panel shows Ballot A (E[correct] greedy) and Ballot B
     (Max P(>=5)) side by side with team names."""
     at = _run_small(_apptest().run())
     assert not at.exception
     text = _all_text(at)
-    assert "Max E[correct]" in text  # Ballot A
+    assert "E[correct] greedy" in text  # Ballot A (greedy, not claimed globally optimal)
     assert "Max P(>=5)" in text      # Ballot B
 
 

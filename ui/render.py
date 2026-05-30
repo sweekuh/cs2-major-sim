@@ -192,7 +192,7 @@ def ballot_columns(
     diff = set(diff_ids)
     return (
         '<div style="display:flex;gap:24px">'
-        f'{_ballot_card_html("A — Max E[correct]", ballot_a, name_of, diff)}'
+        f'{_ballot_card_html("A — E[correct] greedy", ballot_a, name_of, diff)}'
         f'{_ballot_card_html("B — Max P(>=5)", ballot_b, name_of, diff)}'
         "</div>"
     )

@@ -223,7 +223,7 @@ def test_ballot_columns_lists_names_and_marks_diff():
     html = ballot_columns(name_of, a, b, diff_ids=(8, 11))
 
     assert isinstance(html, str)
-    assert "Max E[correct]" in html  # Ballot A title
+    assert "E[correct] greedy" in html  # Ballot A title (greedy, not claimed globally optimal)
     assert "Max P(>=5)" in html      # Ballot B title
     for i in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
         assert f"T{i}" in html

@@ -1,37 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-current_phase: 05 (odds-ensemble) — ALL 3 PLANS EXECUTED (05-01/02/03 done)
-status: executing
-stopped_at: Completed 05-03-PLAN.md
+milestone: v3
+milestone_name: Full-Major
+current_phase: 06 (full-major-v3) — NOT STARTED (next milestone)
+status: milestone_complete
+stopped_at: v1.0 SHIPPED + ARCHIVED 2026-05-30 (Phases 1-5, tag v1.0). Phase 6 carved out → v3 milestone.
 last_updated: "2026-05-30T07:16:23.672Z"
 last_activity: 2026-05-30
 progress:
-  total_phases: 6
-  completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-28)
+See: .planning/PROJECT.md (updated 2026-05-30 after v1.0)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase 5 — Odds Ensemble (ALL 3 PLANS EXECUTED on branch phase-5-odds). Next: `/gsd-verify-work 5`.
+**Current focus:** v1.0 SHIPPED (Cologne Swiss-stage Pick'Em, Phases 1-5). Next milestone = **v3 Full-Major** (Phase 6: Stages 2-3 Swiss + playoff bracket). Start with `/gsd-new-milestone` or `/gsd-plan-phase 6`.
 
 ## Current Position
 
-Phase: 5 (odds-ensemble) — ALL 3 PLANS EXECUTED (05-01 + 05-02 + 05-03 done)
-Plan: 05-01 (pure odds core) DONE ∥ 05-02 (back-solve + epistemic fill) DONE ∥ 05-03 (fetch script + read-only cache seam + app wiring + fetch-now button) DONE
-Status: Phase 5 plans complete — next is `/gsd-verify-work 5` (DEFERRED Task-3 live-slug /browse checkpoint pending markets posting)
+Milestone: **v1.0 COMPLETE** — archived to `.planning/milestones/v1.0-*`, tagged `v1.0`. 54/54 reqs satisfied, 113 tests green, GATE-01 backtest GREEN.
+Next: **v3 Full-Major** — Phase 6 (Full-Major v3): Stage 2 & 3 Swiss + playoff single-elim (7-pick round-weighted ballot). V3-04 map-level Bo3 closed as not-needed.
 Last activity: 2026-05-30
 
-Progress: [██████████] 100%
+Progress: v1.0 [██████████] 100% shipped · v3 [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -115,9 +114,8 @@ Recent decisions affecting current work:
 
 [Issues that affect future work]
 
-- **GATE-01/04 DEFERRED (2026-05-29 user decision):** The round-by-round backtest is BLOCKED on the authoritative Valve seed bracket (HLTV Cloudflare-walled). Phase 1 is gated on the green rulebook unit tests instead; Phase 2 proceeds WITH the caveat in the trust badge. The deferred backtest carries a real open question: the VRS order does not reproduce Budapest's R1/R2 pairings — this may be a seed-data gap OR an engine within-group-pairing nuance that must be root-caused before Cologne output is fully trusted. Tracked in .planning/todos/pending.
-- **Phase 1×2 seam:** SeedSequence.spawn over pinned chunk count must survive Phase 2 chunked progress yielding.
-- **Phase 2×4 seam:** `@st.cache_data` key must include `locked` from Phase 2 or Phase 4 becomes a re-architecture.
+- **GATE-01/04 RESOLVED — GREEN (2026-05-29):** The round-by-round backtest now reproduces Budapest 2025 Stage 1 pairings EXACTLY (R1-R5) using the authoritative Valve VRS snapshot seeds. `BACKTEST_PASSED=True`; `test_backtest_budapest_2025` green. The prior VRS-vs-pairing concern was a seed-data gap (snapshot rule), not an engine nuance. No longer a blocker.
+- **Phase 1×2 / 2×4 seams:** SATISFIED through v1.0 — SeedSequence.spawn reproducibility holds across chunked progress; `locked` is in the `@st.cache_data` key and drives Phase 4 re-sim.
 - **Phase 5×v2 seam (SATISFIED 2026-05-30):** the read-only `data/odds_cache.json` contract (ODDS-07) is written + frozen by `scripts/fetch_odds.py`; the app's only odds contact is `ui/odds_loader.load_odds_cache` reading it. The deferred v2 cron (OPS-01) is now a ONE-crontab-line drop-in with zero app change.
 - **Phase 5 DEFERRED Task-3 (live-slug confirmation):** the OddsPapi/Polymarket/Kalshi live Cologne slugs/tickers/field-names (A2–A5) are a `checkpoint:human-verify` the user runs via gstack `/browse` ONCE markets post (not posted 2026-05-30 — expected). The build + tests are complete against recorded fixtures; `discover_fixtures` returns `{}` until then (a no-fixtures fetch writes a valid empty cache). NOT a build blocker.
 - **Requirement count note:** REQUIREMENTS.md header says 48 v1 requirements; the enumerated REQ-IDs total 58. All 58 enumerated IDs are mapped — flag the header discrepancy to the user.
