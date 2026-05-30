@@ -127,7 +127,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Ratings back-solve inverts each known series prob to map-level (identity Bo1, invert `p²(3−2p)` for Bo3) then fits per-team ratings via logistic least-squares; live odds override the imminent round's known matchups (ODDS-04).
   4. The epistemic outer loop draws p ~ Beta(blend, clamped var) with `variance < p(1-p)` clamp before the moment fit; the reported band ⊇ the inner Wilson band and does NOT shrink with N on high-disagreement matches (wires PROB-03/PROB-04/PROB-05).
   5. Adapters discover Cologne fixtures/slugs dynamically; the fetch writes a read-only `data/odds_cache.json` the app only ever reads, and the app never calls `get_quotes()` on a rerun (ODDS-05/ODDS-06/ODDS-07).
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 05-01-PLAN.md — pure `odds/` core (TDD): `OddsProvider` adapters (OddsPapi/Polymarket/Kalshi over recorded fixtures), de-vig routed on `vig_type`, OddsPapi bundle pre-pooled to one Pinnacle opinion, liquidity/sharpness-weighted log-opinion `pool()` → `BlendedProb(p,var,n_sources)`. httpx confined to `odds/`. No engine/app mutation (ODDS-01/02/03/05)
+- [ ] 05-02-PLAN.md — `engine/backsolve.py` (TDD): invert series→map (Bo1 identity, bisection-invert `p²(3−2p)`) + numpy-only Gauss-Newton logistic rating fit (gauge-anchored, no scipy); fill `epistemic_draws` with K Beta draws (k=1+var=0 = byte-identical no-op); additive keyword-only `market_overrides` threaded `simulate_stage`→`_play` (lower-id orientation). Band ⊇ Wilson, N-stable. GATE-01 stays green (ODDS-04/PROB-03/04/05)
+- [ ] 05-03-PLAN.md — fetch + cache + UI: `scripts/fetch_odds.py` (button AND v2 cron, ODDS-07) writing read-only `data/odds_cache.json`; `ui/odds_loader.py` json-only read path; "fetch now" button + fail-soft preservation (no key → rating-only + banner, zero-config first run intact); app never calls providers on rerun. Live slug/ticker confirm = deferred /browse checkpoint (AppTest) (ODDS-05/06/07/08)
 **UI hint**: yes
 
 **Cross-phase seam to honor NOW:**
@@ -161,5 +164,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Streamlit UI Shell | 3/3 | Plans done | 2026-05-29 |
 | 3. Pick'Em Optimizer | 2/2 | Complete | 2026-05-29 |
 | 4. Conditional Re-Sim + Live Mode | 0/2 | Planned | - |
-| 5. Odds Ensemble | 0/TBD | Not started | - |
+| 5. Odds Ensemble | 0/3 | Planned | - |
 | 6. Full-Major v3 | 0/TBD | Not started | - |

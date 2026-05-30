@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_complete
-stopped_at: Executed Phase 4 plan 04-02 (LIVE-mode UI wiring) — Phase 4 COMPLETE; +5 live AppTests +1 pure bracket assertion, full suite 85 passed, GATE-01 green
+status: phase_planned
+stopped_at: Phase 4 merged to master (PR #4 squash cf5a84f). Planned Phase 5 (Odds Ensemble) — 3 plans, plan-checker PASS + 3 warnings hardened
 last_updated: "2026-05-30T01:54:07.922Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 11
+  total_plans: 14
   completed_plans: 11
-  percent: 100
+  percent: 79
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase 4 — conditional re-sim + live mode (COMPLETE — both plans executed). Next: Phase 5 (Odds Ensemble).
+**Current focus:** Phase 5 — Odds Ensemble (PLANNED, ready to execute). Phase 4 merged to master (PR #4).
 
 ## Current Position
 
-Phase: 4 (conditional-re-sim-live-mode) — COMPLETE (04-01 + 04-02 executed 2026-05-29)
-Plan: 04-02 (LIVE-mode UI wiring, wave 2) ✅ EXECUTED 2026-05-29 — Phase 4 done (RESIM-01..04 satisfied)
-Status: Phase complete — next is `/gsd-plan-phase 5` (Odds Ensemble) + `/gsd-verify-work 4`
+Phase: 5 (odds-ensemble) — PLANNED (3 plans written, plan-checker PASS, 3 warnings hardened)
+Plan: 05-01 (pure odds core, TDD, wave 1) ∥ 05-02 (back-solve + epistemic fill, TDD, wave 1) → 05-03 (fetch + cache + UI, AppTest, wave 2) — not yet executed
+Status: Planned — next is `/gsd-execute-phase 5`
 Last activity: 2026-05-29
 
-Progress: [██████████] 100%
+Progress: [████████░░] 79% (4/6 phases complete; Phase 5 planned). Phase 4 merged to master as cf5a84f.
 
 ## Performance Metrics
 
