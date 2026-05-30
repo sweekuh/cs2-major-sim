@@ -15,6 +15,8 @@ falsely green.
 
 from __future__ import annotations
 
+import pytest
+
 APP = "app.py"
 
 
@@ -433,3 +435,247 @@ def test_readme_quickstart_and_cold_start_drill():
     tail = readme[-1200:].lower()
     assert "cold-start" in tail or "cold start" in tail
     assert "git pull" in tail
+
+
+# --- Phase 4: LIVE-mode wiring (RESIM-01..04) --------------------------------------------
+#
+# These AppTest cases exercise the LIVE-mode lock controls + delta hero + status chips +
+# record-bucket bracket. Wave-0 (Task 1) ships them RED via xfail(strict=True); Task 2 wires
+# app.py and removes the markers (strict xfail flips a passing test to XPASS -> failure, so a
+# stray un-removed marker can't hide a real pass). N is kept small (2000) per the latency budget.
+
+
+def _first_legal_r1_lock():
+    """The first legal Round-1 (winner_id, loser_id) for the default fixture (seed i vs i+8).
+
+    R1 == round_idx 0; build_round1_pairs gives (seed i, seed i+8). The top seed (id 1) beats
+    its R1 opponent (id 9) — a guaranteed-legal lock. Keyed on id (== seed for this fixture).
+    """
+    from engine.teams import build_round1_pairs, load_teams
+
+    a, b = build_round1_pairs(load_teams())[0]
+    return (a.id, b.id)  # (winner=1, loser=9)
+
+
+def _go_live_small(at, n=2000):
+    """Switch to LIVE mode, set N small, and Run (keeps AppTest under the latency budget)."""
+    from ui.state import Mode
+
+    _mode_widget(at).set_value(Mode.LIVE.value).run()
+    at.number_input(key="N_input").set_value(n).run()
+    at.button(key="run_btn").click().run()
+    return at
+
+
+def test_live_lock_changes_cache_key():
+    """RESIM-01 / T-04-STALE: committing one legal lock makes the post-lock cache_key (with the
+    derived non-empty locked_key) differ from the unlocked key — a NEW mc_cache entry appears."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    pre_keys = set(at.session_state["mc_cache"].keys())
+
+    # Inject one legal R1 lock and re-run (the lock-controls path commits it).
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    post_keys = set(at.session_state["mc_cache"].keys())
+    # A new key with the non-empty locked_key appeared (the empty-locked key may also remain).
+    new_keys = post_keys - pre_keys
+    assert new_keys, "a locked Run must create a new cache entry on the non-empty locked key"
+    # Every cache key is (ratings_key, S, N, locked_key); a new one carries a non-empty locked_key.
+    assert any(k[3] != () for k in new_keys)
+
+
+def test_live_lock_moves_p_advance():
+    """RESIM-01: after a legal lock + re-sim, at least one team's P(advance) differs from the
+    pre-lock value — read the two Results from the session mc_cache on their respective keys."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    cache = at.session_state["mc_cache"]
+    pre_key = next(k for k in cache if k[3] == ())
+    pre_p_adv = cache[pre_key].p_advance()
+
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    cache = at.session_state["mc_cache"]
+    post_key = next(k for k in cache if k[3] != ())
+    post_p_adv = cache[post_key].p_advance()
+    # >=1 P(advance) moves (the locked winner's pair is now deterministic -> counts shift).
+    assert any(
+        abs(post_p_adv.get(tid, 0.0) - pre_p_adv.get(tid, 0.0)) > 1e-9
+        for tid in set(pre_p_adv) | set(post_p_adv)
+    )
+
+
+def test_impossible_lock_shows_reason():
+    """RESIM-03 / T-04-BADLOCK: an illegal lock (a rematch of an already-locked pair) surfaces
+    an st.error with the validate_lock reason, leaves KEY_LOCKED unchanged, and adds NO mc_cache
+    entry. The pending-lock is injected via KEY_PENDING_LOCK (the commit source app.py reads)."""
+    from ui.state import KEY_LOCKED, KEY_PENDING_LOCK
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # Lock R1 game 1 legally first (winner 1 over 9).
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    cache_before = dict(at.session_state["mc_cache"])
+    locked_before = list(at.session_state[KEY_LOCKED])
+
+    # Now attempt to re-lock the SAME pair at R1 (a rematch) — illegal.
+    at.session_state[KEY_PENDING_LOCK] = (0, w, ell)
+    at.button(key="live_lock_btn").click().run()
+    assert not at.exception
+
+    # The validate_lock reason is shown via st.error; the lock + cache are untouched.
+    assert any("no rematches" in e.value.lower() for e in at.error)
+    assert list(at.session_state[KEY_LOCKED]) == locked_before
+    assert dict(at.session_state["mc_cache"]) == cache_before
+
+
+def test_live_status_chips_render():
+    """RESIM-02/04: a lock that secures a pick renders glyph+label status badges
+    ('/ secured' / 'o live' / 'x dead'), and the bracket renders record-bucket COLUMNS (bucket
+    labels + flex layout) — never a tree."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    text = _all_text(at)
+    html_blobs = "\n".join(m.value for m in at.markdown)
+    # Status chips: at least one of the glyph+label badges renders (UI-06 blue/amber, never red/green).
+    assert any(tok in text for tok in ("secured", "live", "dead"))
+    assert any(g in html_blobs for g in ("/ secured", "o live", "x dead"))
+    # Record-bucket bracket: canonical column labels present, a flex layout, NOT a tree.
+    assert "0-0" in html_blobs and "3-0 adv" in html_blobs
+    assert "display:flex" in html_blobs
+    # No tree/connector markup leaked in (the bracket is columns, RESIM-04).
+    assert "tree" not in html_blobs.lower()
+
+
+def test_live_round_progress_caption_shows_remaining():
+    """ISSUE-2: the open round shows a 'N of M matches locked — lock all M to open the next
+    round' progress hint, so the round-gating is discoverable (it stuck a UAT tester)."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # Partially lock Round 1 (1 of 8) — the caption must surface the remaining count.
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    text = _all_text(at)
+    assert "of 8 matches locked" in text
+    assert "lock all 8 to open the next round" in text.lower()
+
+
+def test_live_delta_table_shows_per_team_change():
+    """RESIM-02 / ISSUE-1: the LIVE 'Delta probabilities' table shows the per-team CHANGE vs
+    pre-lock (signed '+/-pp' tags), not just absolute values — so the user can see what moved.
+    The locked winner's P(advance) tag is a positive delta (its R1 result is now certain)."""
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    text = _all_text(at)
+    html_blobs = "\n".join(m.value for m in at.markdown)
+    # The section still exists, now with the clarifying caption (no longer a bare 'Delta' label).
+    assert "Delta probabilities" in text
+    assert "change vs pre-lock" in text
+    # Signed percentage-point delta tags render (the fix's signal) — at least one positive/blue.
+    assert "pp</span>" in html_blobs
+    assert "+" in html_blobs and "#3B82F6" in html_blobs  # an increase rendered in blue
+
+
+def test_live_delta_anchor_uses_pre_key():
+    """BLOCKER 1 / T-04-ANCHOR: the delta hero's anchor ballot is captured ONCE from the
+    EMPTY-locked pre_key Result via optimize_cached(pre_lock_result, *pre_key).recommended and
+    stored in session_state; locking does NOT re-optimize it, and pge5_delta's `before` equals
+    p_ge5(anchor, matrices(pre_key Result.sample, ids)) — i.e. `before` is the pre_key Result."""
+    from engine.live import pge5_delta
+    from engine.optimizer import build_outcome_matrices, p_ge5
+    from engine.teams import load_teams
+    from ui.state import KEY_LIVE_ANCHOR, KEY_LOCKED
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    anchor_pre = at.session_state[KEY_LIVE_ANCHOR]
+    assert anchor_pre is not None
+
+    cache = at.session_state["mc_cache"]
+    pre_key = next(k for k in cache if k[3] == ())
+    pre_result = cache[pre_key]
+
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # The anchor is UNCHANGED after the lock (never re-optimized per round).
+    anchor_post = at.session_state[KEY_LIVE_ANCHOR]
+    assert anchor_post == anchor_pre
+
+    # `before` is computed on the pre_key Result's OWN sample (not the post-lock result).
+    cache = at.session_state["mc_cache"]
+    post_key = next(k for k in cache if k[3] != ())
+    post_result = cache[post_key]
+    ids = [t.id for t in load_teams()]
+    before, after = pge5_delta(anchor_post, pre_result, post_result, ids)
+    expected_before = p_ge5(anchor_post, build_outcome_matrices(pre_result.sample, ids))
+    assert abs(before - expected_before) < 1e-12
+
+
+def test_bracket_columns_html_is_columns_not_tree():
+    """RESIM-04 (pure render): bracket_columns_html emits record-bucket flex COLUMNS, escapes
+    team names, marks locked-solid vs simulated-faint via opacity, and has no tree/connector
+    markup. Pure assertion — no AppTest needed (the render exists from Task 1)."""
+    from engine.live import BracketView
+    from ui.render import bracket_columns_html
+
+    # Two teams at 1-0 / 0-1 from a single locked R1 result; a third still at 0-0 (simulated).
+    view = BracketView(
+        legal_pairings=[],
+        records={1: (1, 0), 9: (0, 1), 2: (0, 0)},
+        locked_edges={frozenset((1, 9))},
+    )
+    name_of = {1: "GamerLegion", 9: "NRG", 2: "<script>B8"}
+    html_out = bracket_columns_html(view, name_of)
+
+    # Flex row of record-bucket columns (NOT a tree).
+    assert "display:flex" in html_out
+    assert "0-0" in html_out and "1-0" in html_out and "0-1" in html_out
+    assert "3-0 adv" in html_out and "0-3 elim" in html_out
+    assert "tree" not in html_out.lower()
+    # Locked teams (in a locked edge) are solid; the simulated-only team is faint.
+    assert "opacity:1" in html_out      # locked (GamerLegion / NRG)
+    assert "opacity:0.5" in html_out    # simulated-only (B8 at 0-0)
+    # Names are html.escape-d (XSS defense-in-depth).
+    assert "&lt;script&gt;B8" in html_out
+    assert "<script>B8" not in html_out

@@ -102,6 +102,34 @@ def test_ci_bar_html_is_xss_safe_numeric_only():
         ci_bar_html("<script>alert(1)</script>", 0.0, 1.0)  # type: ignore[arg-type]
 
 
+def test_delta_tag_html_signs_and_palette():
+    """delta_tag_html (RESIM-02 / ISSUE-1): signed pp change, blue up / amber down / grey flat.
+
+    The +/- SIGN is the colorblind-safe signal (UI-06); hue only reinforces. ASCII only.
+    """
+    from ui.render import delta_tag_html
+
+    up = delta_tag_html(0.999, 0.85)  # +14.9pp
+    assert "+14.9pp" in up and "#3B82F6" in up  # increase -> blue, leading '+'
+    down = delta_tag_html(0.40, 0.55)  # -15.0pp
+    assert "-15.0pp" in down and "#F59E0B" in down  # decrease -> amber, leading '-'
+    flat = delta_tag_html(0.500, 0.500)
+    assert "+0.0pp" in flat and "#3B82F6" not in flat and "#F59E0B" not in flat  # muted
+    # ASCII only — no Unicode arrows (cp1252 lesson).
+    for tag in (up, down, flat):
+        assert tag.isascii()
+
+
+def test_delta_tag_html_is_xss_safe_numeric_only():
+    """delta_tag_html must reject free-text args (T-02-XSS) — numbers only reach the markup."""
+    from ui.render import delta_tag_html
+
+    with pytest.raises(TypeError):
+        delta_tag_html("<script>", 0.5)  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        delta_tag_html(0.5, "<script>")  # type: ignore[arg-type]
+
+
 def test_status_palette_never_red_green():
     """Every STATUS hue is colorblind-safe blue/amber — NEVER a red/green family (UI-06).
 

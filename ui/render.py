@@ -79,6 +79,36 @@ def ci_bar_html(p: float, lo: float, hi: float, hue: str = _DEFAULT_HUE) -> str:
     )
 
 
+def delta_tag_html(post: float, pre: float, *, eps: float = 0.0005) -> str:
+    """Return a small signed percentage-POINT delta tag: ``post`` vs ``pre`` (both 0..1).
+
+    For the LIVE "Delta probabilities" table (RESIM-02 — show the CHANGE, not a new static
+    number). Colorblind-safe (UI-06): the ``+``/``-`` SIGN is the real signal; hue is only
+    reinforcement — increase = blue, decrease = amber, no-change = muted grey. ASCII only
+    (no Unicode arrows — the cp1252 lesson, CLAUDE.md). Both args MUST be numeric floats; a
+    non-numeric value raises TypeError so no free-text reaches the unsafe_allow_html markup
+    (T-02-XSS). ``eps`` (in 0..1 units) is the dead-band below which the change reads as flat.
+    """
+    for name, val in (("post", post), ("pre", pre)):
+        if isinstance(val, bool) or not isinstance(val, (int, float)):
+            raise TypeError(
+                f"delta_tag_html expects numeric {name}, got {type(val).__name__} "
+                "(team names / free text must NEVER reach this HTML — T-02-XSS)"
+            )
+    dpp = (post - pre) * 100.0  # percentage points
+    if abs(post - pre) < eps:
+        return (
+            '<span style="color:#8A8F98;font-family:ui-monospace,monospace;font-size:11px">'
+            "+0.0pp</span>"
+        )
+    hue = _BLUE if dpp > 0 else _AMBER
+    sign = "+" if dpp > 0 else "-"
+    return (
+        f'<span style="color:{hue};font-family:ui-monospace,monospace;font-size:11px">'
+        f"{sign}{abs(dpp):.1f}pp</span>"
+    )
+
+
 def status_badge_html(state: str) -> str:
     """Return a colorblind-safe status badge: ASCII glyph + text label + hue (UI-06).
 
@@ -166,6 +196,69 @@ def ballot_columns(
         f'{_ballot_card_html("B — Max P(>=5)", ballot_b, name_of, diff)}'
         "</div>"
     )
+
+
+# --- Phase 4: record-bucket bracket (D6 / RESIM-04) --------------------------------------
+# Swiss teams reconverge BY RECORD, so the bracket is record-bucket COLUMNS, never a tree
+# (HANDOFF §10.5). Canonical column order: 0-0 -> 1-0/0-1 -> 2-0/1-1/0-2 -> 2-1/1-2 ->
+# 3-0 (advanced) / 0-3 (eliminated). Each column is a vertical stack of team chips placed by
+# current (wins, losses); a chip from a LOCKED result is solid (opacity 1), a simulated-only
+# chip is faint (opacity ~0.5). Team names are html.escape-d (T-04-XSS, like _ballot_card_html).
+
+# (wins, losses) -> human column label, in canonical left->right order.
+_BRACKET_BUCKETS: tuple[tuple[tuple[int, int], str], ...] = (
+    ((0, 0), "0-0"),
+    ((1, 0), "1-0"),
+    ((0, 1), "0-1"),
+    ((2, 0), "2-0"),
+    ((1, 1), "1-1"),
+    ((0, 2), "0-2"),
+    ((2, 1), "2-1"),
+    ((1, 2), "1-2"),
+    ((3, 0), "3-0 adv"),
+    ((0, 3), "0-3 elim"),
+)
+
+
+def bracket_columns_html(bracket_view, name_of: dict[int, str]) -> str:
+    """Render a BracketView as record-bucket COLUMNS — never a tree (D6 / RESIM-04).
+
+    One ``<div>`` column per canonical (wins, losses) bucket, laid out in a ``display:flex``
+    row; each column is a vertical stack of team chips placed by their record from
+    ``bracket_view.records`` (``{id: (wins, losses)}``). A team that appears in any LOCKED
+    edge (``bracket_view.locked_edges``) renders solid (``opacity:1``); a simulated-only team
+    renders faint (``opacity:0.5``). Team names are HTML-escaped via ``name_of`` (XSS
+    defense-in-depth, like ``_ballot_card_html``). No streamlit, no tree/connector markup.
+    """
+    # Team ids that are "locked" (appear in at least one locked pair) -> solid chip.
+    locked_team_ids: set[int] = set()
+    for edge in getattr(bracket_view, "locked_edges", set()):
+        locked_team_ids |= set(edge)
+
+    # Group team ids by their current record.
+    by_record: dict[tuple[int, int], list[int]] = {}
+    for tid, rec in bracket_view.records.items():
+        by_record.setdefault(tuple(rec), []).append(tid)
+
+    columns: list[str] = []
+    for record, label in _BRACKET_BUCKETS:
+        chips: list[str] = []
+        for tid in sorted(by_record.get(record, []), key=lambda t: name_of.get(t, str(t))):
+            name = html.escape(str(name_of.get(tid, tid)))
+            opacity = "1" if tid in locked_team_ids else "0.5"
+            chips.append(
+                f'<div style="opacity:{opacity};font-family:ui-monospace,monospace;'
+                f'font-size:12px;padding:2px 0">{name}</div>'
+            )
+        body = "".join(chips) if chips else (
+            '<div style="opacity:0.3;font-size:11px">—</div>'
+        )
+        columns.append(
+            f'<div data-bucket="{label}" style="flex:1;min-width:90px">'
+            f'<div style="font-weight:600;font-size:11px;opacity:0.65;'
+            f'margin-bottom:4px">{label}</div>{body}</div>'
+        )
+    return f'<div style="display:flex;gap:12px;overflow-x:auto">{"".join(columns)}</div>'
 
 
 def correlated_pick_warning_text(name_a: str, name_b: str) -> str:
