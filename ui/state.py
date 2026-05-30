@@ -55,20 +55,21 @@ BAD_RATING_MSG = "Ratings must be numbers. Fix the highlighted cell, then Run."
 
 # --- Trust badge (UI-07) + seed-safety (DX-02) + fail-soft odds (ODDS-08) gates ----------
 #
-# BACKTEST_PASSED is an EXPLICIT flag, currently False, so the trust badge can NEVER drift
-# to a green "validated" claim while the Budapest round-by-round backtest is DEFERRED
-# (GATE-01/04/05 — authoritative Valve seeds unsourceable; see 01-04-SUMMARY + the
-# STATE.md 2026-05-29 decision). It is flipped to True ONLY when that deferred backtest
-# actually runs and passes (RESEARCH Open Question 3). Do NOT flip it as a side effect of
-# shipping UI.
-BACKTEST_PASSED = False
+# BACKTEST_PASSED is an EXPLICIT flag. Flipped True 2026-05-29: the Budapest 2025 Stage-1
+# round-by-round backtest is GREEN (GATE-01/04/05). The engine reproduces every actual
+# pairing under the authoritative Valve VRS-snapshot seeds (test_backtest_budapest_2025).
+# It gates the trust badge together with seeds_confirmed (Pitfall 6 "both, not one"): the
+# engine is now backtest-validated, but the badge stays caveated until the user confirms the
+# Cologne 2026 seeds (which are still [INFERRED]). Do NOT flip back as a side effect.
+BACKTEST_PASSED = True
 
-# UI-07 caveated badge text — the EXACT string (UI-SPEC Copywriting). It MUST NOT mention
-# Budapest/Austin or claim a green ✓ "backtest passed": the engine is validated against the
-# Valve rulebook UNIT tests, but the full pairing-reproduction backtest is still pending the
-# authoritative seed data. test_trust_badge_wording asserts this string verbatim.
+# UI-07 caveated badge text — the EXACT string (UI-SPEC Copywriting). Shown while the Cologne
+# seeds are unconfirmed. The engine is validated (rulebook unit tests + full round-by-round
+# backtest); what's pending now is confirming THIS event's [INFERRED] seeds — NOT the backtest.
+# No green ✓, no "backtest passed", no Budapest/Austin in the caveat. test_trust_badge_wording
+# asserts this string verbatim.
 TRUST_BADGE_CAVEATED = (
-    "engine validated vs Valve rulebook unit tests — full backtest pending seed data"
+    "engine validated (Valve rulebook + round-by-round backtest) — confirm the Cologne seeds to finalize"
 )
 
 # UI-07 VALIDATED badge text — used ONLY by the green st.success branch once BOTH

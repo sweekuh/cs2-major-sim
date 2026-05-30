@@ -261,11 +261,12 @@ def test_hero_is_pge5_not_placeholder():
 
 
 def test_trust_badge_wording():
-    """UI-07 / Pitfall 6: the trust badge text is EXACTLY the caveated string, gated on BOTH
-    BACKTEST_PASSED and seeds_confirmed, and MUST NOT claim a green/Budapest 'validated'.
+    """UI-07 / Pitfall 6: the trust badge is gated on BOTH BACKTEST_PASSED and seeds_confirmed,
+    and MUST NOT claim a green ✓ / Budapest 'validated' in the CAVEATED string.
 
-    The Budapest backtest was DEFERRED (GATE-01/04/05); the badge cannot drift to a green
-    'validated' claim while the backtest has not run. Both flags must be true to validate.
+    The Budapest backtest is now GREEN (GATE-01/04/05) so BACKTEST_PASSED is True. The badge
+    still shows the caveated string until the user confirms the [INFERRED] Cologne seeds — the
+    second of the two gates. Validated requires BOTH.
     """
     from ui.state import (
         BACKTEST_PASSED,
@@ -273,32 +274,33 @@ def test_trust_badge_wording():
         trust_badge_state,
     )
 
-    # The constant is False in Phase 2 — the deferred backtest has not run.
-    assert BACKTEST_PASSED is False
+    # The backtest passed — the constant is True.
+    assert BACKTEST_PASSED is True
 
-    # Exact caveated wording (UI-SPEC Copywriting) — no Budapest/Austin, no green check.
+    # Exact caveated wording (UI-SPEC Copywriting) — the caveat is now the seeds, not the
+    # backtest; still no Budapest/Austin, no green check, no "backtest passed".
     assert (
         TRUST_BADGE_CAVEATED
-        == "engine validated vs Valve rulebook unit tests — full backtest pending seed data"
+        == "engine validated (Valve rulebook + round-by-round backtest) — confirm the Cologne seeds to finalize"
     )
     assert "Budapest" not in TRUST_BADGE_CAVEATED
     assert "Austin" not in TRUST_BADGE_CAVEATED
     assert "✓" not in TRUST_BADGE_CAVEATED
     assert "backtest passed" not in TRUST_BADGE_CAVEATED.lower()
 
-    # Gated on BOTH flags (Pitfall 6 "both, not one"): only validated when both are true.
-    assert trust_badge_state(seeds_confirmed=True) == "caveated"  # backtest still False
+    # Gated on BOTH (Pitfall 6 "both, not one"): with the backtest passed, validated needs
+    # seeds confirmed; caveated otherwise.
+    assert trust_badge_state(seeds_confirmed=True) == "validated"
     assert trust_badge_state(seeds_confirmed=False) == "caveated"
     assert trust_badge_state(False) == "caveated"
 
-    # The validated state requires BOTH — proven by overriding BACKTEST_PASSED locally.
+    # The validated state still requires the backtest gate — proven by overriding it False.
     import ui.state as state_mod
 
     original = state_mod.BACKTEST_PASSED
     try:
-        state_mod.BACKTEST_PASSED = True
-        assert state_mod.trust_badge_state(seeds_confirmed=True) == "validated"
-        assert state_mod.trust_badge_state(seeds_confirmed=False) == "caveated"
+        state_mod.BACKTEST_PASSED = False
+        assert state_mod.trust_badge_state(seeds_confirmed=True) == "caveated"
     finally:
         state_mod.BACKTEST_PASSED = original
 
@@ -337,7 +339,8 @@ def _all_text(at):
 
 def test_trust_badge_caveated_until_both():
     """UI-07: the header renders the EXACT caveated badge text and never a green/Budapest
-    'validated' state (because BACKTEST_PASSED is False), on both first load and after Run."""
+    'validated' state on first load — the backtest passed, but the shipped Cologne seeds are
+    unconfirmed (seeds_confirmed=false), so the both-gated badge stays caveated."""
     from ui.state import TRUST_BADGE_CAVEATED
 
     at = _apptest().run()
