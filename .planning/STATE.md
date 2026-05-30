@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase_complete
-stopped_at: Executed Phase 3 (03-01 + 03-02) — optimizer green, OPT-01..05 done
+status: phase_planned
+stopped_at: Planned Phase 4 (04-01 pure core + 04-02 UI) — plan-checker PASS on iteration 2
 last_updated: "2026-05-29T00:00:00.000Z"
 last_activity: 2026-05-29
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 9
+  total_plans: 11
   completed_plans: 9
   percent: 50
 ---
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-28)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** Phase --phase — 2
+**Current focus:** Phase 4 — conditional re-sim + live mode (PLANNED, ready to execute)
 
 ## Current Position
 
-Phase: 3 (pickem-optimizer) — COMPLETE (2/2 plans executed)
-Plan: 03-01 + 03-02 executed; OPT-01..05 done
-Status: Phase complete — next is Phase 4 (conditional re-sim + live mode)
+Phase: 4 (conditional-re-sim-live-mode) — PLANNED (2 plans written, plan-checker PASS)
+Plan: 04-01 (pure engine/live.py core, TDD, wave 1) + 04-02 (LIVE-mode UI wiring, wave 2) — not yet executed
+Status: Planned — next is `/gsd-execute-phase 4`
 Last activity: 2026-05-29
 
-Progress: [██████████] 100%
+Progress: [██████████] 100% (Phase 3 complete; Phase 4 planned)
 
 ## Performance Metrics
 

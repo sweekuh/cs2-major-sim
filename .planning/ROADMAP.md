@@ -109,7 +109,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Each locked pick displays as live / dead / secured with a P(≥5)-from-here delta arrow (e.g. `71% → 58%`), showing the change rather than a new static number (RESIM-02).
   3. An impossible locked pairing (a rematch or an already-terminated team) is rejected with a reason, not silently accepted (RESIM-03).
   4. The bracket renders as record-bucket columns (HLTV/Liquipedia convention, never a tree) with locked/real results solid and simulated branches faint (RESIM-04).
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 04-01-PLAN.md — `engine/live.py` pure core (TDD): lock-list↔`locked`-dict projection, `validate_lock` (rematch/terminated/non-pairing/double-booking/winner-not-in-pair reasons), `classify_pick` live/dead/secured against the conditional sample, `pge5_delta` reusing `optimizer.p_ge5` on a fixed anchor ballot, `derive_bracket`/`legal_pairings_for_round` replaying `simulate_stage(..., pairings_out=[])` (full-locked-prefix precondition) + `tests/test_live.py`. No engine mutation (RESIM-02/03/04)
+- [ ] 04-02-PLAN.md — LIVE-mode UI wiring: round-by-round lock controls → `KEY_LOCKED` → existing `freeze_locked`→`cache_key` path (re-sim fires for free), from-here delta filling `_hero_slot`, per-pick status chips, record-bucket bracket (solid-locked/faint-simulated columns), `validate_lock` gating with `st.error` reason + AppTest (RESIM-01/02/03/04)
 **UI hint**: yes
 
 **Note:** This phase is primarily UI additions and classification logic — re-sim fires for free because `locked` is already in the cache key from Phase 2 and honored by swiss.py from Phase 1. If those Phase 1×2 seams were skipped, this becomes a re-architecture.
@@ -158,6 +160,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Engine + Backtest Gate | 4/4 | Plans done (GATE-01/04 deferred) | 2026-05-29 |
 | 2. Streamlit UI Shell | 3/3 | Plans done | 2026-05-29 |
 | 3. Pick'Em Optimizer | 2/2 | Complete | 2026-05-29 |
-| 4. Conditional Re-Sim + Live Mode | 0/TBD | Not started | - |
+| 4. Conditional Re-Sim + Live Mode | 0/2 | Planned | - |
 | 5. Odds Ensemble | 0/TBD | Not started | - |
 | 6. Full-Major v3 | 0/TBD | Not started | - |
