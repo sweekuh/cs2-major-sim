@@ -13,7 +13,18 @@
 > - ✅ **D1 + bug fixes A/B** — honest cache-driven status panel (header strip), real fetch spinner,
 >   persisted fetch outcome. New helpers `fmt_age`/`is_stale`/`provider_labels`/`priced_ids` + unit tests;
 >   2 stale banner tests updated, 2 new AppTests. test_ui_helpers (21) + test_app (36) green.
-> - ⏳ **D2 (two-tone band)** + **D3 (per-book drill-down)** — next lane (engine `band_*_sampling` + schema v2).
+> - ✅ **D2 (two-tone band)** — `Result.band_*_sampling` (aleatoric Wilson of the marginal) beside the
+>   epistemic union band; `ci_bar_two_tone_html` (solid sampling + faint epistemic); two-tone in the
+>   probs + delta tables under an odds-fed run, with a legend. Nesting + K=1-equality test green.
+> - ✅ **D3 (per-book drill-down)** — `fetch_odds` writes per-source prices; **ADDITIVE within schema v1,
+>   NOT a v2 bump** (correction below). "Why the books disagree" expander sorted by spread.
+>
+> **Schema-versioning correction (implementation finding):** the eng review recommended cache **schema
+> v2** with the loader accepting v1+v2. Implementation revealed that's *worse*: bumping the version makes
+> an OLD app's loader (accepts only v1) **reject** a NEW cache → silent downgrade to rating-only. The
+> `sources` field is optional and the loader never validates blended sub-entries, so it is **additive
+> within v1** — old readers ignore it, new caches still load everywhere. Loader + its fail-soft
+> `version != 1 → None` test are unchanged. Smaller, strictly more backward-compatible.
 
 ---
 

@@ -145,6 +145,42 @@ def test_point_probs_valid_under_epistemic():
     )
 
 
+def test_sampling_band_nested_in_epistemic_and_equal_when_k1():
+    """D2 (/plan-eng-review): band_*_sampling (the aleatoric Wilson of the aggregate marginal) is
+    NESTED inside band_* (the epistemic across-draw union) under K>1, and EQUAL to it when K=1.
+
+    The two-tone CI bar draws sampling solid + epistemic faint; the equal-when-K=1 fact is the GATE
+    guard (the bar collapses to single-tone on the rating-only path). Nesting holds because the
+    sampling band is a single tight Wilson over K*N sims while the union spans per-draw Wilson
+    intervals each over N (wider) plus the across-draw spread.
+    """
+    teams = load_teams()
+    N = 4000
+    eps = 1e-9
+
+    # K=1 (rating-only): sampling band == epistemic band exactly, for all three buckets.
+    base = run_mc(teams, None, 40.0, N, {}, seed=7, market_blend=None)
+    assert base.band_advance_sampling == base.band_advance
+    assert base.band_30_sampling == base.band_30
+    assert base.band_03_sampling == base.band_03
+
+    # K>1 (injected var): sampling band is nested inside the epistemic union for EVERY team.
+    epi = run_mc(teams, None, 40.0, N, {}, seed=7, market_blend={"1-9": (0.5, 0.05)})
+    for tid in (t.id for t in teams):
+        lo_o, hi_o = epi.band_advance[tid]
+        lo_i, hi_i = epi.band_advance_sampling[tid]
+        assert lo_o <= lo_i + eps and hi_i <= hi_o + eps, (
+            f"team {tid}: sampling [{lo_i:.4f},{hi_i:.4f}] not nested in epistemic "
+            f"[{lo_o:.4f},{hi_o:.4f}]"
+        )
+    # On the injected-var match (seed 1) the epistemic band is clearly WIDER than the sampling band.
+    lo_o, hi_o = epi.band_advance[1]
+    lo_i, hi_i = epi.band_advance_sampling[1]
+    assert (hi_o - lo_o) > (hi_i - lo_i) * 1.1, (
+        "the priced match's epistemic band must exceed its sampling band (the disagreement shows)"
+    )
+
+
 def test_rating_only_noop_unchanged():
     """GATE GUARD (T-05-GATE): with NO var / NO market overrides, run_mc produces IDENTICAL
     per-team counts to a baseline run for a fixed (seed, N, n_chunks).

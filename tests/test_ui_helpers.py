@@ -258,6 +258,46 @@ def test_correlated_pick_warning_text_format():
     assert txt.startswith("!")
 
 
+# --- Phase 5 display: two-tone CI bar + drill-down helpers (D2/D3) ------------------------
+
+
+def test_ci_bar_two_tone_collapses_when_outer_equals_inner():
+    """D2 GATE guard: when the epistemic (outer) band equals the sampling (inner) band — the
+    rating-only case — the two-tone bar draws both segments at the same place (reads single-tone)
+    and still carries the formatted percentage. Two positioned segments (faint outer + solid inner).
+    """
+    from ui.render import ci_bar_two_tone_html
+
+    html = ci_bar_two_tone_html(0.62, 0.58, 0.66, 0.58, 0.66)
+    assert "62.0%" in html
+    assert "opacity:0.35" in html                      # the faint outer (epistemic) segment
+    assert html.count("position:absolute") == 2        # outer + inner segments
+
+
+def test_ci_bar_two_tone_is_xss_safe_numeric_only():
+    """ci_bar_two_tone_html rejects free-text band values and non-hex hues (T-02-XSS), like ci_bar_html."""
+    from ui.render import ci_bar_two_tone_html
+
+    with pytest.raises(TypeError):
+        ci_bar_two_tone_html("<script>", 0.0, 1.0, 0.0, 1.0)  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        ci_bar_two_tone_html(0.5, 0.4, 0.6, 0.4, 0.6, hue="blue;}<script>")
+
+
+def test_source_spread_disagreement_width():
+    """source_spread = max(p) - min(p) across a match's per-book prices; <2 prices or malformed -> 0."""
+    from ui.render import source_spread
+
+    assert source_spread(
+        [{"book": "a", "p": 0.60}, {"book": "b", "p": 0.72}, {"book": "c", "p": 0.55}]
+    ) == pytest.approx(0.17)
+    assert source_spread([{"book": "a", "p": 0.6}]) == 0.0
+    assert source_spread([]) == 0.0
+    assert source_spread(None) == 0.0
+    # Malformed entries are skipped; the remaining valid prices still compute.
+    assert source_spread([{"book": "a"}, {"p": 0.5}, {"p": 0.7}]) == pytest.approx(0.2)
+
+
 # --- Phase 5 display: live-odds status panel helpers (D1) --------------------------------
 
 

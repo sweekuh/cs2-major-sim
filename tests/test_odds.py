@@ -236,3 +236,43 @@ def test_keyless_two_source_pool(teams, monkeypatch):
     blended = pool(quotes)
     assert blended.n_sources == 2
     assert 0.0 < blended.p < 1.0
+
+
+# --------------------------------------------------------------------------------------
+# fetch_odds.main cache writing — per-source prices for the drill-down (D3)
+# --------------------------------------------------------------------------------------
+
+
+def test_fetch_odds_main_writes_per_source_prices(teams, tmp_path):
+    """D3: fetch_odds.main writes each blended entry's per-source prices into a `sources` list,
+    ADDITIVE within schema v1 (version stays 1 — NOT a bump, so old loaders still accept it).
+
+    Drives main() with the recorded sample fixtures (no network), then asserts the written cache
+    carries `sources` of {book, p} and that the UNCHANGED loader round-trips it with sources intact.
+    """
+    from scripts.fetch_odds import main, match_key
+    from ui.odds_loader import load_odds_cache
+
+    def _pname(provider):
+        return getattr(provider, "name", provider.__name__)
+
+    fixtures = {
+        _pname(OddsPapiProvider): _load("oddspapi_sample.json"),
+        _pname(PolymarketProvider): _load("polymarket_sample.json"),
+        _pname(KalshiProvider): _load("kalshi_sample.json"),
+    }
+    out = tmp_path / "odds_cache.json"
+    cache = main(out, fixtures=fixtures)
+
+    assert cache["_meta"]["version"] == 1, "sources is additive within v1, not a version bump"
+    entry = cache["blended"][match_key(_EXPECTED_MATCH)]
+    sources = entry["sources"]
+    assert len(sources) >= 2, "the 3-provider pool should record >=2 independent book prices"
+    for s in sources:
+        assert set(s) == {"book", "p"}
+        assert 0.0 < s["p"] < 1.0
+
+    # The UNCHANGED loader accepts the sources-bearing cache and returns it intact (back-compat).
+    loaded = load_odds_cache(out)
+    assert loaded is not None
+    assert loaded["blended"][match_key(_EXPECTED_MATCH)]["sources"] == sources

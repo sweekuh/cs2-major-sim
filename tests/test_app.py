@@ -819,6 +819,45 @@ def test_fetch_outcome_persists_across_rerun(monkeypatch):
     assert KEY_ODDS_OUTCOME not in at.session_state
 
 
+def test_odds_drilldown_and_two_tone_under_sourced_cache(monkeypatch, tmp_path):
+    """D2/D3: a loaded cache carrying per-source prices shows the 'why the books disagree' drill-down
+    (human book labels + blended consensus, sorted by spread) and, after Run, the two-tone CI legend.
+    """
+    from datetime import datetime, timezone
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    cache_file = tmp_path / "odds_cache.json"
+    fresh = datetime.now(timezone.utc).isoformat()
+    blended = {
+        "1-9": {
+            "p": 0.62,
+            "var": 0.02,
+            "n_sources": 3,
+            "bo3": True,
+            "sources": [
+                {"book": "oddspapi", "p": 0.66},
+                {"book": "polymarket", "p": 0.55},
+                {"book": "kalshi", "p": 0.64},
+            ],
+        }
+    }
+    _write_cache(cache_file, blended, fetched_at=fresh)
+    import ui.odds_loader as loader
+
+    _real = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: _real(cache_file))
+
+    at = _run_small(_apptest().run())  # Run so the odds-fed (two-tone) probs table renders
+    assert not at.exception
+    text = _all_text(at)
+    # Drill-down content (inside the expander) — caption + human book labels + blended consensus.
+    assert "Each book's series price" in text
+    assert "Pinnacle" in text and "Polymarket" in text and "Kalshi" in text
+    assert "blended 0.62" in text
+    # Two-tone CI legend appears on the odds-fed probs table.
+    assert "solid = sampling band" in text
+
+
 def test_zero_config_first_run_still_works(monkeypatch):
     """DX-01: a fresh run with no key + no cache hits Run and produces per-team P(advance) — the
     Phase-2 zero-config promise is unbroken by the Phase-5 wiring."""

@@ -42,15 +42,19 @@ from ui.render import (
     ballot_columns,
     bracket_columns_html,
     ci_bar_html,
+    ci_bar_two_tone_html,
     correlated_pick_warning_text,
     delta_tag_html,
     fmt_age,
     fmt_pct,
     hero_number_html,
     is_stale,
+    priced_ids,
     provider_labels,
+    source_spread,
     status_badge_html,
 )
+from ui.render import PROVIDER_LABELS
 from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
@@ -83,6 +87,9 @@ from ui.state import (
 # Status hues — colorblind-safe, NEVER red/green (UI-06). Used for the CI-bar fill.
 HUE_ADVANCE = "#3B82F6"  # blue
 EM_DASH = "—"  # — : empty-state placeholder for probs (never "0%")
+# Two-tone CI-bar legend (D2) — shown only on an odds-fed run (priced matches present). The faint
+# flank is the across-draw epistemic spread; the solid core is the sampling band (UI-06: all blue).
+TWO_TONE_LEGEND = "CI bars: solid = sampling band · faint = extra width from the books disagreeing."
 
 st.set_page_config(page_title="Cologne 2026 Swiss MC", layout="wide")
 
@@ -324,7 +331,18 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
     return result
 
 
-def _render_probs_table(result) -> None:
+def _ci_cell_html(p: float, seed: int, band_epi: dict, band_samp: dict, two_tone: bool) -> str:
+    """One probability cell's bar: two-tone (solid sampling over faint epistemic) on an odds-fed
+    run, else the single-tone Wilson bar (rating-only — byte-identical to Phase 2). Shared by the
+    pre-stage probs table and the live delta table so the bar rendering stays DRY (one code path)."""
+    lo_o, hi_o = band_epi.get(seed, (0.0, 0.0))
+    if two_tone:
+        lo_i, hi_i = band_samp.get(seed, (lo_o, hi_o))
+        return ci_bar_two_tone_html(p, lo_i, hi_i, lo_o, hi_o, HUE_ADVANCE)
+    return ci_bar_html(p, lo_o, hi_o, HUE_ADVANCE)
+
+
+def _render_probs_table(result, two_tone: bool = False) -> None:
     """SUCCESS state: per-team rows sorted by P(advance), each cell = number + inline CI bar.
 
     UI-04: EVERY probability cell renders the number PLUS an always-visible inline Wilson CI
@@ -335,6 +353,8 @@ def _render_probs_table(result) -> None:
     p_30 = result.p_30()
     p_03 = result.p_03()
     order = sorted(by_seed, key=lambda s: p_adv.get(s, 0.0), reverse=True)
+    if two_tone:
+        st.caption(TWO_TONE_LEGEND)
     hdr = st.columns([3, 2, 2, 2])
     hdr[0].markdown("**Team**")
     hdr[1].markdown("**P(advance)**")
@@ -344,19 +364,25 @@ def _render_probs_table(result) -> None:
         t = by_seed[seed]
         c = st.columns([3, 2, 2, 2])
         c[0].markdown(f"{t.name}")
-        lo_a, hi_a = result.band_advance.get(seed, (0.0, 0.0))
-        lo_3, hi_3 = result.band_30.get(seed, (0.0, 0.0))
-        lo_0, hi_0 = result.band_03.get(seed, (0.0, 0.0))
         c[1].markdown(
-            ci_bar_html(p_adv.get(seed, 0.0), lo_a, hi_a, HUE_ADVANCE),
+            _ci_cell_html(
+                p_adv.get(seed, 0.0), seed,
+                result.band_advance, result.band_advance_sampling, two_tone,
+            ),
             unsafe_allow_html=True,
         )
         c[2].markdown(
-            ci_bar_html(p_30.get(seed, 0.0), lo_3, hi_3, HUE_ADVANCE),
+            _ci_cell_html(
+                p_30.get(seed, 0.0), seed,
+                result.band_30, result.band_30_sampling, two_tone,
+            ),
             unsafe_allow_html=True,
         )
         c[3].markdown(
-            ci_bar_html(p_03.get(seed, 0.0), lo_0, hi_0, HUE_ADVANCE),
+            _ci_cell_html(
+                p_03.get(seed, 0.0), seed,
+                result.band_03, result.band_03_sampling, two_tone,
+            ),
             unsafe_allow_html=True,
         )
 
@@ -380,7 +406,7 @@ def _render_probs_empty() -> None:
         c[3].markdown(EM_DASH)
 
 
-def _render_delta_table(pre_result, post_result) -> None:
+def _render_delta_table(pre_result, post_result, two_tone: bool = False) -> None:
     """LIVE 'Delta probabilities' (RESIM-02 — show the CHANGE, not a new static number).
 
     Each cell renders the post-lock value (CI bar) PLUS a signed percentage-point delta vs
@@ -396,6 +422,8 @@ def _render_delta_table(pre_result, post_result) -> None:
     )
     order = sorted(by_seed, key=lambda s: post_adv.get(s, 0.0), reverse=True)
     st.caption("Post-lock odds with the change vs pre-lock (+/-pp) — blue up, amber down.")
+    if two_tone:
+        st.caption(TWO_TONE_LEGEND)
     hdr = st.columns([3, 2, 2, 2])
     hdr[0].markdown("**Team**")
     hdr[1].markdown("**P(advance)**")
@@ -405,17 +433,14 @@ def _render_delta_table(pre_result, post_result) -> None:
         t = by_seed[seed]
         c = st.columns([3, 2, 2, 2])
         c[0].markdown(f"{t.name}")
-        lo_a, hi_a = post_result.band_advance.get(seed, (0.0, 0.0))
-        lo_3, hi_3 = post_result.band_30.get(seed, (0.0, 0.0))
-        lo_0, hi_0 = post_result.band_03.get(seed, (0.0, 0.0))
         cells = (
-            (c[1], post_adv, pre_adv, lo_a, hi_a),
-            (c[2], post_30, pre_30, lo_3, hi_3),
-            (c[3], post_03, pre_03, lo_0, hi_0),
+            (c[1], post_adv, pre_adv, post_result.band_advance, post_result.band_advance_sampling),
+            (c[2], post_30, pre_30, post_result.band_30, post_result.band_30_sampling),
+            (c[3], post_03, pre_03, post_result.band_03, post_result.band_03_sampling),
         )
-        for col, post_p, pre_p, lo, hi in cells:
+        for col, post_p, pre_p, band_epi, band_samp in cells:
             col.markdown(
-                ci_bar_html(post_p.get(seed, 0.0), lo, hi, HUE_ADVANCE)
+                _ci_cell_html(post_p.get(seed, 0.0), seed, band_epi, band_samp, two_tone)
                 + delta_tag_html(post_p.get(seed, 0.0), pre_p.get(seed, 0.0)),
                 unsafe_allow_html=True,
             )
@@ -795,9 +820,51 @@ def _render_ballot_panel(result, cache_key) -> None:
         st.caption("Ballot A and Ballot B agree on all 10 picks.")
 
 
+def _render_odds_drilldown(blended) -> None:
+    """D3 per-book drill-down: 'why the books disagree'. For each priced match with >=2 sources,
+    list each book's series price next to the blended consensus, sorted by disagreement spread
+    (widest first). Pure display read of the optional ``sources`` field — a match without it (a
+    pre-D3 cache) is skipped. Team names + book labels are HTML-escaped; prices are numeric (T-XSS).
+    """
+    name_of = {t.id: t.name for t in teams}
+    rows = []
+    for key, b in blended.items():
+        sources = b.get("sources") or []
+        if len(sources) < 2:
+            continue  # nothing to compare — one (or no) independent opinion
+        try:
+            lo, hi = (int(x) for x in str(key).split("-"))
+        except (ValueError, AttributeError):
+            continue
+        rows.append((lo, hi, b, sources, source_spread(sources)))
+    if not rows:
+        return
+    rows.sort(key=lambda r: r[4], reverse=True)  # widest disagreement first
+    with st.expander("Why the books disagree", expanded=False):
+        st.caption("Each book's series price vs the blended consensus — sorted by disagreement.")
+        for lo, hi, b, sources, spread in rows:
+            a = html.escape(str(name_of.get(lo, lo)))
+            c = html.escape(str(name_of.get(hi, hi)))
+            books_txt = " · ".join(
+                f"{html.escape(PROVIDER_LABELS.get(str(s.get('book', '')).lower(), str(s.get('book', ''))))} "
+                f"{float(s.get('p', 0.0)):.2f}"
+                for s in sources
+            )
+            wide = " [wide]" if spread > 0.10 else ""  # ASCII tag — the label is the signal (UI-06)
+            st.markdown(
+                f"**{a} vs {c}** — {books_txt} → blended {float(b.get('p', 0.0)):.2f} "
+                f"(spread {spread:.2f}){wide}"
+            )
+
+
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
 with main:
     result, error_msg, cache_key = _run_or_serve()
+    # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
+    # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->
+    # priced empty -> two_tone False -> single-tone bars (the Phase-2 render, unchanged).
+    odds_blended = (load_odds_cache() or {}).get("blended") or {}
+    two_tone = bool(priced_ids(odds_blended))
     if result is not None:
         st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
 
@@ -819,7 +886,7 @@ with main:
             st.info("Set ratings, then Run.")
             _render_probs_empty()
         else:
-            _render_probs_table(result)
+            _render_probs_table(result, two_tone)
 
         _render_bracket()
     else:
@@ -862,6 +929,11 @@ with main:
         else:
             # pre_lock_result (empty-locked baseline) was assigned above under the SAME
             # (result is not None and not error) condition — show the per-team change.
-            _render_delta_table(pre_lock_result, result)
+            _render_delta_table(pre_lock_result, result, two_tone)
 
         _render_bracket_live(name_of)
+
+    # Per-book drill-down (D3) — shown in BOTH modes when the loaded cache carries per-source prices
+    # (skipped on a rating-only / pre-D3 cache that has no `sources`). A pure display read.
+    if odds_blended:
+        _render_odds_drilldown(odds_blended)

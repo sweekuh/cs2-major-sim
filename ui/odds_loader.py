@@ -11,8 +11,11 @@ NEVER raises into the UI.
 
 Schema (the FROZEN contract written by ``scripts/fetch_odds.py``):
     {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint"},
-     "blended": {"lo-hi": {"p", "var", "n_sources", "bo3"}}}
+     "blended": {"lo-hi": {"p", "var", "n_sources", "bo3", "sources"?: [{"book", "p"}]}}}
 ``p`` = P(lower-id team wins the SERIES); ``var`` is RAW (clamped downstream by ``beta_moment_fit``).
+``sources`` (D3, optional) is per-source prices for the drill-down — ADDITIVE within v1, so this
+loader is UNCHANGED: an entry without ``sources`` is the pre-D3 shape and still loads (the app reads
+``sources`` defensively). No version bump (a bump would make this loader reject newer caches).
 """
 
 from __future__ import annotations

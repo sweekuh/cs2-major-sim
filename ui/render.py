@@ -80,6 +80,56 @@ def ci_bar_html(p: float, lo: float, hi: float, hue: str = _DEFAULT_HUE) -> str:
     )
 
 
+def ci_bar_two_tone_html(
+    p: float,
+    lo_in: float,
+    hi_in: float,
+    lo_out: float,
+    hi_out: float,
+    hue: str = _DEFAULT_HUE,
+) -> str:
+    """Two-tone CI bar (D2): a SOLID inner sampling band over a FAINT outer epistemic extension.
+
+    ``lo_in/hi_in`` is the sampling (aleatoric) Wilson band, drawn solid; ``lo_out/hi_out`` is the
+    epistemic across-draw union band, drawn faint underneath — so a wider faint flank reads as "the
+    books disagree", distinct from pure sampling noise. All one hue (never red/green); the
+    distinction is OPACITY, not colour (UI-06). When outer == inner (rating-only) the faint segment
+    coincides with the solid one and it reads single-tone.
+
+    All five band values MUST be numeric floats and ``hue`` a ``#rrggbb`` string — same XSS guards as
+    ``ci_bar_html`` (T-02-XSS): no team name / free text ever reaches this markup.
+    """
+    for name, val in (
+        ("p", p), ("lo_in", lo_in), ("hi_in", hi_in), ("lo_out", lo_out), ("hi_out", hi_out),
+    ):
+        if isinstance(val, bool) or not isinstance(val, (int, float)):
+            raise TypeError(
+                f"ci_bar_two_tone_html expects numeric {name}, got {type(val).__name__} "
+                "(team names / free text must NEVER reach this HTML — T-02-XSS)"
+            )
+    if not isinstance(hue, str) or not _HEX_COLOR.match(hue):
+        raise ValueError(
+            f"ci_bar_two_tone_html hue must be a #rrggbb hex colour, got {hue!r} (XSS guard)"
+        )
+
+    pct = fmt_pct(p)
+    out_left = max(0.0, min(1.0, lo_out)) * 100
+    out_width = max(0.0, min(1.0, hi_out) - max(0.0, lo_out)) * 100
+    in_left = max(0.0, min(1.0, lo_in)) * 100
+    in_width = max(0.0, min(1.0, hi_in) - max(0.0, lo_in)) * 100
+    return (
+        f'<div style="font-family:ui-monospace,monospace;text-align:right">{pct}</div>'
+        f'<div style="height:4px;background:{_TRACK};border-radius:2px;position:relative">'
+        # faint outer (epistemic) band underneath
+        f'<div style="position:absolute;left:{out_left:.1f}%;width:{out_width:.1f}%;'
+        f'height:4px;background:{hue};opacity:0.35;border-radius:2px"></div>'
+        # solid inner (sampling) band on top
+        f'<div style="position:absolute;left:{in_left:.1f}%;width:{in_width:.1f}%;'
+        f'height:4px;background:{hue};border-radius:2px"></div>'
+        f"</div>"
+    )
+
+
 def delta_tag_html(post: float, pre: float, *, eps: float = 0.0005) -> str:
     """Return a small signed percentage-POINT delta tag: ``post`` vs ``pre`` (both 0..1).
 
@@ -357,6 +407,20 @@ def priced_ids(blended) -> set[int]:
         except (ValueError, AttributeError):
             continue
     return ids
+
+
+def source_spread(sources) -> float:
+    """max(p) - min(p) across a match's per-book prices (the disagreement width, D3 drill-down sort).
+
+    Fewer than 2 parseable prices -> 0.0 (nothing to disagree about). Malformed entries are skipped.
+    """
+    ps: list[float] = []
+    for s in sources or []:
+        try:
+            ps.append(float(s["p"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return max(ps) - min(ps) if len(ps) >= 2 else 0.0
 
 
 def correlated_pick_warning_text(name_a: str, name_b: str) -> str:
