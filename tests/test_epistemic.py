@@ -106,6 +106,45 @@ def test_band_stable_in_N():
     )
 
 
+def test_point_probs_valid_under_epistemic():
+    """CRITICAL REGRESSION (P0, /plan-eng-review 2026-05-31): point probabilities MUST stay valid
+    under the K-draw epistemic OUTER loop.
+
+    Under ``market_blend`` var>0 the MC runs K=12 outer draws, accumulating ``counts_*`` and
+    ``sample`` over K*N sims. ``Result.n`` MUST therefore be ``len(sample)`` (== K*N), NOT ``N`` —
+    else ``p_advance()/p_30()/p_03()`` are inflated by K (proven: sum=96.0, max=11.9 with n=N).
+
+    The pre-existing band tests assert band WIDTH only and never caught this. This asserts the
+    structural invariants of the marginals: every probability is in [0, 1], exactly 8 of 16 teams
+    advance in expectation (sum P(advance)==8), and at most 8 can go 3-0 / at most 8 can go 0-3.
+    """
+    teams = load_teams()
+    N = 3000
+    epi = run_mc(teams, None, 40.0, N, {}, seed=42, market_blend={"1-9": (0.5, 0.05)})
+
+    p_adv = epi.p_advance()
+    p_30 = epi.p_30()
+    p_03 = epi.p_03()
+
+    # Every marginal is a valid probability.
+    for label, probs in (("advance", p_adv), ("3-0", p_30), ("0-3", p_03)):
+        worst = max(probs.values())
+        assert worst <= 1.0, f"P({label}) exceeded 1.0 (got {worst:.3f}) — counts/n inflated by K"
+
+    # Structural totals: 8 of 16 advance; 3-0 and 0-3 are 2-team slots each (<=8 in expectation).
+    assert abs(sum(p_adv.values()) - 8.0) < 0.05, (
+        f"sum P(advance) must be 8.0 (8 of 16 advance), got {sum(p_adv.values()):.2f} "
+        "— Result.n is not len(sample) under epistemic draws"
+    )
+    assert sum(p_30.values()) <= 8.0 + 0.05
+    assert sum(p_03.values()) <= 8.0 + 0.05
+
+    # n must equal the retained sample size (the true sim count behind the counts).
+    assert epi.n == len(epi.sample) == N * 12, (
+        f"Result.n ({epi.n}) must equal len(sample) ({len(epi.sample)}) == K*N under epistemic draws"
+    )
+
+
 def test_rating_only_noop_unchanged():
     """GATE GUARD (T-05-GATE): with NO var / NO market overrides, run_mc produces IDENTICAL
     per-team counts to a baseline run for a fixed (seed, N, n_chunks).

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import html
 import re
+from datetime import datetime, timezone
 
 # Track colour behind the filled CI portion (UI-SPEC Color §contrast). The fill uses the
 # status hue at full opacity; the remainder is this neutral track.
@@ -259,6 +260,103 @@ def bracket_columns_html(bracket_view, name_of: dict[int, str]) -> str:
             f'margin-bottom:4px">{label}</div>{body}</div>'
         )
     return f'<div style="display:flex;gap:12px;overflow-x:auto">{"".join(columns)}</div>'
+
+
+# --- Phase 5 display: live-odds status panel helpers (D1) --------------------------------
+# Pure string/bool builders for the persistent odds-status line (no streamlit). The odds state
+# back-solves every rating, so the panel reads the LOADED cache (not the env key) — the env key
+# only gauges whether Pinnacle is reachable; Polymarket + Kalshi are keyless. ALL inputs here are
+# our own cache metadata (timestamps, a fixed provider allowlist), never user free-text.
+
+# Default staleness threshold: market prices move, so a cache older than 2h is flagged "may be
+# stale". Passed-in so callers/tests can override; the boundary is unit-tested both sides.
+STALE_AFTER_SECONDS = 7200
+
+# Raw provider .name -> human book label. An ALLOWLIST: an unknown provider is dropped (never
+# interpolated), so the status line can be rendered via unsafe_allow_html with no escaping risk.
+# OddsPapi is the Pinnacle-anchored soft-book bundle (one independent opinion) — labelled Pinnacle.
+PROVIDER_LABELS: dict[str, str] = {
+    "oddspapi": "Pinnacle",
+    "polymarket": "Polymarket",
+    "kalshi": "Kalshi",
+}
+
+
+def _parse_iso(ts) -> datetime | None:
+    """Parse an ISO-8601 timestamp to a tz-aware UTC datetime, or None on anything unparseable.
+
+    The cache's ``_meta.fetched_at`` is written tz-aware (``datetime.now(timezone.utc).isoformat()``).
+    A naive timestamp is assumed UTC; a non-string / malformed value returns None (fail toward
+    "unknown / stale" rather than raising into the header strip).
+    """
+    if not isinstance(ts, str):
+        return None
+    try:
+        dt = datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+def fmt_age(fetched_at_iso, now: datetime) -> str:
+    """Human relative age: 'just now' / 'Nm ago' / 'Nh ago' / 'Nd ago' (``now`` passed in for tests).
+
+    A bad/missing timestamp renders 'unknown' (never raises). A future timestamp clamps to 'just now'.
+    """
+    dt = _parse_iso(fetched_at_iso)
+    if dt is None:
+        return "unknown"
+    secs = (now - dt).total_seconds()
+    if secs < 60:
+        return "just now"
+    if secs < 3600:
+        return f"{int(secs // 60)}m ago"
+    if secs < 86400:
+        return f"{int(secs // 3600)}h ago"
+    return f"{int(secs // 86400)}d ago"
+
+
+def is_stale(fetched_at_iso, now: datetime, threshold_s: int = STALE_AFTER_SECONDS) -> bool:
+    """True once the cache age exceeds ``threshold_s`` (default 2h). Bad/missing timestamp -> True.
+
+    Failing toward stale is the safe default: an unparseable fetched_at means we can't prove the
+    odds are fresh, so prompt a re-fetch rather than silently presenting possibly-stale prices.
+    """
+    dt = _parse_iso(fetched_at_iso)
+    if dt is None:
+        return True
+    return (now - dt).total_seconds() > threshold_s
+
+
+def provider_labels(names) -> list[str]:
+    """Map raw provider ``.name`` values to human book labels via the allowlist, deduped, in order.
+
+    Unknown names are dropped (not interpolated) so the rendered status line carries no free-text
+    (the same XSS-by-construction discipline as ci_bar_html). None / non-list -> [].
+    """
+    out: list[str] = []
+    for n in names or []:
+        label = PROVIDER_LABELS.get(str(n).lower())
+        if label and label not in out:
+            out.append(label)
+    return out
+
+
+def priced_ids(blended) -> set[int]:
+    """Union of engine team ids across a blended map's ``"lo-hi"`` keys (the market-priced teams).
+
+    Used by the D2 two-tone band to mark which rows the market priced. A rating-only / empty /
+    malformed blend yields an empty set (no markers — the rating-only path is visually unchanged).
+    """
+    ids: set[int] = set()
+    for key in (blended or {}):
+        try:
+            lo_s, hi_s = str(key).split("-")
+            ids.add(int(lo_s))
+            ids.add(int(hi_s))
+        except (ValueError, AttributeError):
+            continue
+    return ids
 
 
 def correlated_pick_warning_text(name_a: str, name_b: str) -> str:

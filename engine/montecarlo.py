@@ -278,8 +278,13 @@ def run_mc_progressive(
     band_advance = _union_band(per_draw_adv, N, ids)
     band_03 = _union_band(per_draw_03, N, ids)
 
+    # n MUST be the total sims behind the counts, NOT N. Under the epistemic OUTER loop the K
+    # draws accumulate counts_* and sample over K*N sims, so the valid normalizer is len(sample)
+    # (== K*N). With one no-op draw (rating-only / var<=0) len(sample) == N, so p_* and the bands
+    # stay byte-identical and GATE-01 holds. (P0 fix, /plan-eng-review 2026-05-31: n=N inflated
+    # every p_advance()/p_30()/p_03() by K ~= 12 the moment market odds fed var>0.)
     return Result(
-        n=N,
+        n=len(sample),
         counts_30=counts_30,
         counts_advance=counts_advance,
         counts_03=counts_03,

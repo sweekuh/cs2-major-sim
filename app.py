@@ -21,6 +21,7 @@ at import, no ``if __name__ == "__main__"`` side effects. The engine runs only o
 from __future__ import annotations
 
 import html
+from datetime import datetime, timezone
 
 import streamlit as st
 
@@ -43,8 +44,11 @@ from ui.render import (
     ci_bar_html,
     correlated_pick_warning_text,
     delta_tag_html,
+    fmt_age,
     fmt_pct,
     hero_number_html,
+    is_stale,
+    provider_labels,
     status_badge_html,
 )
 from ui.state import (
@@ -56,6 +60,7 @@ from ui.state import (
     KEY_MC_CACHE,
     KEY_MODE,
     KEY_N_INPUT,
+    KEY_ODDS_OUTCOME,
     KEY_PENDING_LOCK,
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
@@ -150,9 +155,38 @@ def _render_header_strip() -> None:
         key=KEY_SEEDS_CONFIRMED,
     )
 
-    # 3. Fail-soft odds-off info banner (ODDS-08 seam) — one line, never a crash, no Phase-5 import.
-    if not odds_key_present():
-        st.info("live odds off (no ODDSPAPI_KEY) — using manual ratings")
+    # 3. Live-odds status panel (D1) — reads the LOADED cache, NOT the env key (honest live/off).
+    #    The sim feeds on data/odds_cache.json; Polymarket + Kalshi are KEYLESS, so a keyless fetch
+    #    feeds the sim while the OLD banner ("off, no ODDSPAPI_KEY") lied. This reads the same cache
+    #    the run uses (JSON-only loader — no httpx/dotenv import, DX-01 zero-config preserved). Every
+    #    interpolated value is our own metadata / a fixed allowlist / a fixed badge — no user free-text.
+    cache = load_odds_cache()
+    blended = (cache or {}).get("blended") or {}
+    if blended:
+        meta = (cache or {}).get("_meta") or {}
+        now = datetime.now(timezone.utc)
+        fetched_at = meta.get("fetched_at")
+        books = provider_labels(meta.get("providers_present", []))
+        books_txt = f" ({', '.join(books)})" if books else ""
+        st.markdown(
+            f'{status_badge_html("live")} &nbsp; '
+            f'<span style="font-family:ui-monospace,monospace">{len(blended)}</span> market(s) · '
+            f'<span style="font-family:ui-monospace,monospace">{len(books)}</span> book(s){books_txt} · '
+            f"fetched {html.escape(fmt_age(fetched_at, now))}",
+            unsafe_allow_html=True,
+        )
+        if is_stale(fetched_at, now):
+            st.warning("Live odds may be stale — click 'Fetch odds now' for current prices.")
+    elif cache is not None:
+        # A valid cache with an EMPTY blended map = a fetch ran, but no Cologne market posted yet.
+        st.caption("odds off — no live markets posted yet, running manual ratings.")
+    elif odds_key_present():
+        st.caption("odds off — using manual ratings. Fetch to pull live market prices.")
+    else:
+        st.caption(
+            "odds off — using manual ratings. Fetch to price the sim from live markets "
+            "(Polymarket + Kalshi need no key; add ODDSPAPI_KEY for Pinnacle)."
+        )
 
 
 _render_header_strip()
@@ -219,25 +253,41 @@ with controls:
     # On a normal rerun this button is NOT clicked, so scripts.fetch_odds is never imported.
     st.divider()
     st.caption("Live odds (optional)")
+    # Bug A fix: render the PERSISTED outcome from the previous run's fetch. A message drawn in the
+    # click branch below is discarded by the st.rerun() that follows it (st.rerun halts + restarts
+    # the run, dropping its output), so the outcome is stashed in session_state and rendered HERE on
+    # the next run, then popped. Without this the user clicks Fetch and reliably sees nothing.
+    _outcome = st.session_state.pop(KEY_ODDS_OUTCOME, None)
+    if _outcome:
+        {"success": st.success, "info": st.info, "error": st.error}.get(_outcome[0], st.info)(
+            _outcome[1]
+        )
     if st.button("Fetch odds now", key="fetch_odds_btn"):
-        try:
-            from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
+        # Bug B fix: a real loading state for the multi-provider httpx call (never a dead button).
+        with st.spinner("Contacting books — Pinnacle / Polymarket / Kalshi…"):
+            try:
+                from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
 
-            cache = _fetch_odds_main()
-            n_blended = len(cache.get("blended", {}))
-            if n_blended:
-                st.success(
-                    f"Fetched {n_blended} market(s) from "
-                    f"{', '.join(cache['_meta'].get('providers_present', [])) or 'no providers'}."
+                cache = _fetch_odds_main()
+                n_blended = len(cache.get("blended", {}))
+                if n_blended:
+                    books = provider_labels(cache.get("_meta", {}).get("providers_present", []))
+                    st.session_state[KEY_ODDS_OUTCOME] = (
+                        "success",
+                        f"Fetched {n_blended} market(s) from {', '.join(books) or 'no providers'}.",
+                    )
+                else:
+                    # A valid empty fetch (no Cologne market posted yet) is fail-soft, not an error.
+                    st.session_state[KEY_ODDS_OUTCOME] = (
+                        "info",
+                        "No live markets found yet (Cologne markets may not have posted) — "
+                        "still running rating-only.",
+                    )
+            except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
+                st.session_state[KEY_ODDS_OUTCOME] = (
+                    "error",
+                    f"Odds fetch failed (running rating-only): {exc}",
                 )
-            else:
-                # A valid empty fetch (no Cologne market posted yet) is fail-soft, not an error.
-                st.info(
-                    "No live markets found yet (Cologne markets may not have posted) — "
-                    "still running rating-only."
-                )
-        except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
-            st.error(f"Odds fetch failed (running rating-only): {exc}")
         st.rerun()
 
 
