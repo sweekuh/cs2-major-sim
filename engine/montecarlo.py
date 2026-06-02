@@ -94,6 +94,14 @@ class Result:
     band_30: dict[int, tuple[float, float]] = field(default_factory=dict)
     band_advance: dict[int, tuple[float, float]] = field(default_factory=dict)
     band_03: dict[int, tuple[float, float]] = field(default_factory=dict)
+    # SAMPLING-only (aleatoric) bands: the Wilson interval of the AGGREGATE marginal over all
+    # n=len(sample) sims (D2, /plan-eng-review). band_* above is the EPISTEMIC across-draw union;
+    # these are the inner sampling band the two-tone CI bar draws solid (the union is the faint
+    # extension). With one no-op draw (rating-only) band_*_sampling == band_* exactly (the union of
+    # a single draw IS wilson(counts, n)), so the two-tone bar collapses to single-tone, GATE-safe.
+    band_30_sampling: dict[int, tuple[float, float]] = field(default_factory=dict)
+    band_advance_sampling: dict[int, tuple[float, float]] = field(default_factory=dict)
+    band_03_sampling: dict[int, tuple[float, float]] = field(default_factory=dict)
 
     def p_30(self) -> dict[int, float]:
         return {tid: c / self.n for tid, c in self.counts_30.items()} if self.n else {}
@@ -278,14 +286,21 @@ def run_mc_progressive(
     band_advance = _union_band(per_draw_adv, N, ids)
     band_03 = _union_band(per_draw_03, N, ids)
 
+    # SAMPLING-only band (D2): the aleatoric Wilson of the AGGREGATE marginal over all len(sample)
+    # == K*N sims. It is the INNER (solid) band of the two-tone CI bar; band_* above is the OUTER
+    # (faint) epistemic union. With one draw len(sample)==N and counts==that draw's counts, so
+    # band_*_sampling == band_* exactly -> the two-tone bar renders single-tone (GATE guard).
+    n_total = len(sample)
+    band_30_sampling = {i: wilson(counts_30[i], n_total) for i in ids}
+    band_advance_sampling = {i: wilson(counts_advance[i], n_total) for i in ids}
+    band_03_sampling = {i: wilson(counts_03[i], n_total) for i in ids}
+
+    # n MUST be the total sims behind the counts, NOT N. Under the epistemic OUTER loop the K
+    # draws accumulate counts_* and sample over K*N sims, so the valid normalizer is len(sample)
+    # (== K*N). With one no-op draw (rating-only / var<=0) len(sample) == N, so p_* and the bands
+    # stay byte-identical and GATE-01 holds. (P0 fix, /plan-eng-review 2026-05-31: n=N inflated
+    # every p_advance()/p_30()/p_03() by K ~= 12 the moment market odds fed var>0.)
     return Result(
-        # n is the TOTAL number of sims tallied into counts_*/sample = K*N under the epistemic
-        # OUTER loop (K Beta draws), and exactly N on the rating-only path (K=1, no-op draw). It
-        # MUST be len(sample), NOT the input N: p_30()/p_advance()/p_03() divide counts_* by n,
-        # and counts_* accumulate across all K draws — using N would inflate every odds-fed point
-        # probability by ~K (sum P(advance) -> 8*K, values > 1). K=1 -> len(sample)==N so the
-        # rating-only path stays byte-identical (GATE-01 safe). Regression: tests/test_epistemic.py
-        # ::test_point_probs_valid_under_epistemic. (Re-fix of the P0 reverted by fde284a.)
         n=len(sample),
         counts_30=counts_30,
         counts_advance=counts_advance,
@@ -294,6 +309,9 @@ def run_mc_progressive(
         band_30=band_30,
         band_advance=band_advance,
         band_03=band_03,
+        band_30_sampling=band_30_sampling,
+        band_advance_sampling=band_advance_sampling,
+        band_03_sampling=band_03_sampling,
     )
 
 

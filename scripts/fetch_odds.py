@@ -24,7 +24,10 @@ Invariants (CLAUDE.md / 05-RESEARCH D7 / threat register):
     market yields ``[]`` -> a valid EMPTY ``blended`` map, NOT an error (ODDS-05, A7).
   - The FROZEN cache schema (design once so the cron is zero app change):
         {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint"},
-         "blended": {"lo-hi": {"p", "var", "n_sources", "bo3"}}}
+         "blended": {"lo-hi": {"p", "var", "n_sources", "bo3",
+                               "sources": [{"book", "p"}]}}}
+    ``sources`` (D3) is ADDITIVE within v1 — per-source prices for the drill-down; an older
+    sources-unaware reader ignores it (so a new cache still loads in an old app — no version bump).
     Keys are sorted ``"loid-hiid"`` engine-id strings (``match_key``); ``p`` = P(lower-id wins the
     SERIES); ``var`` is stored RAW (clamped downstream by ``beta_moment_fit``, never here).
   - ``_meta.fetched_at`` is an ISO-8601 UTC timestamp set at WRITE time — the app folds it into the
@@ -160,6 +163,12 @@ def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None,
             "var": bp.var,
             "n_sources": bp.n_sources,
             "bo3": bp.bo3,
+            # Per-source prices for the "why the books disagree" drill-down (D3). ADDITIVE within
+            # schema v1 (NOT a version bump): the loader returns the dict intact and an older,
+            # sources-unaware app simply ignores this key — so a new cache still loads in an old app
+            # (a v2 bump would make old loaders reject it). ``book`` is the raw provider name (the
+            # app maps it to a display label); ``p`` is that source's P(lower-id wins the SERIES).
+            "sources": [{"book": q.provider, "p": float(q.p_a_raw)} for q in group],
         }
 
     cache = {

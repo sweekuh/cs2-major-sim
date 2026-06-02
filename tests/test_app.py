@@ -435,15 +435,19 @@ def test_seed_banner_dismissable(monkeypatch):
 
 
 def test_odds_off_banner_failsoft(monkeypatch):
-    """ODDS-08: with no ODDSPAPI_KEY the one-line 'live odds off … manual ratings' info banner
-    renders and the app never crashes (fail-soft stub; no Phase-5 import)."""
+    """ODDS-08 (honest live/off, D1): with no ODDSPAPI_KEY AND no loaded cache, the status reads
+    'odds off … manual ratings' (driven by the CACHE, not the env key) and the app never crashes.
+
+    The cache is forced to None so the off-state is deterministic regardless of any local
+    data/odds_cache.json. The old banner keyed on ODDSPAPI_KEY and lied when a keyless fetch was
+    live; the new panel reads the same cache the run feeds on (no httpx/dotenv on the render path).
+    """
     monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
     at = _apptest().run()
     assert not at.exception
-    assert any(
-        "live odds off" in i.value.lower() and "manual ratings" in i.value.lower()
-        for i in at.info
-    )
+    text = _all_text(at).lower()
+    assert "odds off" in text and "manual ratings" in text
 
 
 # --- Plan 03: DX docs — README + .env.example (DX-04 / DX-05) ----------------------------
@@ -803,12 +807,100 @@ def test_no_odds_failsoft(monkeypatch):
     monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
     at = _run_small(_apptest().run())
     assert not at.exception
-    assert any(
-        "live odds off" in i.value.lower() and "manual ratings" in i.value.lower()
-        for i in at.info
-    )
+    text = _all_text(at).lower()
+    assert "odds off" in text and "manual ratings" in text
     # Rating-only run still produced per-team probability content.
     assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_live_odds_status_panel_renders(monkeypatch, tmp_path):
+    """D1: a loaded cache with a non-empty blended map shows the honest 'live' status panel —
+    market count + human book labels + a relative fetched age — not the off copy.
+
+    fetched_at is written FRESH (from now) so the staleness branch stays deterministic regardless
+    of the system clock: a recent fetch must NOT show the stale warning.
+    """
+    from datetime import datetime, timezone
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    cache_file = tmp_path / "odds_cache.json"
+    fresh = datetime.now(timezone.utc).isoformat()
+    _write_cache(
+        cache_file,
+        {"1-9": {"p": 0.6, "var": 0.0, "n_sources": 2, "bo3": True}},
+        fetched_at=fresh,
+    )
+    import ui.odds_loader as loader
+
+    _real_load = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: _real_load(cache_file))
+
+    at = _apptest().run()
+    assert not at.exception
+    text = _all_text(at)
+    assert "market(s)" in text                       # the live count line rendered
+    assert "Polymarket" in text and "Kalshi" in text  # human book labels (allowlist)
+    assert "odds off" not in text.lower()             # NOT the off copy
+    assert "may be stale" not in text.lower()         # a fresh fetch is not stale
+
+
+def test_fetch_outcome_persists_across_rerun(monkeypatch):
+    """Bug A fix: a fetch outcome stashed in session_state is rendered on the NEXT run (surviving
+    the st.rerun the fetch triggers) and then popped — not lost like st.success-before-st.rerun.
+
+    Uses an 'info'-level outcome so _all_text captures it; the stash/render/pop mechanism is the
+    same for success/error. After rendering, the key is cleared so the message is one-shot.
+    """
+    from ui.state import KEY_ODDS_OUTCOME
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
+    at = _apptest().run()
+    at.session_state[KEY_ODDS_OUTCOME] = ("info", "No live markets found yet (test marker).")
+    at.run()
+    assert not at.exception
+    assert "No live markets found yet (test marker)." in _all_text(at)
+    # One-shot: the outcome is popped so it does not persist into the following rerun.
+    assert KEY_ODDS_OUTCOME not in at.session_state
+
+
+def test_odds_drilldown_and_two_tone_under_sourced_cache(monkeypatch, tmp_path):
+    """D2/D3: a loaded cache carrying per-source prices shows the 'why the books disagree' drill-down
+    (human book labels + blended consensus, sorted by spread) and, after Run, the two-tone CI legend.
+    """
+    from datetime import datetime, timezone
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    cache_file = tmp_path / "odds_cache.json"
+    fresh = datetime.now(timezone.utc).isoformat()
+    blended = {
+        "1-9": {
+            "p": 0.62,
+            "var": 0.02,
+            "n_sources": 3,
+            "bo3": True,
+            "sources": [
+                {"book": "oddspapi", "p": 0.66},
+                {"book": "polymarket", "p": 0.55},
+                {"book": "kalshi", "p": 0.64},
+            ],
+        }
+    }
+    _write_cache(cache_file, blended, fetched_at=fresh)
+    import ui.odds_loader as loader
+
+    _real = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: _real(cache_file))
+
+    at = _run_small(_apptest().run())  # Run so the odds-fed (two-tone) probs table renders
+    assert not at.exception
+    text = _all_text(at)
+    # Drill-down content (inside the expander) — caption + human book labels + blended consensus.
+    assert "Each book's series price" in text
+    assert "Pinnacle" in text and "Polymarket" in text and "Kalshi" in text
+    assert "blended 0.62" in text
+    # Two-tone CI legend appears on the odds-fed probs table.
+    assert "solid = sampling band" in text
 
 
 def test_zero_config_first_run_still_works(monkeypatch):
