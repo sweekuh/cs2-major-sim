@@ -21,3 +21,17 @@ venv/
 .DS_Store
 Thumbs.db
 .gstack/
+
+# Scratch / throwaway artifacts (probe scripts, ad-hoc number dumps, screenshot crops).
+# The leading underscore is the project's "disposable" convention. Real screenshots live in
+# docs/assets/ (no underscore prefix), so they are NOT ignored.
+scripts/_*.py
+_*.png
+_*.md
+
+# Internal planning / spec / agent docs — kept LOCAL, not published. The public doc surface is
+# README.md + ROADMAP.md + STATUS.md + docs/. These hold the detailed GSD process trail and the
+# original spec, useful while building but noise (and half-baked thinking) for a public audience.
+.planning/
+files/
+CLAUDE.md

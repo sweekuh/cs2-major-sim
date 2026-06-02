@@ -7,6 +7,9 @@ context to pick up cold in 3 months.
 
 ## 1. Decouple odds fetch from the Streamlit app (cron-fed cache)
 
+- **Status (2026-06-02):** Seam DONE — live fetch is implemented (the "Fetch odds now" button and
+  `python -m scripts.fetch_odds` both hit OddsPapi + Kalshi and write `data/odds_cache.json`, which
+  the app only reads). What's left is the v2 *cron trigger* so it auto-fetches per round.
 - **What:** Move the per-round odds fetch out of the Streamlit process. A small
   standalone job (cron on the Ubuntu host) calls the providers and writes a
   `data/odds_cache.json` (or sqlite); the app only ever *reads* that cache.
@@ -40,11 +43,42 @@ context to pick up cold in 3 months.
   can `@njit` the loop. The closed-form Bo3 (no per-map sampling) helps here.
 - **Depends on:** Engine complete + backtest passing (don't optimize an unverified sim).
 
-## 3. (auto-captured from review) Backtest is a slice-1 GATE, not validation
+## 3. Playoff Pick'Em optimizer (7-pick round-weighted ballot)
 
-- **What:** The round-by-round backtest against Austin/Budapest 2025 must pass before
-  any sim output is trusted or the UI is built.
-- **Why:** It's the only check that proves the greedy rematch-resolution matches Valve's
-  literal priority table (review finding 1b).
-- **Context:** Already in §6/§9, but reframed as a blocker. Not really deferrable —
-  listed here so it isn't quietly downgraded.
+- **What:** A separate optimizer for the playoff Pick'Em, which is NOT the Swiss 2/6/2 scheme.
+  It's a 7-prediction round-weighted ballot (2 Quarterfinal + 1 Semifinal + 1 Grand Final
+  correct picks, per the in-game achievements).
+- **Why:** The current optimizer only handles the Swiss 2/6/2 coin. Playoffs are a different
+  scoring model and must NOT reuse the Swiss optimizer (REQUIREMENTS.md V3-03, Phase 6).
+- **Context:** Confirmed from the live in-game Pick'Em UI. Model it as its own round-weighted
+  ballot type. Not needed for Stage 1 (Swiss); becomes relevant once playoffs are set.
+- **Depends on:** Swiss optimizer (done). Independent otherwise.
+
+## 4. Streaming / aggregate sample path for high N (memory)
+
+- **What:** The optimizer scores `Result.sample` (the full per-sim record list), so memory grows
+  with K·N. A 1M odds-fed run (K=12 → 12M records) needs ~11 GB and OOMs.
+- **Why:** Probabilities converge by ~100k so this never bites in practice, but it's a footgun:
+  someone cranks N to 1M and the machine swaps/dies.
+- **Pros:** Removes the only hard memory ceiling; lets N be arbitrary.
+- **Cons:** The optimizer needs per-sim outcomes for the P(≥5) joint, so a streaming design has to
+  keep the bucket-matrices (per-team boolean arrays) without retaining the raw dict records, or
+  compute ballot scores online. Real refactor.
+- **Context:** Cap N in the UI (already 100k default) and document the limit (done in README) as
+  the cheap mitigation; do the streaming refactor only if a high-N use case appears.
+
+---
+
+## Completed
+
+- **Round-by-round backtest GATE — DONE.** Engine reproduces StarLadder Budapest 2025 Stage 1
+  pairings exactly (`tests/test_backtest_budapest_2025.py`, green). The only check that proves the
+  greedy rematch-resolution matches Valve's literal 15-row priority table.
+- **Live odds ensemble — DONE.** OddsPapi (Pinnacle, de-vigged) + Kalshi (KXCS2GAME, keyless)
+  fetch implemented and verified against live Cologne markets; log-opinion pooled; back-solved to
+  ratings. Polymarket dropped (novelty futures only).
+- **Cologne seeds confirmed — DONE.** Seed order verified vs Liquipedia + live Kalshi bracket +
+  the R1 pairing rule; trust badge now reads validated.
+- **Two P0 probability fixes — DONE.** Odds-fed normalization (`n=len(sample)`, was ~12× inflated)
+  and advance-pick scoring (3-1/3-2, was `wins>=3`, dropped P(≥5) ~90%→~59%). Both with regression
+  tests that fail on revert. See `docs/LESSONS.md`.
