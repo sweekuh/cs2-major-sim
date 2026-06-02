@@ -21,7 +21,6 @@ at import, no ``if __name__ == "__main__"`` side effects. The engine runs only o
 from __future__ import annotations
 
 import html
-from datetime import datetime, timezone
 
 import streamlit as st
 
@@ -42,19 +41,12 @@ from ui.render import (
     ballot_columns,
     bracket_columns_html,
     ci_bar_html,
-    ci_bar_two_tone_html,
     correlated_pick_warning_text,
     delta_tag_html,
-    fmt_age,
     fmt_pct,
     hero_number_html,
-    is_stale,
-    priced_ids,
-    provider_labels,
-    source_spread,
     status_badge_html,
 )
-from ui.render import PROVIDER_LABELS
 from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
@@ -64,7 +56,6 @@ from ui.state import (
     KEY_MC_CACHE,
     KEY_MODE,
     KEY_N_INPUT,
-    KEY_ODDS_OUTCOME,
     KEY_PENDING_LOCK,
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
@@ -87,9 +78,6 @@ from ui.state import (
 # Status hues — colorblind-safe, NEVER red/green (UI-06). Used for the CI-bar fill.
 HUE_ADVANCE = "#3B82F6"  # blue
 EM_DASH = "—"  # — : empty-state placeholder for probs (never "0%")
-# Two-tone CI-bar legend (D2) — shown only on an odds-fed run (priced matches present). The faint
-# flank is the across-draw epistemic spread; the solid core is the sampling band (UI-06: all blue).
-TWO_TONE_LEGEND = "CI bars: solid = sampling band · faint = extra width from the books disagreeing."
 
 st.set_page_config(page_title="Cologne 2026 Swiss MC", layout="wide")
 
@@ -105,7 +93,39 @@ teams = load_teams()  # DX-01 zero-config: data/stage1.json (or in-code default)
 by_seed = {t.seed: t for t in teams}
 
 # --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
-st.title("Cologne 2026 Swiss Monte Carlo")
+# Hero (screenshot-facing): bold headline + one-line method, accent-tinted to the theme violet.
+st.markdown(
+    "<div style='font-size:2.0rem;font-weight:750;letter-spacing:-0.02em;line-height:1.15'>"
+    "IEM&nbsp;Cologne&nbsp;2026 — Swiss&nbsp;Stage&nbsp;Predictions</div>"
+    "<div style='color:#9aa4b2;font-size:0.98rem;margin:0.15rem 0 0.5rem'>"
+    "Market-driven Monte&nbsp;Carlo · per-team P(advance)/P(3-0)/P(0-3) with confidence bands "
+    "· optimal 2/6/2 Pick'Em ballot</div>",
+    unsafe_allow_html=True,
+)
+
+# Friendly labels for the provider slugs the fetch job records in _meta.providers_present.
+_PROVIDER_LABELS = {
+    "oddspapi": "Pinnacle (OddsPapi)",
+    "kalshi": "Kalshi",
+    "polymarket": "Polymarket",
+}
+
+
+def _fmt_fetched(iso) -> str:
+    """ISO-8601 UTC timestamp -> 'Jun 02, 04:49 UTC' (empty string on missing/malformed)."""
+    if not iso:
+        return ""
+    try:
+        from datetime import datetime
+
+        return datetime.fromisoformat(iso).strftime("%b %d, %H:%M UTC")
+    except (ValueError, TypeError):
+        return ""
+
+
+def _provider_label_list(meta: dict) -> str:
+    present = meta.get("providers_present", []) or []
+    return " + ".join(_PROVIDER_LABELS.get(p, p) for p in present) or "live markets"
 
 
 def _render_header_strip() -> None:
@@ -162,38 +182,22 @@ def _render_header_strip() -> None:
         key=KEY_SEEDS_CONFIRMED,
     )
 
-    # 3. Live-odds status panel (D1) — reads the LOADED cache, NOT the env key (honest live/off).
-    #    The sim feeds on data/odds_cache.json; Polymarket + Kalshi are KEYLESS, so a keyless fetch
-    #    feeds the sim while the OLD banner ("off, no ODDSPAPI_KEY") lied. This reads the same cache
-    #    the run uses (JSON-only loader — no httpx/dotenv import, DX-01 zero-config preserved). Every
-    #    interpolated value is our own metadata / a fixed allowlist / a fixed badge — no user free-text.
+    # 3. Odds status (honest by construction). When the gitignored cache the fetch job writes has
+    #    priced markets, show live-ON with sources + freshness; else the fail-soft off banner. Reads
+    #    JSON only (DX-01: no httpx/dotenv import in the app path).
     cache = load_odds_cache()
     blended = (cache or {}).get("blended") or {}
     if blended:
-        meta = (cache or {}).get("_meta") or {}
-        now = datetime.now(timezone.utc)
-        fetched_at = meta.get("fetched_at")
-        books = provider_labels(meta.get("providers_present", []))
-        books_txt = f" ({', '.join(books)})" if books else ""
-        st.markdown(
-            f'{status_badge_html("live")} &nbsp; '
-            f'<span style="font-family:ui-monospace,monospace">{len(blended)}</span> market(s) · '
-            f'<span style="font-family:ui-monospace,monospace">{len(books)}</span> book(s){books_txt} · '
-            f"fetched {html.escape(fmt_age(fetched_at, now))}",
-            unsafe_allow_html=True,
-        )
-        if is_stale(fetched_at, now):
-            st.warning("Live odds may be stale — click 'Fetch odds now' for current prices.")
-    elif cache is not None:
-        # A valid cache with an EMPTY blended map = a fetch ran, but no Cologne market posted yet.
-        st.caption("odds off — no live markets posted yet, running manual ratings.")
-    elif odds_key_present():
-        st.caption("odds off — using manual ratings. Fetch to pull live market prices.")
+        meta = cache.get("_meta", {})
+        fetched = _fmt_fetched(meta.get("fetched_at"))
+        msg = f"● live odds ON — {len(blended)} matches priced from {_provider_label_list(meta)}"
+        if fetched:
+            msg += f" · fetched {fetched}"
+        st.success(msg)
+    elif not odds_key_present():
+        st.info("live odds off (no ODDSPAPI_KEY) — using manual ratings")
     else:
-        st.caption(
-            "odds off — using manual ratings. Fetch to price the sim from live markets "
-            "(Polymarket + Kalshi need no key; add ODDSPAPI_KEY for Pinnacle)."
-        )
+        st.caption("odds key set — click 'Fetch odds now' (left) to price the sim from live markets.")
 
 
 _render_header_strip()
@@ -260,41 +264,25 @@ with controls:
     # On a normal rerun this button is NOT clicked, so scripts.fetch_odds is never imported.
     st.divider()
     st.caption("Live odds (optional)")
-    # Bug A fix: render the PERSISTED outcome from the previous run's fetch. A message drawn in the
-    # click branch below is discarded by the st.rerun() that follows it (st.rerun halts + restarts
-    # the run, dropping its output), so the outcome is stashed in session_state and rendered HERE on
-    # the next run, then popped. Without this the user clicks Fetch and reliably sees nothing.
-    _outcome = st.session_state.pop(KEY_ODDS_OUTCOME, None)
-    if _outcome:
-        {"success": st.success, "info": st.info, "error": st.error}.get(_outcome[0], st.info)(
-            _outcome[1]
-        )
     if st.button("Fetch odds now", key="fetch_odds_btn"):
-        # Bug B fix: a real loading state for the multi-provider httpx call (never a dead button).
-        with st.spinner("Contacting books — Pinnacle / Polymarket / Kalshi…"):
-            try:
-                from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
+        try:
+            from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
 
-                cache = _fetch_odds_main()
-                n_blended = len(cache.get("blended", {}))
-                if n_blended:
-                    books = provider_labels(cache.get("_meta", {}).get("providers_present", []))
-                    st.session_state[KEY_ODDS_OUTCOME] = (
-                        "success",
-                        f"Fetched {n_blended} market(s) from {', '.join(books) or 'no providers'}.",
-                    )
-                else:
-                    # A valid empty fetch (no Cologne market posted yet) is fail-soft, not an error.
-                    st.session_state[KEY_ODDS_OUTCOME] = (
-                        "info",
-                        "No live markets found yet (Cologne markets may not have posted) — "
-                        "still running rating-only.",
-                    )
-            except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
-                st.session_state[KEY_ODDS_OUTCOME] = (
-                    "error",
-                    f"Odds fetch failed (running rating-only): {exc}",
+            cache = _fetch_odds_main()
+            n_blended = len(cache.get("blended", {}))
+            if n_blended:
+                st.success(
+                    f"Fetched {n_blended} market(s) from "
+                    f"{', '.join(cache['_meta'].get('providers_present', [])) or 'no providers'}."
                 )
+            else:
+                # A valid empty fetch (no Cologne market posted yet) is fail-soft, not an error.
+                st.info(
+                    "No live markets found yet (Cologne markets may not have posted) — "
+                    "still running rating-only."
+                )
+        except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
+            st.error(f"Odds fetch failed (running rating-only): {exc}")
         st.rerun()
 
 
@@ -331,18 +319,7 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
     return result
 
 
-def _ci_cell_html(p: float, seed: int, band_epi: dict, band_samp: dict, two_tone: bool) -> str:
-    """One probability cell's bar: two-tone (solid sampling over faint epistemic) on an odds-fed
-    run, else the single-tone Wilson bar (rating-only — byte-identical to Phase 2). Shared by the
-    pre-stage probs table and the live delta table so the bar rendering stays DRY (one code path)."""
-    lo_o, hi_o = band_epi.get(seed, (0.0, 0.0))
-    if two_tone:
-        lo_i, hi_i = band_samp.get(seed, (lo_o, hi_o))
-        return ci_bar_two_tone_html(p, lo_i, hi_i, lo_o, hi_o, HUE_ADVANCE)
-    return ci_bar_html(p, lo_o, hi_o, HUE_ADVANCE)
-
-
-def _render_probs_table(result, two_tone: bool = False) -> None:
+def _render_probs_table(result) -> None:
     """SUCCESS state: per-team rows sorted by P(advance), each cell = number + inline CI bar.
 
     UI-04: EVERY probability cell renders the number PLUS an always-visible inline Wilson CI
@@ -353,8 +330,6 @@ def _render_probs_table(result, two_tone: bool = False) -> None:
     p_30 = result.p_30()
     p_03 = result.p_03()
     order = sorted(by_seed, key=lambda s: p_adv.get(s, 0.0), reverse=True)
-    if two_tone:
-        st.caption(TWO_TONE_LEGEND)
     hdr = st.columns([3, 2, 2, 2])
     hdr[0].markdown("**Team**")
     hdr[1].markdown("**P(advance)**")
@@ -364,25 +339,19 @@ def _render_probs_table(result, two_tone: bool = False) -> None:
         t = by_seed[seed]
         c = st.columns([3, 2, 2, 2])
         c[0].markdown(f"{t.name}")
+        lo_a, hi_a = result.band_advance.get(seed, (0.0, 0.0))
+        lo_3, hi_3 = result.band_30.get(seed, (0.0, 0.0))
+        lo_0, hi_0 = result.band_03.get(seed, (0.0, 0.0))
         c[1].markdown(
-            _ci_cell_html(
-                p_adv.get(seed, 0.0), seed,
-                result.band_advance, result.band_advance_sampling, two_tone,
-            ),
+            ci_bar_html(p_adv.get(seed, 0.0), lo_a, hi_a, HUE_ADVANCE),
             unsafe_allow_html=True,
         )
         c[2].markdown(
-            _ci_cell_html(
-                p_30.get(seed, 0.0), seed,
-                result.band_30, result.band_30_sampling, two_tone,
-            ),
+            ci_bar_html(p_30.get(seed, 0.0), lo_3, hi_3, HUE_ADVANCE),
             unsafe_allow_html=True,
         )
         c[3].markdown(
-            _ci_cell_html(
-                p_03.get(seed, 0.0), seed,
-                result.band_03, result.band_03_sampling, two_tone,
-            ),
+            ci_bar_html(p_03.get(seed, 0.0), lo_0, hi_0, HUE_ADVANCE),
             unsafe_allow_html=True,
         )
 
@@ -406,7 +375,7 @@ def _render_probs_empty() -> None:
         c[3].markdown(EM_DASH)
 
 
-def _render_delta_table(pre_result, post_result, two_tone: bool = False) -> None:
+def _render_delta_table(pre_result, post_result) -> None:
     """LIVE 'Delta probabilities' (RESIM-02 — show the CHANGE, not a new static number).
 
     Each cell renders the post-lock value (CI bar) PLUS a signed percentage-point delta vs
@@ -422,8 +391,6 @@ def _render_delta_table(pre_result, post_result, two_tone: bool = False) -> None
     )
     order = sorted(by_seed, key=lambda s: post_adv.get(s, 0.0), reverse=True)
     st.caption("Post-lock odds with the change vs pre-lock (+/-pp) — blue up, amber down.")
-    if two_tone:
-        st.caption(TWO_TONE_LEGEND)
     hdr = st.columns([3, 2, 2, 2])
     hdr[0].markdown("**Team**")
     hdr[1].markdown("**P(advance)**")
@@ -433,14 +400,17 @@ def _render_delta_table(pre_result, post_result, two_tone: bool = False) -> None
         t = by_seed[seed]
         c = st.columns([3, 2, 2, 2])
         c[0].markdown(f"{t.name}")
+        lo_a, hi_a = post_result.band_advance.get(seed, (0.0, 0.0))
+        lo_3, hi_3 = post_result.band_30.get(seed, (0.0, 0.0))
+        lo_0, hi_0 = post_result.band_03.get(seed, (0.0, 0.0))
         cells = (
-            (c[1], post_adv, pre_adv, post_result.band_advance, post_result.band_advance_sampling),
-            (c[2], post_30, pre_30, post_result.band_30, post_result.band_30_sampling),
-            (c[3], post_03, pre_03, post_result.band_03, post_result.band_03_sampling),
+            (c[1], post_adv, pre_adv, lo_a, hi_a),
+            (c[2], post_30, pre_30, lo_3, hi_3),
+            (c[3], post_03, pre_03, lo_0, hi_0),
         )
-        for col, post_p, pre_p, band_epi, band_samp in cells:
+        for col, post_p, pre_p, lo, hi in cells:
             col.markdown(
-                _ci_cell_html(post_p.get(seed, 0.0), seed, band_epi, band_samp, two_tone)
+                ci_bar_html(post_p.get(seed, 0.0), lo, hi, HUE_ADVANCE)
                 + delta_tag_html(post_p.get(seed, 0.0), pre_p.get(seed, 0.0)),
                 unsafe_allow_html=True,
             )
@@ -820,51 +790,9 @@ def _render_ballot_panel(result, cache_key) -> None:
         st.caption("Ballot A and Ballot B agree on all 10 picks.")
 
 
-def _render_odds_drilldown(blended) -> None:
-    """D3 per-book drill-down: 'why the books disagree'. For each priced match with >=2 sources,
-    list each book's series price next to the blended consensus, sorted by disagreement spread
-    (widest first). Pure display read of the optional ``sources`` field — a match without it (a
-    pre-D3 cache) is skipped. Team names + book labels are HTML-escaped; prices are numeric (T-XSS).
-    """
-    name_of = {t.id: t.name for t in teams}
-    rows = []
-    for key, b in blended.items():
-        sources = b.get("sources") or []
-        if len(sources) < 2:
-            continue  # nothing to compare — one (or no) independent opinion
-        try:
-            lo, hi = (int(x) for x in str(key).split("-"))
-        except (ValueError, AttributeError):
-            continue
-        rows.append((lo, hi, b, sources, source_spread(sources)))
-    if not rows:
-        return
-    rows.sort(key=lambda r: r[4], reverse=True)  # widest disagreement first
-    with st.expander("Why the books disagree", expanded=False):
-        st.caption("Each book's series price vs the blended consensus — sorted by disagreement.")
-        for lo, hi, b, sources, spread in rows:
-            a = html.escape(str(name_of.get(lo, lo)))
-            c = html.escape(str(name_of.get(hi, hi)))
-            books_txt = " · ".join(
-                f"{html.escape(PROVIDER_LABELS.get(str(s.get('book', '')).lower(), str(s.get('book', ''))))} "
-                f"{float(s.get('p', 0.0)):.2f}"
-                for s in sources
-            )
-            wide = " [wide]" if spread > 0.10 else ""  # ASCII tag — the label is the signal (UI-06)
-            st.markdown(
-                f"**{a} vs {c}** — {books_txt} → blended {float(b.get('p', 0.0)):.2f} "
-                f"(spread {spread:.2f}){wide}"
-            )
-
-
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
 with main:
     result, error_msg, cache_key = _run_or_serve()
-    # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
-    # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->
-    # priced empty -> two_tone False -> single-tone bars (the Phase-2 render, unchanged).
-    odds_blended = (load_odds_cache() or {}).get("blended") or {}
-    two_tone = bool(priced_ids(odds_blended))
     if result is not None:
         st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
 
@@ -886,7 +814,7 @@ with main:
             st.info("Set ratings, then Run.")
             _render_probs_empty()
         else:
-            _render_probs_table(result, two_tone)
+            _render_probs_table(result)
 
         _render_bracket()
     else:
@@ -929,11 +857,35 @@ with main:
         else:
             # pre_lock_result (empty-locked baseline) was assigned above under the SAME
             # (result is not None and not error) condition — show the per-team change.
-            _render_delta_table(pre_lock_result, result, two_tone)
+            _render_delta_table(pre_lock_result, result)
 
         _render_bracket_live(name_of)
 
-    # Per-book drill-down (D3) — shown in BOTH modes when the loaded cache carries per-source prices
-    # (skipped on a rating-only / pre-D3 cache that has no `sources`). A pure display read.
-    if odds_blended:
-        _render_odds_drilldown(odds_blended)
+
+# --- Honest methodology footer (full width, both modes) ----------------------------------
+def _render_footer() -> None:
+    """One-line provenance so a screenshot is self-explanatory and honest: data sources +
+    freshness, the market-anchored-R1 / modeled-later-rounds split, reproducible sim params, and
+    the engine-validation basis. Reads the JSON cache only (no httpx import)."""
+    cache = load_odds_cache()
+    meta = (cache or {}).get("_meta", {})
+    blended = (cache or {}).get("blended") or {}
+    st.divider()
+    bits: list[str] = []
+    if blended:
+        fetched = _fmt_fetched(meta.get("fetched_at"))
+        src = _provider_label_list(meta)
+        bits.append(f"**Odds:** {src} · {len(blended)} R1 matches priced (de-vigged, log-opinion pooled)")
+        if fetched:
+            bits.append(f"fetched {fetched}")
+        bits.append("R1 market-anchored; later rounds modeled from market-back-solved ratings")
+    else:
+        bits.append("**Mode:** rating-only (no live odds loaded)")
+    bits.append(f"{int(N) // 1000}k sims · fixed seed {FIXED_SEED} (reproducible)")
+    # Engine-provenance only (no event-name claim — keeps the UI off the Budapest overclaim the
+    # trust-badge rule forbids; the badge above carries the validation state).
+    bits.append("engine validated vs Valve rulebook + full round-by-round backtest")
+    st.caption(" · ".join(bits))
+
+
+_render_footer()
