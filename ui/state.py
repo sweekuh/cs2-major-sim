@@ -49,6 +49,10 @@ KEY_RATINGS_EDITOR = "ratings_editor"
 KEY_S_SLIDER = "S_slider"
 KEY_N_INPUT = "N_input"
 KEY_RUN_BUTTON = "run_btn"
+# Persisted "Fetch odds now" outcome: ("success"|"info"|"error", message). Stashed in the click
+# handler and rendered on the NEXT run so the message survives the st.rerun() that the fetch
+# triggers (a message drawn before st.rerun() is discarded — the toast-lost bug, fixed 2026-05-31).
+KEY_ODDS_OUTCOME = "odds_fetch_outcome"
 
 # --- Phase 4 LIVE-mode keys (RESIM-01..04) -----------------------------------------------
 # KEY_LOCKED holds the ordered source-of-truth list of locked results:

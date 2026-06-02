@@ -258,6 +258,126 @@ def test_correlated_pick_warning_text_format():
     assert txt.startswith("!")
 
 
+# --- Phase 5 display: two-tone CI bar + drill-down helpers (D2/D3) ------------------------
+
+
+def test_ci_bar_two_tone_collapses_when_outer_equals_inner():
+    """D2 GATE guard: when the epistemic (outer) band equals the sampling (inner) band — the
+    rating-only case — the two-tone bar draws both segments at the same place (reads single-tone)
+    and still carries the formatted percentage. Two positioned segments (faint outer + solid inner).
+    """
+    from ui.render import ci_bar_two_tone_html
+
+    html = ci_bar_two_tone_html(0.62, 0.58, 0.66, 0.58, 0.66)
+    assert "62.0%" in html
+    assert "opacity:0.35" in html                      # the faint outer (epistemic) segment
+    assert html.count("position:absolute") == 2        # outer + inner segments
+
+
+def test_ci_bar_two_tone_is_xss_safe_numeric_only():
+    """ci_bar_two_tone_html rejects free-text band values and non-hex hues (T-02-XSS), like ci_bar_html."""
+    from ui.render import ci_bar_two_tone_html
+
+    with pytest.raises(TypeError):
+        ci_bar_two_tone_html("<script>", 0.0, 1.0, 0.0, 1.0)  # type: ignore[arg-type]
+    with pytest.raises(ValueError):
+        ci_bar_two_tone_html(0.5, 0.4, 0.6, 0.4, 0.6, hue="blue;}<script>")
+
+
+def test_source_spread_disagreement_width():
+    """source_spread = max(p) - min(p) across a match's per-book prices; <2 prices or malformed -> 0."""
+    from ui.render import source_spread
+
+    assert source_spread(
+        [{"book": "a", "p": 0.60}, {"book": "b", "p": 0.72}, {"book": "c", "p": 0.55}]
+    ) == pytest.approx(0.17)
+    assert source_spread([{"book": "a", "p": 0.6}]) == 0.0
+    assert source_spread([]) == 0.0
+    assert source_spread(None) == 0.0
+    # Malformed entries are skipped; the remaining valid prices still compute.
+    assert source_spread([{"book": "a"}, {"p": 0.5}, {"p": 0.7}]) == pytest.approx(0.2)
+
+
+# --- Phase 5 display: live-odds status panel helpers (D1) --------------------------------
+
+
+def test_fmt_age_boundaries():
+    """fmt_age renders relative age across the just-now / minute / hour / day boundaries.
+
+    ``now`` is passed in (no Date.now in tests). A bad/missing timestamp renders 'unknown',
+    a future timestamp clamps to 'just now' — the header strip never raises on a weird value.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    from ui.render import fmt_age
+
+    now = datetime(2026, 5, 31, 12, 0, 0, tzinfo=timezone.utc)
+
+    def ago(**kw):
+        return (now - timedelta(**kw)).isoformat()
+
+    assert fmt_age(ago(seconds=10), now) == "just now"
+    assert fmt_age(ago(minutes=4), now) == "4m ago"
+    assert fmt_age(ago(hours=6), now) == "6h ago"
+    assert fmt_age(ago(days=2), now) == "2d ago"
+    # 59m -> still minutes; 23h -> still hours (boundary just below the next unit).
+    assert fmt_age(ago(minutes=59), now) == "59m ago"
+    assert fmt_age(ago(hours=23), now) == "23h ago"
+    # Bad / missing / future.
+    assert fmt_age("not-a-timestamp", now) == "unknown"
+    assert fmt_age(None, now) == "unknown"
+    assert fmt_age((now + timedelta(minutes=5)).isoformat(), now) == "just now"
+
+
+def test_is_stale_boundary():
+    """is_stale flips True past the 2h threshold; a bad/missing timestamp fails toward stale."""
+    from datetime import datetime, timedelta, timezone
+
+    from ui.render import is_stale
+
+    now = datetime(2026, 5, 31, 12, 0, 0, tzinfo=timezone.utc)
+    fresh = (now - timedelta(minutes=30)).isoformat()
+    old = (now - timedelta(hours=3)).isoformat()
+
+    assert is_stale(fresh, now) is False
+    assert is_stale(old, now) is True
+    # Custom threshold honoured.
+    assert is_stale((now - timedelta(seconds=90)).isoformat(), now, threshold_s=60) is True
+    # Fail toward stale on unparseable / missing.
+    assert is_stale("garbage", now) is True
+    assert is_stale(None, now) is True
+
+
+def test_provider_labels_allowlist_dedupe_order():
+    """provider_labels maps raw names to book labels via the allowlist, drops unknowns, dedupes.
+
+    Unknown names are NEVER interpolated (the status line is rendered via unsafe_allow_html), and
+    order is preserved so the display reads stably. None / non-list -> [].
+    """
+    from ui.render import provider_labels
+
+    assert provider_labels(["oddspapi", "polymarket", "kalshi"]) == [
+        "Pinnacle",
+        "Polymarket",
+        "Kalshi",
+    ]
+    # Case-insensitive, unknown dropped, dedup preserves first-seen order.
+    assert provider_labels(["KALSHI", "mystery_book", "kalshi"]) == ["Kalshi"]
+    assert provider_labels([]) == []
+    assert provider_labels(None) == []
+
+
+def test_priced_ids_union_and_failsoft():
+    """priced_ids unions team ids across 'lo-hi' keys; empty/malformed yields an empty set."""
+    from ui.render import priced_ids
+
+    assert priced_ids({"1-9": {}, "3-11": {}}) == {1, 9, 3, 11}
+    assert priced_ids({}) == set()
+    assert priced_ids(None) == set()
+    # A malformed key is skipped, the valid ones still resolve.
+    assert priced_ids({"bad-key-x": {}, "2-7": {}}) == {2, 7}
+
+
 def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
     """run_mc_cached reconstructs dicts from frozen keys and calls the frozen run_mc
     with seed=FIXED_SEED and the default n_chunks=20, returning a Result (UI-02 seam)."""
