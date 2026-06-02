@@ -11,7 +11,7 @@ Imports no streamlit/httpx. R1-trap detection reuses ``engine.teams.build_round1
 
 Format facts (HANDOFF §7 / PRD §"10 calls"): a ballot is 2 + 6 + 2 = 10 DISTINCT teams.
 Scoring per simulated stage is exact-record: a 3-0 pick scores iff the record is exactly
-(3, 0); an advance pick scores iff wins >= 3; a 0-3 pick scores iff the record is exactly
+(3, 0); an advance pick scores iff the record is 3-1 or 3-2 (wins == 3 AND losses >= 1, NOT 3-0 — Cologne rule); a 0-3 pick scores iff the record is exactly
 (0, 3). >=5 correct of 10 upgrades the coin, so P(>=5/10) is the "true coin odds".
 """
 
