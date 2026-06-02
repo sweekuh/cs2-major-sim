@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>COLOGNE 2026 // SWISS FORECAST — swiss-mc</title>
+<meta name="description" content="Monte Carlo forecast of the IEM Cologne 2026 CS2 Major Swiss stage. Market-anchored per-team odds, honest uncertainty, and the math-optimal 2/6/2 Pick'Em ballot." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   swiss-mc · Cologne 2026 Swiss Forecast
+   Aesthetic: tactical telemetry / broadcast HUD
+   Palette: CT-blue (advance) vs T-orange (3-0), rust (elim),
+            over warm gunmetal near-black.
+   ============================================================ */
+
+:root{
+  /* base — warm gunmetal, not navy */
+  --bg:#0b0a0c;
+  --bg-2:#100e12;
+  --panel:#141217;
+  --panel-2:#19161d;
+  --line:#28232f;
+  --line-soft:#1f1b25;
+
+  /* ink */
+  --ink:#f4eee6;
+  --ink-dim:#aaa2b4;
+  --ink-faint:#6f6878;
+
+  /* Counter-Strike dichotomy */
+  --ct:#46a6ff;          /* CT blue — advance / qualify */
+  --ct-glow:#46a6ff;
+  --t:#ff7a18;           /* T orange — 3-0 */
+  --t-2:#ffb338;         /* amber highlight */
+  --rust:#e0533a;        /* elimination 0-3 */
+  --rust-2:#ff6a4d;
+
+  --good:#8fe388;        /* validated / green gate */
+
+  /* type */
+  --display:'Saira Condensed',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --body:'Hanken Grotesk',sans-serif;
+
+  --maxw:1180px;
+  --ease:cubic-bezier(.16,.84,.36,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ---------- atmosphere: gradient mesh + grid + scanlines + grain ---------- */
+body::before{
+  /* gradient mesh — ember top-left, CT-blue bottom-right, on warm black */
+  content:"";
+  position:fixed; inset:0; z-index:-3;
+  background:
+    radial-gradient(900px 600px at 12% -8%, rgba(255,122,24,.16), transparent 60%),
+    radial-gradient(1000px 700px at 88% 108%, rgba(70,166,255,.13), transparent 62%),
+    radial-gradient(700px 500px at 92% 4%, rgba(224,83,58,.07), transparent 60%),
+    linear-gradient(180deg,#0c0a0e 0%, #0b0a0c 40%, #08070a 100%);
+}
+body::after{
+  /* fine HUD grid + scanlines */
+  content:"";
+  position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0px, rgba(0,0,0,.18) 1px, transparent 2px, transparent 3px);
+  background-size: 46px 46px, 46px 46px, 100% 3px;
+  mask-image:radial-gradient(ellipse 120% 100% at 50% 30%, #000 55%, transparent 100%);
+  opacity:.5;
+}
+.grain{
+  position:fixed; inset:-50%; z-index:-1; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- HUD corner registration marks ---------- */
+.regmark{position:fixed; width:26px; height:26px; z-index:50; pointer-events:none; opacity:.55}
+.regmark::before,.regmark::after{content:""; position:absolute; background:var(--t-2)}
+.regmark::before{width:100%; height:2px}
+.regmark::after{width:2px; height:100%}
+.rm-tl{top:14px; left:14px}
+.rm-tr{top:14px; right:14px}
+.rm-bl{bottom:14px; left:14px}
+.rm-br{bottom:14px; right:14px}
+.rm-tr::after,.rm-tr::before{right:0}
+.rm-bl::before{bottom:0} .rm-bl::after{bottom:0}
+.rm-br::before{bottom:0;right:0} .rm-br::after{bottom:0;right:0}
+@media(max-width:760px){.regmark{display:none}}
+
+/* ---------- top status bar ---------- */
+.statusbar{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:18px;
+  padding:10px 22px;
+  font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-faint);
+  background:rgba(9,8,10,.72);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);
+}
+.statusbar .dot{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 10px var(--good);animation:pulse 2.4s var(--ease) infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.statusbar .sb-brand{color:var(--t-2); font-weight:700; letter-spacing:.2em}
+.statusbar .sb-sep{color:var(--line)}
+.statusbar .sb-right{margin-left:auto; display:flex; gap:18px}
+@media(max-width:760px){.statusbar .sb-right{display:none}}
+
+/* ---------- layout ---------- */
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+section{position:relative}
+.eyebrow{
+  font-family:var(--mono); font-size:12px; font-weight:600;
+  letter-spacing:.34em; text-transform:uppercase; color:var(--t-2);
+  display:inline-flex; align-items:center; gap:10px;
+}
+.eyebrow::before{content:"//"; color:var(--ink-faint)}
+
+/* ---------- HERO ---------- */
+.hero{padding:64px 0 40px; cursor:crosshair}
+.hero .wrap{display:grid; grid-template-columns:1.35fr .9fr; gap:48px; align-items:end}
+@media(max-width:920px){.hero .wrap{grid-template-columns:1fr; gap:36px}}
+
+.hero h1{
+  font-family:var(--display); font-weight:900;
+  font-size:clamp(54px, 9vw, 132px);
+  line-height:.86; letter-spacing:-.01em; text-transform:uppercase;
+  margin:18px 0 0; color:var(--ink);
+}
+.hero h1 .ln{display:block; overflow:hidden}
+.hero h1 .ln span{display:block; transform:translateY(110%); animation:rise .9s var(--ease) forwards}
+.hero h1 .ln:nth-child(2) span{animation-delay:.08s}
+.hero h1 .ln:nth-child(3) span{animation-delay:.16s}
+.hero h1 .accent{
+  color:transparent;
+  background:linear-gradient(95deg, var(--t) 0%, var(--t-2) 60%, #ffd27a 100%);
+  -webkit-background-clip:text; background-clip:text;
+}
+@keyframes rise{to{transform:translateY(0)}}
+
+.hero p.lede{
+  font-size:18px; color:var(--ink-dim); max-width:46ch; margin-top:26px;
+  opacity:0; animation:fade .8s var(--ease) .5s forwards;
+}
+.hero .meta-row{
+  margin-top:26px; display:flex; flex-wrap:wrap; gap:10px;
+  opacity:0; animation:fade .8s var(--ease) .68s forwards;
+}
+.chip{
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+  padding:7px 12px; border:1px solid var(--line); border-radius:2px;
+  color:var(--ink-dim); background:rgba(255,255,255,.018);
+  display:inline-flex; align-items:center; gap:8px;
+}
+.chip b{color:var(--ink); font-weight:700}
+.chip.ok{border-color:rgba(143,227,136,.35); color:var(--good)}
+.chip.ok b{color:var(--good)}
+@keyframes fade{to{opacity:1}}
+
+/* censored odds providers — no free promo ;) */
+.redact{
+  display:inline-block; position:relative; vertical-align:baseline;
+  background:#16121d; color:transparent; user-select:none; cursor:help;
+  padding:0 .2em; margin:0 .03em; border-radius:2px;
+  transform:rotate(-.5deg);
+  box-shadow:0 1px 0 rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06);
+  font-family:var(--mono);
+}
+.redact::after{
+  content:""; position:absolute; inset:0; border-radius:2px; pointer-events:none;
+  background:repeating-linear-gradient(45deg, rgba(255,255,255,.06) 0 3px, transparent 3px 7px);
+}
+
+/* hero trophy art (top-right) */
+.hero-right{display:flex; flex-direction:column; gap:18px}
+.hero-art{
+  position:relative; border:1px solid var(--line); border-radius:4px;
+  overflow:hidden; aspect-ratio:16/9; background:var(--panel-2);
+  opacity:0; animation:fade .9s var(--ease) .22s forwards;
+}
+.hero-art.noimg{display:none}
+.hero-art img{width:100%; height:100%; object-fit:cover; display:block; filter:saturate(.9) contrast(1.03)}
+.hero-art::before{ /* tonal blend into the ember/CT-blue palette */
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    radial-gradient(130% 90% at 0% 0%, rgba(255,122,24,.20), transparent 55%),
+    radial-gradient(130% 120% at 100% 100%, rgba(70,166,255,.16), transparent 60%),
+    linear-gradient(180deg, rgba(11,10,12,.08) 35%, rgba(11,10,12,.78));
+}
+.hero-art::after{ /* HUD scanlines */
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.5;
+  background:repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,.16) 2px 3px);
+}
+.hero-art figcaption{
+  position:absolute; left:13px; bottom:11px; z-index:2;
+  font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-dim); text-shadow:0 1px 6px #000;
+}
+.hero-art .corner{position:absolute; top:10px; right:10px; z-index:2; width:18px; height:18px; opacity:.85}
+.hero-art .corner::before,.hero-art .corner::after{content:""; position:absolute; top:0; right:0; background:var(--t-2)}
+.hero-art .corner::before{width:100%; height:2px}
+.hero-art .corner::after{width:2px; height:100%}
+
+/* hero coin readout */
+.coin{
+  position:relative; border:1px solid var(--line);
+  background:
+     radial-gradient(120% 140% at 100% 0%, rgba(255,122,24,.10), transparent 55%),
+     linear-gradient(180deg, var(--panel), var(--bg-2));
+  padding:26px 28px 28px; border-radius:4px;
+  opacity:0; animation:fade .9s var(--ease) .35s forwards;
+  overflow:hidden;
+}
+.coin::before{
+  content:""; position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0 5px, rgba(0,0,0,.16) 5px 6px);
+  pointer-events:none; opacity:.5;
+}
+.coin .lbl{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint)}
+.coin .big{
+  font-family:var(--display); font-weight:900; line-height:.9;
+  font-size:clamp(78px,12vw,128px); letter-spacing:-.01em; margin-top:6px;
+  color:transparent;
+  background:linear-gradient(180deg, #ffe2b0, var(--t) 70%, var(--rust));
+  -webkit-background-clip:text; background-clip:text;
+}
+.coin .big .pct{font-size:.4em; -webkit-text-fill-color:var(--t-2); vertical-align:super; margin-left:2px}
+.coin .sub{font-family:var(--mono); font-size:12.5px; color:var(--ink-dim); margin-top:8px; line-height:1.6}
+.coin .sub b{color:var(--t-2)}
+.coin .crosshair{position:absolute; top:18px; right:18px; width:34px; height:34px; opacity:.6}
+.coin .crosshair::before,.coin .crosshair::after{content:"";position:absolute;background:var(--ct)}
+.coin .crosshair::before{left:50%;top:0;width:1px;height:100%;transform:translateX(-.5px)}
+.coin .crosshair::after{top:50%;left:0;height:1px;width:100%;transform:translateY(-.5px)}
+.coin .ring{position:absolute;top:50%;left:50%;width:16px;height:16px;border:1px solid var(--ct);border-radius:50%;transform:translate(-50%,-50%)}
+
+/* ---------- section heading ---------- */
+.shead{display:flex; align-items:flex-end; justify-content:space-between; gap:20px; padding:0 0 22px; flex-wrap:wrap}
+.shead h2{font-family:var(--display); font-weight:800; font-size:clamp(30px,4.4vw,52px); text-transform:uppercase; line-height:.95; letter-spacing:-.005em}
+.shead .desc{font-size:14.5px; color:var(--ink-dim); max-width:42ch}
+.divider{height:1px;background:linear-gradient(90deg,var(--line),transparent); margin:0 0 30px}
+
+/* ---------- FORECAST ---------- */
+.forecast{padding:72px 0 40px}
+.legend{display:flex; gap:22px; flex-wrap:wrap; font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--ink-dim); margin-bottom:18px; text-transform:uppercase}
+.legend .k{display:inline-flex; align-items:center; gap:8px}
+.legend .sw{width:22px;height:9px;border-radius:1px;position:relative;overflow:hidden}
+.legend .sw .solid{position:absolute;inset:0 60% 0 0}
+.legend .sw .faint{position:absolute;inset:0;opacity:.28}
+.legend .lg-band{display:inline-block;width:28px;height:14px;border-radius:2px;background:rgba(70,166,255,.16);border-left:2px solid rgba(188,222,255,.85);border-right:2px solid rgba(188,222,255,.85);vertical-align:middle}
+.legend .lg-core{display:inline-block;width:12px;height:10px;border-radius:2px;background:rgba(188,222,255,.6);box-shadow:0 0 6px rgba(70,166,255,.7);vertical-align:middle}
+
+.table{border:1px solid var(--line); border-radius:4px; overflow-x:auto; overflow-y:hidden; background:linear-gradient(180deg, rgba(255,255,255,.012), transparent); -webkit-overflow-scrolling:touch}
+.thead, .trow{
+  display:grid;
+  grid-template-columns: 54px minmax(150px,1.2fr) repeat(3, minmax(150px, 1fr));
+  align-items:center;
+}
+.thead{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-faint); padding:13px 18px; border-bottom:1px solid var(--line);
+  background:#100d14; position:relative; z-index:10;
+}
+.thead .sortable{cursor:pointer; user-select:none; transition:color .2s; display:inline-flex; align-items:center; gap:6px}
+.thead .sortable:hover{color:var(--ink)}
+.thead .sortable[data-active="1"]{color:var(--t-2)}
+.thead .arr{font-size:9px; opacity:.6}
+.thead .col-team{padding-left:2px}
+.col-m{text-align:left}
+
+.trow{
+  padding:14px 18px; border-bottom:1px solid var(--line-soft);
+  transition:background .18s var(--ease);
+  opacity:0; transform:translateY(8px);
+}
+.trow:last-child{border-bottom:none}
+.trow.in{animation:rowin .5s var(--ease) forwards}
+@keyframes rowin{to{opacity:1; transform:none}}
+.trow:hover{background:rgba(70,166,255,.04)}
+.trow:hover .tname{color:#fff}
+
+.rank{font-family:var(--mono); font-size:13px; color:var(--ink-faint); font-weight:600}
+.rank .seedchip{display:block; font-size:9px; letter-spacing:.1em; color:var(--ink-faint); opacity:.7; margin-top:2px}
+
+.team{display:flex; align-items:center; gap:12px; min-width:0}
+.tflag{
+  width:30px;height:30px;flex:none;border:1px solid var(--line);border-radius:3px;
+  display:grid;place-items:center; font-family:var(--display); font-weight:800; font-size:14px;
+  color:var(--ink); background:var(--panel-2); letter-spacing:.02em;
+}
+.tname{font-family:var(--display); font-weight:700; font-size:21px; letter-spacing:.01em; text-transform:uppercase; line-height:1; transition:color .18s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+
+/* metric cell: number + telemetry bar */
+.metric{padding-right:22px}
+.metric .num{font-family:var(--mono); font-weight:700; font-size:15px; letter-spacing:.02em; display:flex; align-items:baseline; gap:6px}
+.metric .num .ci{font-size:10px; font-weight:500; color:var(--ink-faint)}
+.metric.adv .num{color:var(--ct)}
+.metric.tre .num{color:var(--t-2)}
+.metric.zro .num{color:var(--rust-2)}
+
+/* per-metric hue triplets: --h base · --hl light (caps/core/tick) · --hd dark (fill base) */
+.metric.adv{--h:70,166,255;  --hl:188,222,255; --hd:28,79,122}
+.metric.tre{--h:255,179,56;  --hl:255,224,176; --hd:154,71,8}
+.metric.zro{--h:255,106,77;  --hd:122,36,23;   --hl:255,182,163}
+
+.bar{position:relative; height:18px; margin-top:9px; border-radius:3px;
+     background:rgba(255,255,255,.045); box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); overflow:visible}
+/* magnitude fill: 0 -> point estimate */
+.bar .fill{position:absolute; left:0; top:0; bottom:0; width:0; border-radius:3px 2px 2px 3px;
+     background:linear-gradient(90deg, rgba(var(--hd),.92), rgb(var(--h)));
+     box-shadow:0 0 14px rgba(var(--h),.4); transition:width 1.05s var(--ease)}
+/* epistemic band: faint translucent box with bright vertical caps (books disagreeing) */
+.bar .epi{position:absolute; top:0; bottom:0; left:0; width:0; border-radius:1px;
+     background:rgba(var(--h),.16);
+     border-left:2px solid rgba(var(--hl),.85); border-right:2px solid rgba(var(--hl),.85);
+     opacity:0; transition:opacity .45s .85s}
+/* sampling (Wilson) core: small bright solid band */
+.bar .wil{position:absolute; top:3px; bottom:3px; left:0; width:0; border-radius:2px;
+     background:rgba(var(--hl),.6); opacity:0; transition:opacity .45s .9s}
+/* point-estimate tick */
+.bar .tick{position:absolute; top:-3px; bottom:-3px; left:0; width:2px; border-radius:2px;
+     background:#fff; box-shadow:0 0 0 1px rgba(0,0,0,.6), 0 0 9px rgba(var(--h),.95);
+     opacity:0; transition:opacity .35s .95s}
+.bar.lit .epi,.bar.lit .wil,.bar.lit .tick{opacity:1}
+
+.fnote{font-family:var(--mono); font-size:11px; color:var(--ink-faint); margin-top:16px; line-height:1.7}
+
+/* ---------- BALLOT ---------- */
+.ballot{padding:72px 0 40px}
+.loadout{display:grid; grid-template-columns:repeat(3,1fr); gap:18px}
+@media(max-width:820px){.loadout{grid-template-columns:1fr}}
+.lo{
+  border:1px solid var(--line); border-radius:4px; padding:20px; position:relative; overflow:hidden;
+  background:linear-gradient(180deg,var(--panel),var(--bg-2));
+}
+.lo::after{content:""; position:absolute; left:0; top:0; bottom:0; width:3px}
+.lo.k30::after{background:linear-gradient(180deg,var(--t),var(--rust))}
+.lo.kadv::after{background:linear-gradient(180deg,var(--ct),#1c4f7a)}
+.lo.k03::after{background:linear-gradient(180deg,var(--rust),#5a1d12)}
+.lo .lo-h{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px}
+.lo .lo-h .t{font-family:var(--display); font-weight:800; font-size:24px; text-transform:uppercase; letter-spacing:.02em}
+.lo.k30 .lo-h .t{color:var(--t-2)} .lo.kadv .lo-h .t{color:var(--ct)} .lo.k03 .lo-h .t{color:var(--rust-2)}
+.lo .lo-h .c{font-family:var(--mono); font-size:11px; color:var(--ink-faint); letter-spacing:.1em}
+.pick{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px 0; border-top:1px solid var(--line-soft)}
+.pick:first-of-type{border-top:none}
+.pick .pn{font-family:var(--display); font-weight:700; font-size:19px; text-transform:uppercase; letter-spacing:.01em}
+.pick .pv{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--ink-dim)}
+.lo.k30 .pick .pv{color:var(--t-2)} .lo.kadv .pick .pv{color:var(--ct)} .lo.k03 .pick .pv{color:var(--rust-2)}
+
+.ballot-note{
+  margin-top:22px; padding:16px 20px; border:1px dashed var(--line); border-radius:4px;
+  font-family:var(--mono); font-size:12.5px; color:var(--ink-dim); display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+}
+.ballot-note .ok{color:var(--good)}
+
+/* ---------- SIMULATED DISTRIBUTION (Monte Carlo histogram) ---------- */
+.simchart{padding:72px 0 40px}
+.chart{position:relative; border:1px solid var(--line); border-radius:4px; padding:34px 26px 16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.014), transparent); overflow:hidden}
+.chart .bars{position:relative; display:flex; align-items:flex-end; gap:0; height:300px}
+/* fine density bars (~0.1 wide); x spans 0..10 linearly across the full width */
+.chart .db{flex:1 1 0; height:0; position:relative; z-index:2; transition:height .5s var(--ease)}
+.chart .db.miss{background:linear-gradient(180deg,#4c4753,#231f2a)}
+.chart .db.hit{background:linear-gradient(180deg,var(--t-2),var(--t)); box-shadow:0 0 14px rgba(255,122,24,.25)}
+.chart .db.edge{box-shadow:inset 1px 0 0 rgba(255,255,255,.16)}   /* faint integer gridline */
+.chart .db.hit.edge{box-shadow:inset 1px 0 0 rgba(255,255,255,.16), 0 0 14px rgba(255,122,24,.25)}
+.chart .region{position:absolute; top:14px; bottom:0; z-index:1; opacity:0; transition:opacity .6s .3s;
+  background:linear-gradient(180deg, rgba(255,122,24,.13), rgba(255,122,24,.02))}
+.chart .mark{position:absolute; top:6px; bottom:0; width:0; z-index:3; opacity:0; transition:opacity .5s .5s}
+.chart .mark.thresh{border-left:2px dashed rgba(255,179,56,.95)}
+.chart .mark.mean{border-left:2px dashed rgba(255,255,255,.42)}
+.chart .mark span{position:absolute; top:-1px; font-family:var(--mono); font-size:10px; letter-spacing:.1em; white-space:nowrap; text-transform:uppercase}
+.chart .mark.thresh span{left:7px; color:var(--t-2)}
+.chart .mark.mean span{top:auto; bottom:-1px; right:7px; color:var(--ink-dim)}
+.chart.lit .region,.chart.lit .mark{opacity:1}
+.chart .xaxis{position:relative; height:18px; margin-top:9px}
+.chart .xaxis span{position:absolute; transform:translateX(-50%); font-family:var(--mono); font-size:12px; color:var(--ink-faint)}
+.chart .axis{margin-top:8px; font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-faint); text-align:center}
+.simbig{position:absolute; right:28px; top:24px; z-index:4; text-align:right; opacity:0; transition:opacity .6s .8s}
+.chart.lit .simbig{opacity:1}
+.simbig .n{font-family:var(--display); font-weight:900; font-size:clamp(40px,6vw,66px); line-height:.86;
+  color:transparent; background:linear-gradient(180deg,#ffe2b0,var(--t)); -webkit-background-clip:text; background-clip:text}
+.simbig .l{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-top:5px}
+@media(max-width:720px){
+  .chart{padding:24px 14px 12px}
+  .chart .bars{height:200px}
+  .chart .xaxis span{font-size:10px}
+  .simbig{position:static; text-align:left; margin-bottom:14px; opacity:1}
+}
+
+/* ---------- METHOD / pipeline ---------- */
+.method{padding:72px 0 40px}
+.pipe{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; border:1px solid var(--line); border-radius:4px; overflow:hidden}
+.pstep{flex:1 1 0; min-width:160px; padding:20px 18px; border-right:1px solid var(--line-soft); position:relative; background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}
+.pstep:last-child{border-right:none}
+.pstep .ix{font-family:var(--mono); font-size:11px; color:var(--t-2); letter-spacing:.18em}
+.pstep .pt{font-family:var(--display); font-weight:800; font-size:21px; text-transform:uppercase; margin:8px 0 6px}
+.pstep .pd{font-size:13px; color:var(--ink-dim); line-height:1.5}
+@media(max-width:820px){.pstep{flex-basis:100%; border-right:none; border-bottom:1px solid var(--line-soft)}}
+
+.cred{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:24px}
+@media(max-width:820px){.cred{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.cred{grid-template-columns:1fr}}
+.card{border:1px solid var(--line); border-radius:4px; padding:20px; background:linear-gradient(180deg,var(--panel),var(--bg-2)); position:relative}
+.card .cv{font-family:var(--display); font-weight:900; font-size:42px; line-height:1; color:var(--ink)}
+.card .cv.green{color:var(--good)}
+.card .ck{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-top:8px}
+.card .cd{font-size:13px; color:var(--ink-dim); margin-top:10px; line-height:1.5}
+
+/* ---------- CAVEATS / FOOTER ---------- */
+.caveats{padding:64px 0}
+.cav-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px}
+@media(max-width:820px){.cav-grid{grid-template-columns:1fr}}
+.cav{border-left:2px solid var(--rust); padding:4px 0 4px 18px}
+.cav h4{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--rust-2); margin-bottom:8px}
+.cav p{font-size:14px; color:var(--ink-dim); line-height:1.6}
+
+footer{border-top:1px solid var(--line-soft); padding:34px 0 64px; margin-top:30px}
+footer .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center}
+footer .f-brand{font-family:var(--display); font-weight:900; font-size:28px; text-transform:uppercase; letter-spacing:.02em}
+footer .f-brand .x{color:var(--t-2)}
+footer .f-meta{font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); letter-spacing:.05em; line-height:1.8; text-align:right}
+@media(max-width:680px){footer .f-meta{text-align:left}}
+
+::selection{background:var(--t); color:#0b0a0c}
+
+/* ---------- mobile: dense table scrolls horizontally, type tightens ---------- */
+@media(max-width:720px){
+  .wrap{padding:0 16px}
+  .thead, .trow{min-width:600px}            /* keep columns usable; container scrolls */
+  .thead{font-size:9.5px; letter-spacing:.1em}
+  .tname{font-size:18px}
+  .metric{padding-right:14px}
+  .metric .num{font-size:13px}
+  .metric .num .ci{display:none}             /* drop ±band label on phones */
+  .table{box-shadow:inset -22px 0 18px -18px rgba(0,0,0,.7)}  /* scroll affordance */
+  .legend{font-size:10px; gap:14px}
+  .hero{padding:40px 0 30px}
+  .forecast,.ballot,.method{padding:52px 0 30px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important; transition:none!important}
+  .trow{opacity:1; transform:none}
+  .hero h1 .ln span{transform:none}
+  .hero p.lede,.hero .meta-row,.coin,.hero-art{opacity:1}
+}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<div class="regmark rm-tl" aria-hidden="true"></div>
+<div class="regmark rm-tr" aria-hidden="true"></div>
+<div class="regmark rm-bl" aria-hidden="true"></div>
+<div class="regmark rm-br" aria-hidden="true"></div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <span class="dot"></span>
+  <span class="sb-brand">SWISS-MC</span>
+  <span class="sb-sep">/</span>
+  <span>IEM Cologne 2026</span>
+  <span class="sb-sep">/</span>
+  <span>Swiss · Stage 1</span>
+  <div class="sb-right">
+    <span>Monte Carlo · N≈120K</span>
+    <span class="sb-sep">/</span>
+    <span>Market-anchored</span>
+    <span class="sb-sep">/</span>
+    <span style="color:var(--good)">● seeds validated</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Monte Carlo Swiss Forecast</span>
+      <h1>
+        <span class="ln"><span>Cologne</span></span>
+        <span class="ln"><span>2026</span></span>
+        <span class="ln"><span class="accent">Forecast</span></span>
+      </h1>
+      <p class="lede">
+        ~120,000 Swiss tournaments, resolved. Per-team odds back-solved from live
+        market prices, with the uncertainty <em>shown</em>, not hidden. The point isn't a
+        pretty dashboard — it's a <b style="color:var(--ink)">correct</b> one.
+      </p>
+      <div class="meta-row">
+        <span class="chip ok"><b>●</b> Budapest 2025 backtest · GREEN</span>
+        <span class="chip"><b>128</b> passing tests</span>
+        <span class="chip">Markets · <span class="redact" title="redacted — no free promo">██████</span> + <span class="redact" title="redacted — no free promo">█████</span> + <span class="redact" title="redacted — no free promo">███████</span></span>
+        <span class="chip">Bo3 closed-form · <b>p²(3−2p)</b></span>
+      </div>
+    </div>
+
+    <div class="hero-right">
+    <figure class="hero-art">
+      <span class="corner" aria-hidden="true"></span>
+      <img src="assets/iem-trophy.jpg" alt="IEM trophy on the Cologne main stage, crowd lit by phone lights"
+           loading="lazy" onerror="this.closest('.hero-art').classList.add('noimg')" />
+      <figcaption>IEM · LANXESS Arena, Cologne</figcaption>
+    </figure>
+
+    <div class="coin">
+      <div class="crosshair"><span class="ring"></span></div>
+      <div class="lbl">True coin odds · P(≥5 / 10)</div>
+      <div class="big" id="coinBig">0<span class="pct">%</span></div>
+      <div class="sub">
+        ≥5 of 10 correct upgrades the coin — the only target.<br>
+        This is the <b>P(≥5)-optimal</b> ballot; it diverges from<br>
+        the most-picks-right ballot on purpose.
+      </div>
+    </div>
+    </div>
+  </div>
+</header>
+
+<!-- FORECAST -->
+<section class="forecast">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <span class="eyebrow">Per-team probabilities</span>
+        <h2 style="margin-top:14px">The Field</h2>
+      </div>
+      <p class="desc">Each team's chance to advance (3 wins before 3 losses), to run the table 3-0,
+      and to crash out 0-3. Bars are telemetry — the bright band is sampling noise, the faint glow is the books disagreeing.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="legend">
+      <span class="k"><span class="lg-band"></span> faint box + caps = epistemic (books disagree)</span>
+      <span class="k"><span class="lg-core"></span> bright core + tick = sampling (Wilson)</span>
+      <span class="k" style="color:var(--ct)">■ P(advance)</span>
+      <span class="k" style="color:var(--t-2)">■ P(3-0)</span>
+      <span class="k" style="color:var(--rust-2)">■ P(0-3)</span>
+    </div>
+
+    <div class="table">
+      <div class="thead">
+        <div>#</div>
+        <div class="col-team">Team</div>
+        <div class="col-m sortable" data-sort="adv" data-active="1">P(advance) <span class="arr">▼</span></div>
+        <div class="col-m sortable" data-sort="tre">P(3-0) <span class="arr">▼</span></div>
+        <div class="col-m sortable" data-sort="zro">P(0-3) <span class="arr">▼</span></div>
+      </div>
+      <div id="rows"></div>
+    </div>
+
+    <p class="fnote">
+      Point estimates are a live <span class="redact" title="redacted — no free promo">██████</span> (<span class="redact" title="redacted — no free promo">██████</span>, de-vigged) + <span class="redact" title="redacted — no free promo">█████</span> snapshot, back-solved and simulated.
+      Round 1 is market-anchored; rounds 2–5 are projected from back-solved ratings, so deeper numbers are softer.
+      Sampling (Wilson) noise is tiny at N≈120K — the wide faint box is the books disagreeing. Bands are scaled up for legibility; the live app derives epistemic width from real per-source variance.
+    </p>
+  </div>
+</section>
+
+<!-- BALLOT -->
+<section class="ballot">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <span class="eyebrow">Recommended loadout · 2 / 6 / 2</span>
+        <h2 style="margin-top:14px">The Ballot</h2>
+      </div>
+      <p class="desc">Pick 2 to go 3-0, 6 to advance, 2 to go 0-3. Built to maximize one thing —
+      P(≥5), the coin upgrade. That's not the most picks right on average, so it looks a little insane on purpose.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="loadout">
+      <div class="lo k30">
+        <div class="lo-h"><span class="t">3-0</span><span class="c">P(3-0) · 2</span></div>
+        <div class="pick"><span class="pn">GamerLegion</span><span class="pv">59.1%</span></div>
+        <div class="pick"><span class="pn">HEROIC</span><span class="pv">11.4%</span></div>
+      </div>
+      <div class="lo kadv">
+        <div class="lo-h"><span class="t">Advance</span><span class="c">P(3-1 / 3-2) · 6</span></div>
+        <div class="pick"><span class="pn">NRG</span><span class="pv">72.0%</span></div>
+        <div class="pick"><span class="pn">MIBR</span><span class="pv">58.1%</span></div>
+        <div class="pick"><span class="pn">BetBoom</span><span class="pv">56.1%</span></div>
+        <div class="pick"><span class="pn">B8</span><span class="pv">55.4%</span></div>
+        <div class="pick"><span class="pn">TYLOO</span><span class="pv">50.3%</span></div>
+        <div class="pick"><span class="pn">M80</span><span class="pv">45.3%</span></div>
+      </div>
+      <div class="lo k03">
+        <div class="lo-h"><span class="t">0-3</span><span class="c">P(0-3) · 2</span></div>
+        <div class="pick"><span class="pn">THUNDER dOWNUNDER</span><span class="pv">39.7%</span></div>
+        <div class="pick"><span class="pn">FlyQuest</span><span class="pv">36.5%</span></div>
+      </div>
+    </div>
+
+    <div class="ballot-note">
+      <span class="ok">◆ Yes — HEROIC at 3-0 over BetBoom, on purpose.</span>
+      <span>3-0 picks are coin flips wherever you slot them, so you bank reliable teams where they actually score: BetBoom and B8 are worth far more as <b style="color:var(--ct)">advance</b> picks (3-1/3-2 ≈ 55–56%) than as 3-0 bets (≈25%). The leftover 3-0 slot becomes a cheap flyer — chasing the obvious 3-0 favorites quietly lowers your coin odds.</span>
+      <span style="opacity:.75">Percentages above are each pick's hit chance — for advance that's P(3-1 or 3-2), not the qualify number in the table.</span>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATED DISTRIBUTION -->
+<section class="simchart">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <span class="eyebrow">1.2M tournaments, scored</span>
+        <h2 style="margin-top:14px">The Coin, Simulated</h2>
+      </div>
+      <p class="desc">Every simulated tournament grades the ballot 0–10. Land ≥5 and the coin upgrades.
+      The whole game is shoving as much of this distribution as possible past the line.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="chart">
+      <div class="simbig" id="simBig"></div>
+      <div class="bars" id="simBars">
+        <div class="region" id="simRegion"></div>
+        <div class="mark thresh" id="simThresh"><span>≥5 · coin</span></div>
+        <div class="mark mean" id="simMean"><span>avg 4.84</span></div>
+      </div>
+      <div class="xaxis" id="simX"></div>
+      <div class="axis">← correct picks · whole numbers, 0–10 →</div>
+    </div>
+    <p class="fnote" id="simNote"></p>
+  </div>
+</section>
+
+<!-- METHOD -->
+<section class="method">
+  <div class="wrap">
+    <div class="shead">
+      <div>
+        <span class="eyebrow">How the number is made</span>
+        <h2 style="margin-top:14px">Correctness Is the Product</h2>
+      </div>
+      <p class="desc">Every probability is validated against the Valve rulebook and a real past-Major backtest.
+      No scraping — APIs only, fail-soft.</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="pipe">
+      <div class="pstep"><div class="ix">01</div><div class="pt">Seeds + Ratings</div><div class="pd">16 confirmed Cologne seeds; ratings back-solved from market odds.</div></div>
+      <div class="pstep"><div class="ix">02</div><div class="pt">Swiss Engine</div><div class="pd">Round-by-round pairing, Buchholz difficulty, Valve 15-row rematch table.</div></div>
+      <div class="pstep"><div class="ix">03</div><div class="pt">Monte Carlo</div><div class="pd">N sims, Bo3 as one Bernoulli draw, Wilson CI, epistemic outer loop.</div></div>
+      <div class="pstep"><div class="ix">04</div><div class="pt">Optimizer</div><div class="pd">2/6/2 ballot, 3-1/3-2 scoring, P(≥5) hill-climb to dodge correlated picks.</div></div>
+    </div>
+
+    <div class="cred">
+      <div class="card"><div class="cv green">GREEN</div><div class="ck">Backtest gate</div><div class="cd">Reproduces StarLadder Budapest 2025 R1–R5 pairings exactly. If it goes red, the engine is broken.</div></div>
+      <div class="card"><div class="cv">128</div><div class="ck">Passing tests</div><div class="cd">Including regression guards that distinguish the right rule from the wrong one.</div></div>
+      <div class="card"><div class="cv">2</div><div class="ck">Real bugs caught</div><div class="cd">A 12× normalization inflation and the advance-pick scoring rule. See docs/LESSONS.md.</div></div>
+      <div class="card"><div class="cv">3</div><div class="ck">Odds providers</div><div class="cd"><span class="redact" title="redacted — no free promo">██████</span> (de-vigged) + <span class="redact" title="redacted — no free promo">█████</span> + <span class="redact" title="redacted — no free promo">███████</span>, pooled by a weighted log-opinion pool.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CAVEATS -->
+<section class="caveats">
+  <div class="wrap">
+    <div class="shead"><div><span class="eyebrow">Read this part</span><h2 style="margin-top:14px">Honest Caveats</h2></div></div>
+    <div class="divider"></div>
+    <div class="cav-grid">
+      <div class="cav"><h4>Model, not oracle</h4><p>Round 1 is anchored to live market prices. Rounds 2–5 are projected from back-solved ratings, so deeper-round numbers are softer than R1.</p></div>
+      <div class="cav"><h4>Honest uncertainty</h4><p>A wide faint band means the books don't agree yet. That's shown on purpose — false precision is the enemy, not the goal.</p></div>
+      <div class="cav"><h4>Swiss only</h4><p>This optimizes the Swiss 2/6/2 ballot. The playoff Pick'Em — a 7-pick round-weighted ballot — is not built yet.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div>
+      <div class="f-brand">SWISS<span class="x">·</span>MC</div>
+      <div style="font-family:var(--mono); font-size:11.5px; color:var(--ink-faint); margin-top:6px; letter-spacing:.06em">A model's odds, not a guarantee.</div>
+    </div>
+    <div class="f-meta">
+      Python 3.12 · numpy 2.4 · Streamlit 1.57 · httpx<br>
+      Monte Carlo · log-opinion pool · Wilson + epistemic CI<br>
+      APIs only · no scraping · keys never logged
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ---- real market-anchored snapshot (README call-my-shot) ---- */
+const N = 120000;
+const Z = 1.96;
+// [name, abbrev, seed, P(advance), P(3-0), P(0-3)] — probabilities as %
+const TEAMS = [
+  ["GamerLegion","GL",1,99.4,59.1,0.1],
+  ["NRG","NRG",9,92.8,20.8,0.9],
+  ["BetBoom","BB",4,82.8,26.7,1.5],
+  ["B8","B8",2,78.3,22.9,2.3],
+  ["MIBR","MBR",7,75.5,17.4,2.5],
+  ["TYLOO","TY",10,60.2,9.9,6.4],
+  ["M80","M80",6,54.1,8.8,6.6],
+  ["HEROIC","HRC",3,53.4,11.4,5.6],
+  ["BIG","BIG",5,51.0,8.4,7.0],
+  ["Liquid","LIQ",13,36.6,4.0,13.9],
+  ["Lynn Vision","LV",14,32.5,3.0,16.4],
+  ["Gaimin Gladiators","GG",12,25.0,2.3,21.5],
+  ["Sharks","SHK",11,23.6,2.4,19.3],
+  ["SINNERS","SIN",8,16.7,1.7,19.9],
+  ["THUNDER dOWNUNDER","TDU",15,10.9,0.7,39.7],
+  ["FlyQuest","FQ",16,7.1,0.5,36.5],
+];
+
+// Wilson 95% half-width (in %) for proportion p (0..1) at sample size n
+function wilsonHalf(p, n){
+  const a = Z/(1+Z*Z/n);
+  const hw = a * Math.sqrt(p*(1-p)/n + Z*Z/(4*n*n));
+  return hw*100;
+}
+// illustrative epistemic half-width (%): peaks at coin-flip p, wider for lower seeds
+// (thinner liquidity → books disagree more). Scaled up for on-page legibility.
+function epiHalf(p, seed){
+  return Math.sqrt(p*(1-p)) * (9 + 0.55*seed);
+}
+
+const METRICS = [
+  {key:"adv", cls:"adv", idx:3},
+  {key:"tre", cls:"tre", idx:4},
+  {key:"zro", cls:"zro", idx:5},
+];
+
+function metricCell(t, m){
+  const v = t[m.idx];                 // %
+  const p = v/100;
+  const wil = Math.max(wilsonHalf(p, N), 1.0);     // visual floor so the solid core reads
+  const epi = Math.max(epiHalf(p, t[2]), wil+1.4);  // epistemic always wider than sampling
+  const lo = Math.max(0, v-epi), hiE = Math.min(100, v+epi);
+  const loW = Math.max(0, v-wil), hiW = Math.min(100, v+wil);
+  return `
+  <div class="metric ${m.cls}">
+    <div class="num">${v.toFixed(1)}%<span class="ci">±${epi.toFixed(1)}</span></div>
+    <div class="bar" data-fill="${v}" data-epil="${lo}" data-epiw="${(hiE-lo)}" data-will="${loW}" data-wilw="${(hiW-loW)}" data-tick="${v}">
+      <span class="fill"></span>
+      <span class="epi" style="left:0;width:0"></span>
+      <span class="wil" style="left:0;width:0"></span>
+      <span class="tick" style="left:0"></span>
+    </div>
+  </div>`;
+}
+
+function row(t, i){
+  return `
+  <div class="trow" style="animation-delay:${i*45}ms">
+    <div class="rank">${String(i+1).padStart(2,"0")}<span class="seedchip">SEED ${String(t[2]).padStart(2,"0")}</span></div>
+    <div class="team"><div class="tflag">${t[1]}</div><div class="tname" title="${t[0]}">${t[0]}</div></div>
+    ${metricCell(t,METRICS[0])}
+    ${metricCell(t,METRICS[1])}
+    ${metricCell(t,METRICS[2])}
+  </div>`;
+}
+
+let sortKey = "adv";
+const colIdx = {adv:3, tre:4, zro:5};
+
+function render(){
+  const data = [...TEAMS].sort((a,b)=> b[colIdx[sortKey]] - a[colIdx[sortKey]]);
+  const host = document.getElementById("rows");
+  host.innerHTML = data.map(row).join("");
+  // reveal + fill
+  const rows = host.querySelectorAll(".trow");
+  requestAnimationFrame(()=>{
+    rows.forEach(r=>r.classList.add("in"));
+    host.querySelectorAll(".bar").forEach((bar, k)=>{
+      const d = bar.dataset;
+      const fill = bar.querySelector(".fill");
+      const epi  = bar.querySelector(".epi");
+      const wil  = bar.querySelector(".wil");
+      const tick = bar.querySelector(".tick");
+      const delay = 120 + (k%3)*60 + Math.floor(k/3)*45;
+      setTimeout(()=>{
+        fill.style.width = d.fill+"%";
+        epi.style.left = d.epil+"%"; epi.style.width = d.epiw+"%";
+        wil.style.left = d.will+"%"; wil.style.width = d.wilw+"%";
+        tick.style.left = d.tick+"%";
+        bar.classList.add("lit");
+      }, delay);
+    });
+  });
+}
+
+// header sort
+document.querySelectorAll(".thead .sortable").forEach(h=>{
+  h.addEventListener("click",()=>{
+    sortKey = h.dataset.sort;
+    document.querySelectorAll(".thead .sortable").forEach(x=>x.dataset.active = (x===h?"1":"0"));
+    render();
+  });
+});
+
+render();
+
+/* ---- coin count-up ---- */
+const coinEl = document.getElementById("coinBig");
+const TARGET = 59.1;
+const reduce = matchMedia("(prefers-reduced-motion:reduce)").matches;
+if(reduce){
+  coinEl.innerHTML = TARGET.toFixed(1)+'<span class="pct">%</span>';
+}else{
+  let start=null, dur=1400;
+  function tick(ts){
+    if(!start) start=ts;
+    const p = Math.min((ts-start)/dur,1);
+    const e = 1-Math.pow(1-p,3);
+    coinEl.innerHTML = (TARGET*e).toFixed(1)+'<span class="pct">%</span>';
+    if(p<1) requestAnimationFrame(tick);
+  }
+  setTimeout(()=>requestAnimationFrame(tick), 400);
+}
+
+/* ---- Monte Carlo ballot-score distribution (fine, 0.1 resolution) ---- */
+(function(){
+  // REAL engine output: the page ballot scored against every simulated tournament.
+  // 1,200,000 sims (N=100k Monte Carlo × 12 epistemic draws), seed 20260528, market-anchored.
+  // Source: scripts/dump_distribution.py over data/odds_cache.json — these are counts/n, not a model.
+  const pmf=[0.000195,0.005683,0.042092,0.128608,0.232439,0.266851,0.204739,0.090847,0.024083,0.004129,0.000333];
+  const NSIMS=1200000;
+  const pGE5 = pmf.slice(5).reduce((a,b)=>a+b,0);          // = 0.5910
+  const mean = pmf.reduce((a,p,k)=>a+k*p,0);               // = 4.837
+
+  // Catmull-Rom interpolation of the PMF -> smooth density between integers
+  const g=i=>pmf[Math.max(0,Math.min(pmf.length-1,i))];
+  function dens(x){
+    const k=Math.floor(x), t=x-k;
+    if(k>=pmf.length-1) return Math.max(0,g(pmf.length-1));
+    const p0=g(k-1),p1=g(k),p2=g(k+1),p3=g(k+2),t2=t*t,t3=t2*t;
+    return Math.max(0, 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3));
+  }
+
+  const NB=100;                       // 100 bars, each 0.1 wide, spanning x in [0,10]
+  const PLOT = matchMedia('(max-width:720px)').matches ? 150 : 250;
+  const samples=[]; let maxV=0;
+  for(let i=0;i<NB;i++){ const x=(i+0.5)*10/NB, v=dens(x); samples.push({x,v}); if(v>maxV)maxV=v; }
+
+  const bars=document.getElementById('simBars');
+  samples.forEach((s,i)=>{
+    const d=document.createElement('div');
+    let cls='db '+(s.x>=4.5?'hit':'miss');
+    if(i%10===0) cls+=' edge';        // faint gridline at each integer x
+    d.className=cls;
+    d.dataset.h=(s.v/maxV*PLOT).toFixed(1);
+    bars.appendChild(d);
+  });
+
+  // integer axis labels, positioned at the exact fraction x/10
+  const xax=document.getElementById('simX');
+  for(let k=0;k<=10;k++){
+    const sp=document.createElement('span');
+    sp.textContent=k; sp.style.left=(k*10)+'%';
+    if(k===0) sp.style.transform='translateX(0)';
+    else if(k===10) sp.style.transform='translateX(-100%)';
+    xax.appendChild(sp);
+  }
+
+  // markers + shaded region by simple % (x maps linearly across the width)
+  document.getElementById('simThresh').style.left='45%';        // boundary between 4 and 5
+  document.getElementById('simMean').style.left=(mean*10)+'%';
+  const rg=document.getElementById('simRegion'); rg.style.left='45%'; rg.style.right='0';
+
+  document.getElementById('simBig').innerHTML =
+    `<div class="n">${(pGE5*100).toFixed(0)}%</div><div class="l">of 1.2M sims land ≥5 · the coin</div>`;
+  document.getElementById('simNote').innerHTML =
+    `The real thing — correct picks across <b>${(NSIMS/1e6).toFixed(1)}M</b> simulated tournaments `+
+    `(100k Monte Carlo × 12 epistemic draws), scoring the ballot above against every bracket, `+
+    `correlation and all. Outcomes are whole numbers 0–10 (E[correct] ≈ ${mean.toFixed(2)}); the bars `+
+    `interpolate at 0.1 resolution to show the shape. Mass at ≥5 = `+
+    `<b style="color:var(--t-2)">${(pGE5*100).toFixed(0)}%</b> — the coin.`;
+
+  const chart=document.querySelector('.chart');
+  function lit(){
+    chart.classList.add('lit');
+    bars.querySelectorAll('.db').forEach((d,i)=>{ setTimeout(()=>{ d.style.height=d.dataset.h+'px'; }, 60 + i*6); });
+  }
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){
+    bars.querySelectorAll('.db').forEach(d=>{ d.style.height=d.dataset.h+'px'; });
+    chart.classList.add('lit');
+  } else {
+    const io=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ lit(); io.disconnect(); } }); }, {threshold:.25});
+    io.observe(chart);
+  }
+})();
+</script>
+</body>
+</html>
