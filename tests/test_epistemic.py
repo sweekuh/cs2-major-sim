@@ -23,6 +23,7 @@ series), var = raw cross-source variance, clamped downstream by beta_moment_fit)
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from engine.montecarlo import run_mc, wilson
 from engine.teams import load_teams
@@ -37,6 +38,40 @@ def _r1_lower_id_match_key(teams):
     """An imminent-round (R1) matchup key 'lo-hi' for seed i vs seed i+8 (i < i+8)."""
     # Round 1 pairs seed i vs i+8; use seed 1 vs 9 -> key "1-9", id 1 is the lower id.
     return "1-9", 1, 9
+
+
+def test_point_probs_valid_under_epistemic():
+    """CRITICAL regression (P0, re-fix of the bug reverted by fde284a). Under the epistemic
+    OUTER loop (K Beta draws when any market var>0), ``counts_*`` and ``sample`` accumulate over
+    K*N sims, so ``Result.n`` MUST be ``len(sample)`` (=K*N). If it is the input N instead, every
+    POINT probability is inflated by ~K: ``p_advance()`` sums to 8*K and individual values exceed
+    1.0 ("1192%"). Rating-only (K=1) is unaffected, which is why GATE-01 and the band-width tests
+    stayed green — they never assert ``p ∈ [0, 1]`` or the structural sums. This test closes that
+    gap.
+
+    Structural invariant of a 16-team 3-0/0-3 Swiss stage: EVERY sim has exactly 8 teams advance
+    (reach 3 wins), exactly 2 go 3-0, exactly 2 go 0-3. Summed over teams -> P(advance)=8,
+    P(3-0)=2, P(0-3)=2 (CLAUDE.md "Σ P = 8 / 2 / 2"), regardless of K.
+    """
+    teams = load_teams()
+    key, _lo, _hi = _r1_lower_id_match_key(teams)
+    N = 4000
+    # Inject var>0 on one R1 matchup -> has_epistemic -> the K-draw outer loop runs.
+    r = run_mc(teams, None, 40.0, N, {}, seed=7, market_blend={key: (0.5, 0.05)})
+
+    # n reflects the TOTAL sims tallied (K*N) and matches the retained sample length.
+    assert r.n == len(r.sample)
+    assert r.n > N, "var>0 must run K>1 epistemic draws (n should be K*N, not N)"
+
+    p_adv, p_30, p_03 = r.p_advance(), r.p_30(), r.p_03()
+    # Every value is a valid probability (the K-inflation bug pushed these well above 1.0).
+    assert all(0.0 <= v <= 1.0 for v in p_adv.values()), f"max p_adv={max(p_adv.values()):.3f}"
+    assert all(0.0 <= v <= 1.0 for v in p_30.values())
+    assert all(0.0 <= v <= 1.0 for v in p_03.values())
+    # Structural sums hold exactly (integer counts / len(sample)); a K-inflated n breaks all three.
+    assert sum(p_adv.values()) == pytest.approx(8.0, abs=1e-9)
+    assert sum(p_30.values()) == pytest.approx(2.0, abs=1e-9)
+    assert sum(p_03.values()) == pytest.approx(2.0, abs=1e-9)
 
 
 def test_band_wider_than_wilson():

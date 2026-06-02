@@ -10,6 +10,13 @@ both OUT of the Streamlit render path (Pitfall 11):
   - imported + called by the "fetch now" button's click handler (an explicit USER action, never a
     rerun) — the button lazy-imports THIS module so httpx/dotenv never enter the app import path.
 
+LIVE PROVIDERS (verified live 2026-06-01 against IEM Cologne markets):
+  - OddsPapi (Pinnacle anchor) — KEYED: needs ``ODDSPAPI_KEY``. Missing key -> skipped, the run
+    degrades to Kalshi-only, never an error (ODDS-08 fail-soft).
+  - Kalshi (KXCS2GAME match winners) — KEYLESS public read.
+  - Polymarket is NOT fetched live: its CS2 coverage is novelty futures only (no per-match Cologne
+    markets), confirmed at the live-verify probe. The parser stays for the recorded-fixture path.
+
 Invariants (CLAUDE.md / 05-RESEARCH D7 / threat register):
   - ``load_dotenv()`` lives HERE (keys never in the app). ``ODDSPAPI_KEY`` is read here only; its
     VALUE is never returned or logged — presence-only (T-05-SECRET).
@@ -26,18 +33,17 @@ Invariants (CLAUDE.md / 05-RESEARCH D7 / threat register):
   - ``_meta.fetched_at`` is an ISO-8601 UTC timestamp set at WRITE time — the app folds it into the
     run cache key so a fresh fetch that moves only ``var`` still invalidates the memoized Result
     (T-05-STALEBAND).
-  - NO streamlit import. ``discover_fixtures`` reuses ``engine.teams.load_teams`` /
-    ``engine.swiss.build_round1_pairs`` — it NEVER re-derives seeds (the GATE-01 blocker).
+  - NO streamlit import.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+import os
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from engine.swiss import build_round1_pairs
 from engine.teams import load_teams
 from odds.base import pool
 from odds.kalshi import KalshiProvider
@@ -48,42 +54,17 @@ log = logging.getLogger("scripts.fetch_odds")
 
 DEFAULT_OUT = "data/odds_cache.json"
 CACHE_VERSION = 1
+DEFAULT_TOURNAMENT = "cologne"  # substring matched against provider tournament/rules text
 
-# The cross-provider provider set. OddsPapi is the only keyed provider (Pinnacle anchor); Polymarket
-# + Kalshi are keyless public reads, so a no-key fetch still yields a 2-source pool (D3 new fact).
+# The recorded-fixture provider set (button-recorded / tests parse explicit fixtures via main(
+# fixtures=...)). The LIVE path is handled by `_live_quotes` (OddsPapi + Kalshi only).
 _PROVIDERS = (OddsPapiProvider, PolymarketProvider, KalshiProvider)
 
 
 def match_key(match: tuple[int, int]) -> str:
-    """The sorted ``"loid-hiid"`` engine-id string key for a match tuple (the FROZEN schema key).
-
-    ``match`` is the sorted ``(lower_id, higher_id)`` tuple every ``OddsQuote`` already carries, so
-    this just renders it — the app maps the key back to a matchup WITHOUT any provider strings.
-    """
+    """The sorted ``"loid-hiid"`` engine-id string key for a match tuple (the FROZEN schema key)."""
     lo, hi = sorted(match)
     return f"{lo}-{hi}"
-
-
-def discover_fixtures(teams) -> dict:
-    """Resolve each provider's Cologne market into the per-provider recorded-fixture inputs (ODDS-05).
-
-    For the recorded-fixture path the providers parse a fixture dict/path directly; the live-URL
-    discovery (alias-matching the known Round-1 matchups from ``build_round1_pairs`` to each
-    provider's market) is a thin httpx-guarded branch.
-
-    [DEFERRED — verify once Cologne markets post]: the live slug/ticker/field-name shapes
-    (Assumptions A2-A5) cannot be confirmed until IEM Cologne 2026 markets exist. Until then this
-    returns ``{}`` (no live fixtures) so ``main`` produces a valid EMPTY blended cache rather than
-    contacting an endpoint that does not yet exist — the app stays fully fail-soft (rating-only +
-    keyless). Reusing ``build_round1_pairs(teams)`` here pins the discovery to the PROVEN seed set
-    (never re-derive seeds — the GATE-01 blocker).
-    """
-    # The known imminent-round matchups, pinned to the proven seed set (NEVER re-derived). Available
-    # for the live-discovery branch to alias-match against each provider's posted market.
-    _r1 = [(a.id, b.id) for (a, b) in build_round1_pairs(teams)]  # noqa: F841 — DEFERRED live branch
-    # [DEFERRED] Live URL discovery + per-provider fetch() goes here once markets post. The recorded
-    # -fixture path (tests + the offline build) supplies fixtures explicitly via main(fixtures=...).
-    return {}
 
 
 def _quotes_for_provider(Provider, fixtures_for_provider, *, teams) -> list:
@@ -97,33 +78,77 @@ def _quotes_for_provider(Provider, fixtures_for_provider, *, teams) -> list:
         return []
 
 
-def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None) -> dict:
+def _live_quotes(teams, *, tournament: str = DEFAULT_TOURNAMENT) -> tuple[list, list[str]]:
+    """Gather LIVE quotes from OddsPapi (keyed) + Kalshi (keyless), each fully fail-soft.
+
+    Returns ``(quotes, providers_present)``. A missing ``ODDSPAPI_KEY`` simply drops the Pinnacle
+    anchor and the run continues Kalshi-only (ODDS-08). The key's VALUE is never logged.
+    """
+    quotes: list = []
+    present: list[str] = []
+
+    # OddsPapi (Pinnacle anchor) — KEYED. 9-day window (their cap is 10 days for sportId-only).
+    key = os.environ.get("ODDSPAPI_KEY")
+    if key:
+        now = datetime.now(timezone.utc)
+        d_from = now.strftime("%Y-%m-%dT00:00:00Z")
+        d_to = (now + timedelta(days=9)).strftime("%Y-%m-%dT00:00:00Z")
+        try:
+            q = OddsPapiProvider().fetch(
+                teams=teams, api_key=key, tournament=tournament, date_from=d_from, date_to=d_to
+            )
+            if q:
+                quotes.extend(q)
+                present.append("oddspapi")
+        except Exception as exc:  # noqa: BLE001 — fail-soft
+            log.warning("oddspapi live fetch failed: %s", exc)
+    else:
+        log.info("no ODDSPAPI_KEY — skipping OddsPapi/Pinnacle anchor (Kalshi-only run)")
+
+    # Kalshi (KXCS2GAME) — KEYLESS.
+    try:
+        q = KalshiProvider().fetch(teams=teams, tournament=tournament)
+        if q:
+            quotes.extend(q)
+            present.append("kalshi")
+    except Exception as exc:  # noqa: BLE001 — fail-soft
+        log.warning("kalshi live fetch failed: %s", exc)
+
+    return quotes, present
+
+
+def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None,
+         tournament: str = DEFAULT_TOURNAMENT) -> dict:
     """Fetch (or parse recorded) provider odds, pool per match, write the frozen cache, return it.
 
     ``fixtures`` (optional) maps a provider ``name`` -> that provider's recorded fixture (dict or
-    path) for the OFFLINE/recorded path the tests + button exercise. When omitted, ``discover_
-    fixtures`` resolves the live markets (DEFERRED until Cologne markets post — currently ``{}``, so
-    a no-fixtures run writes a valid EMPTY ``blended`` map, never an error).
+    path) for the OFFLINE/recorded path the tests exercise. When omitted, the LIVE path
+    (``_live_quotes``) contacts OddsPapi + Kalshi. Either way the run is fully fail-soft: no
+    market / no key -> a valid EMPTY ``blended`` map, never an error.
 
-    Per-provider fail-soft, per-match log-opinion ``pool()``, then the FROZEN schema is written with
-    an ISO-8601 UTC ``_meta.fetched_at``. Returns the cache dict.
+    Per-match log-opinion ``pool()``, then the FROZEN schema is written with an ISO-8601 UTC
+    ``_meta.fetched_at``. Returns the cache dict.
     """
     load_dotenv_safe()  # keys live HERE (T-05-SECRET); never imported by the app
+    # httpx logs the full request URL (incl. the ?apiKey=… query param) at INFO — force WARNING so
+    # the OddsPapi key is NEVER emitted to logs/stdout (T-05-SECRET).
+    for _n in ("httpx", "httpcore"):
+        logging.getLogger(_n).setLevel(logging.WARNING)
     teams = load_teams()
 
-    # The recorded-fixture map (button/tests) takes precedence; else discover live (DEFERRED -> {}).
-    fixtures_map = fixtures if fixtures is not None else discover_fixtures(teams)
-
-    # Gather quotes from every provider, each fail-soft and independent (ODDS-05).
-    all_quotes: list = []
-    providers_present: list[str] = []
-    for Provider in _PROVIDERS:
-        name = getattr(Provider, "name", Provider.__name__)
-        provider_fixture = fixtures_map.get(name) if isinstance(fixtures_map, dict) else None
-        quotes = _quotes_for_provider(Provider, provider_fixture, teams=teams)
-        if quotes:
-            providers_present.append(name)
-            all_quotes.extend(quotes)
+    if fixtures is not None:
+        # Recorded path (tests / recorded button fixtures): parse each provider's fixture.
+        all_quotes: list = []
+        providers_present: list[str] = []
+        for Provider in _PROVIDERS:
+            name = getattr(Provider, "name", Provider.__name__)
+            quotes = _quotes_for_provider(Provider, fixtures.get(name), teams=teams)
+            if quotes:
+                providers_present.append(name)
+                all_quotes.extend(quotes)
+    else:
+        # Live path: OddsPapi (keyed) + Kalshi (keyless), fail-soft.
+        all_quotes, providers_present = _live_quotes(teams, tournament=tournament)
 
     # Group the independent opinions per match (sorted-id bucket) and pool each group (ODDS-03/D4).
     by_match: dict[tuple[int, int], list] = {}
@@ -161,8 +186,8 @@ def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None) ->
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(cache, indent=2), encoding="utf-8")
     log.info(
-        "wrote %d blended match(es) from %d provider(s) to %s",
-        len(blended), len(providers_present), out,
+        "wrote %d blended match(es) from %d provider(s) %s to %s",
+        len(blended), len(providers_present), providers_present, out,
     )
     return cache
 
@@ -172,7 +197,7 @@ def load_dotenv_safe() -> None:
 
     python-dotenv is imported INSIDE this function (not at module top) purely to keep the network
     deps localized; ``scripts/`` is never on the app import path regardless. A missing .env is the
-    normal keyless state (Polymarket + Kalshi are keyless reads) — never an error.
+    normal keyless state (Kalshi is a keyless read) — never an error.
     """
     try:
         from dotenv import load_dotenv

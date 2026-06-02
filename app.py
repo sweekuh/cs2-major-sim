@@ -105,7 +105,39 @@ teams = load_teams()  # DX-01 zero-config: data/stage1.json (or in-code default)
 by_seed = {t.seed: t for t in teams}
 
 # --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
-st.title("Cologne 2026 Swiss Monte Carlo")
+# Hero (screenshot-facing): bold headline + one-line method, accent-tinted to the theme violet.
+st.markdown(
+    "<div style='font-size:2.0rem;font-weight:750;letter-spacing:-0.02em;line-height:1.15'>"
+    "IEM&nbsp;Cologne&nbsp;2026 — Swiss&nbsp;Stage&nbsp;Predictions</div>"
+    "<div style='color:#9aa4b2;font-size:0.98rem;margin:0.15rem 0 0.5rem'>"
+    "Market-driven Monte&nbsp;Carlo · per-team P(advance)/P(3-0)/P(0-3) with confidence bands "
+    "· optimal 2/6/2 Pick'Em ballot</div>",
+    unsafe_allow_html=True,
+)
+
+# Friendly labels for the provider slugs the fetch job records in _meta.providers_present.
+_PROVIDER_LABELS = {
+    "oddspapi": "Pinnacle (OddsPapi)",
+    "kalshi": "Kalshi",
+    "polymarket": "Polymarket",
+}
+
+
+def _fmt_fetched(iso) -> str:
+    """ISO-8601 UTC timestamp -> 'Jun 02, 04:49 UTC' (empty string on missing/malformed)."""
+    if not iso:
+        return ""
+    try:
+        from datetime import datetime
+
+        return datetime.fromisoformat(iso).strftime("%b %d, %H:%M UTC")
+    except (ValueError, TypeError):
+        return ""
+
+
+def _provider_label_list(meta: dict) -> str:
+    present = meta.get("providers_present", []) or []
+    return " + ".join(_PROVIDER_LABELS.get(p, p) for p in present) or "live markets"
 
 
 def _render_header_strip() -> None:
@@ -937,3 +969,32 @@ with main:
     # (skipped on a rating-only / pre-D3 cache that has no `sources`). A pure display read.
     if odds_blended:
         _render_odds_drilldown(odds_blended)
+
+
+# --- Honest methodology footer (full width, both modes) ----------------------------------
+def _render_footer() -> None:
+    """One-line provenance so a screenshot is self-explanatory and honest: data sources +
+    freshness, the market-anchored-R1 / modeled-later-rounds split, reproducible sim params, and
+    the engine-validation basis. Reads the JSON cache only (no httpx import)."""
+    cache = load_odds_cache()
+    meta = (cache or {}).get("_meta", {})
+    blended = (cache or {}).get("blended") or {}
+    st.divider()
+    bits: list[str] = []
+    if blended:
+        fetched = _fmt_fetched(meta.get("fetched_at"))
+        src = _provider_label_list(meta)
+        bits.append(f"**Odds:** {src} · {len(blended)} R1 matches priced (de-vigged, log-opinion pooled)")
+        if fetched:
+            bits.append(f"fetched {fetched}")
+        bits.append("R1 market-anchored; later rounds modeled from market-back-solved ratings")
+    else:
+        bits.append("**Mode:** rating-only (no live odds loaded)")
+    bits.append(f"{int(N) // 1000}k sims · fixed seed {FIXED_SEED} (reproducible)")
+    # Engine-provenance only (no event-name claim — keeps the UI off the Budapest overclaim the
+    # trust-badge rule forbids; the badge above carries the validation state).
+    bits.append("engine validated vs Valve rulebook + full round-by-round backtest")
+    st.caption(" · ".join(bits))
+
+
+_render_footer()

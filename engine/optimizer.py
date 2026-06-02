@@ -111,12 +111,22 @@ Matrices = tuple[dict[int, np.ndarray], dict[int, np.ndarray], dict[int, np.ndar
 def build_outcome_matrices(
     sample: list[dict[int, tuple[int, int]]], ids: list[int]
 ) -> Matrices:
-    """Turn the stored per-sim ``sample`` into three boolean matrices (RESEARCH D3).
+    """Turn the stored per-sim ``sample`` into three PICK-BUCKET boolean matrices (RESEARCH D3).
 
-    ``is_30[tid]`` / ``is_adv[tid]`` / ``is_03[tid]`` are each a length-N boolean array:
-    record exactly (3,0), wins >= 3, record exactly (0,3) respectively. One pass per team;
-    every later P(>=5) eval is then a single vectorized reduce over N (so the hill-climb is
-    cheap and the optimizer never touches the RNG).
+    Each is a length-N boolean array scoring one Pick'Em bucket:
+      - ``is_30[tid]``  = exact (3,0)
+      - ``is_adv[tid]`` = exact 3-1/3-2 (advance-bucket hit) — NOT 3-0
+      - ``is_03[tid]``  = exact (0,3)
+
+    CRITICAL (Cologne / current Valve rule): an ADVANCE-bucket pick is correct ONLY on a 3-1 or
+    3-2 finish. A 3-0 satisfies the 3-0 bucket, NEVER the advance bucket. The old scheme scored
+    advance as ``wins >= 3``, which double-counts 3-0 teams in the advance bucket and inflates the
+    recommended P(>=5) (~90% -> ~59% on the Cologne field). The per-team "who QUALIFIES" display
+    stat is a SEPARATE quantity — ``montecarlo.Result.p_advance()`` keeps ``wins >= 3`` and is
+    unaffected by this change. Regression: tests/test_optimizer.py::test_advance_pick_requires_3_1_or_3_2.
+
+    One pass per team; every later P(>=5) eval is then a single vectorized reduce over N (so the
+    hill-climb is cheap and the optimizer never touches the RNG).
     """
     is_30: dict[int, np.ndarray] = {}
     is_adv: dict[int, np.ndarray] = {}
@@ -125,7 +135,8 @@ def build_outcome_matrices(
         rec = np.array([s[tid] for s in sample], dtype=np.int16).reshape(-1, 2)
         wins, losses = rec[:, 0], rec[:, 1]
         is_30[tid] = (wins == ADVANCE_AT_WINS) & (losses == 0)
-        is_adv[tid] = wins >= ADVANCE_AT_WINS
+        # Advance pick = exact 3-1/3-2 (qualified but NOT 3-0). NEVER `wins >= 3` (Cologne rule).
+        is_adv[tid] = (wins == ADVANCE_AT_WINS) & (losses >= 1)
         is_03[tid] = (wins == 0) & (losses == ELIMINATE_AT_LOSSES)
     return is_30, is_adv, is_03
 
@@ -133,10 +144,13 @@ def build_outcome_matrices(
 def marginals_from_matrices(
     matrices: Matrices,
 ) -> tuple[dict[int, float], dict[int, float], dict[int, float]]:
-    """Per-team P(3-0)/P(advance)/P(0-3) straight off the sample matrices.
+    """Per-team bucket-hit marginals straight off the sample matrices: P(3-0), P(advance-PICK
+    correct) = P(3-1/3-2) (NOT P(qualify)), P(0-3).
 
     Computed from the SAME sample the P(>=5) search scores against, so Ballot A's marginal
     ranking and Ballot B's P(>=5) are consistent (no divergence between counts and sample).
+    These feed the optimizer ONLY (ballot_a ranking + e_correct); the per-team "who qualifies"
+    display uses montecarlo.Result.p_advance() (wins>=3), a separate quantity.
     """
     is_30, is_adv, is_03 = matrices
     p_30 = {tid: float(arr.mean()) for tid, arr in is_30.items()}

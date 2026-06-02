@@ -190,22 +190,24 @@ def test_classify_secured_dead_live():
     """CRITICAL — exact P==1.0 -> advanced (secured), P==0.0 -> eliminated (dead),
     0<P<1 -> live, computed against the conditional sample via build_outcome_matrices.
 
-    Hand-built sample of N=4 sims over three teams (ids 1, 2, 3):
-      - team 1 is an ADVANCE pick that is ALREADY 3-0 in EVERY sim -> is_adv.mean()==1.0
-        (secured) and is_30.mean()==1.0 as well.
-      - team 2 is a 3-0 pick whose record is (2,1) in EVERY sim -> is_30.mean()==0.0
-        (dead for the 3-0 bucket).
-      - team 3 is an ADVANCE pick that advances in 2 of 4 sims -> is_adv.mean()==0.5 (live).
+    Cologne rule: an ADVANCE pick is correct on an exact 3-1/3-2 finish ONLY — a 3-0 does NOT
+    satisfy it (a 3-0-bound team in the advance bucket is a DEAD advance pick; you'd have wanted
+    it in the 3-0 bucket). Hand-built N=4 sims over ids 1,2,3,4:
+      - team 1: ADVANCE pick, 3-1 in EVERY sim -> is_adv.mean()==1.0 (secured).
+      - team 2: 3-0 pick, record (2,1) in EVERY sim -> is_30.mean()==0.0 (dead for 3-0).
+      - team 3: ADVANCE pick, 3-1/3-2 in 2 of 4 sims -> is_adv.mean()==0.5 (live).
+      - team 4: ADVANCE pick, 3-0 in EVERY sim -> is_adv.mean()==0.0 (DEAD under the Cologne
+        rule; this would read "advanced" under the OLD wins>=3 scheme — the regression guard).
     """
     sample = _record_sample(
         [
-            {1: (3, 0), 2: (2, 1), 3: (3, 1)},
-            {1: (3, 0), 2: (2, 1), 3: (3, 2)},
-            {1: (3, 0), 2: (2, 1), 3: (1, 3)},
-            {1: (3, 0), 2: (2, 1), 3: (2, 3)},
+            {1: (3, 1), 2: (2, 1), 3: (3, 1), 4: (3, 0)},
+            {1: (3, 1), 2: (2, 1), 3: (3, 2), 4: (3, 0)},
+            {1: (3, 1), 2: (2, 1), 3: (1, 3), 4: (3, 0)},
+            {1: (3, 1), 2: (2, 1), 3: (2, 3), 4: (3, 0)},
         ]
     )
-    ids = [1, 2, 3]
+    ids = [1, 2, 3, 4]
     matrices = build_outcome_matrices(sample, ids)
 
     # team 1, advance bucket -> P==1.0 -> secured
@@ -214,12 +216,15 @@ def test_classify_secured_dead_live():
     assert classify_pick(2, "picks_30", matrices) == "eliminated"
     # team 3, advance bucket -> 0<P<1 -> live
     assert classify_pick(3, "picks_adv", matrices) == "live"
+    # team 4, advance bucket, always 3-0 -> P==0.0 -> DEAD (Cologne: 3-0 != advance pick)
+    assert classify_pick(4, "picks_adv", matrices) == "eliminated"
 
     # Exact-equality discipline: the secured/dead verdicts ride on == 1.0 / == 0.0.
     is_30, is_adv, is_03 = matrices
     assert float(is_adv[1].mean()) == 1.0
     assert float(is_30[2].mean()) == 0.0
     assert 0.0 < float(is_adv[3].mean()) < 1.0
+    assert float(is_adv[4].mean()) == 0.0
 
 
 # ===========================================================================

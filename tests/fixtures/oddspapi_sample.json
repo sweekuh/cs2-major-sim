@@ -1,30 +1,61 @@
 {
-  "_comment": "[ASSUMED — verify once Cologne markets post] Recorded-shape OddsPapi /odds response. One CS2 Cologne matchup (GamerLegion vs NRG, a Bo1 Swiss opening match) with a bundle of two-way fixed-odds book prices: Pinnacle (the sharp originator) plus soft books that copy its line. Field names (bookmakerOdds / bookmaker / participantAName etc.) are A3 [DEFERRED] and will be reconciled at the 05-03 live-verify checkpoint. The parser collapses this whole bundle to ONE Pinnacle-anchored OddsQuote.",
-  "fixtureId": "cologne2026-swiss-r1-m3",
-  "tournament": "IEM Cologne 2026",
+  "_comment": "[VERIFIED 2026-06-01 against live OddsPapi /v4/odds] Real-shape ENRICHED fixture: participant names from /v4/fixtures joined to that fixture's bookmakerOdds from /v4/odds. One CS2 Cologne Bo1 match (GamerLegion vs NRG). bookmakerOdds is a DICT keyed by book slug; each book -> markets['171'] (Match Winner) -> outcomes['171']=participant1(GamerLegion) / ['172']=participant2(NRG) -> players['0'].price (decimal). Pinnacle is the sharp originator (1.50/2.50 de-vigs to 0.625 for GamerLegion); the soft books copy the line. The parser collapses the whole bundle to ONE Pinnacle-anchored OddsQuote (Pitfall 7).",
+  "fixtureId": "id-cologne-r1-glnrg",
+  "participant1Name": "GamerLegion",
+  "participant2Name": "NRG",
   "bo3": false,
-  "participantAName": "GamerLegion",
-  "participantBName": "NRG",
-  "bookmakerOdds": [
-    {
-      "bookmaker": "Pinnacle",
-      "oddsA": 1.50,
-      "oddsB": 2.50
+  "bookmakerOdds": {
+    "pinnacle": {
+      "bookmakerIsActive": true,
+      "suspended": false,
+      "markets": {
+        "171": {
+          "marketActive": true,
+          "outcomes": {
+            "171": {"players": {"0": {"active": true, "price": 1.50}}},
+            "172": {"players": {"0": {"active": true, "price": 2.50}}}
+          }
+        }
+      }
     },
-    {
-      "bookmaker": "Thunderpick",
-      "oddsA": 1.53,
-      "oddsB": 2.45
+    "thunderpick": {
+      "bookmakerIsActive": true,
+      "suspended": false,
+      "markets": {
+        "171": {
+          "marketActive": true,
+          "outcomes": {
+            "171": {"players": {"0": {"active": true, "price": 1.53}}},
+            "172": {"players": {"0": {"active": true, "price": 2.45}}}
+          }
+        }
+      }
     },
-    {
-      "bookmaker": "GG.BET",
-      "oddsA": 1.48,
-      "oddsB": 2.55
+    "ggbet": {
+      "bookmakerIsActive": true,
+      "suspended": false,
+      "markets": {
+        "171": {
+          "marketActive": true,
+          "outcomes": {
+            "171": {"players": {"0": {"active": true, "price": 1.48}}},
+            "172": {"players": {"0": {"active": true, "price": 2.55}}}
+          }
+        }
+      }
     },
-    {
-      "bookmaker": "Betway",
-      "oddsA": 1.55,
-      "oddsB": 2.40
+    "betway": {
+      "bookmakerIsActive": true,
+      "suspended": false,
+      "markets": {
+        "171": {
+          "marketActive": true,
+          "outcomes": {
+            "171": {"players": {"0": {"active": true, "price": 1.55}}},
+            "172": {"players": {"0": {"active": true, "price": 2.40}}}
+          }
+        }
+      }
     }
-  ]
+  }
 }

@@ -16,10 +16,32 @@ falsely green.
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
 APP = "app.py"
+
+
+@pytest.fixture(autouse=True)
+def _no_ambient_odds_cache():
+    """Isolate every AppTest run from the ambient ``data/odds_cache.json`` (a gitignored runtime
+    artifact). Once odds are fetched that file is populated and the app takes the odds-fed path
+    (K epistemic draws x N sims, ~12x cost), which blows the 60s AppTest budget for the timing
+    tests in this file. A fresh checkout has no such file, which is why these tests passed before;
+    here we recreate that clean state by moving any real cache aside for the duration of the test
+    and restoring it after. Tests that need a cache (test_cache_present_feeds_sim) supply their own
+    via a tmp file + monkeypatch, and the direct-loader test passes explicit paths — both are
+    unaffected because the real ``load_odds_cache`` is left intact."""
+    p = Path("data/odds_cache.json")
+    backup = p.with_suffix(".json.testbak") if p.exists() else None
+    if backup is not None:
+        p.replace(backup)
+    try:
+        yield
+    finally:
+        if backup is not None:
+            backup.replace(p)
 
 
 def _apptest():
@@ -309,13 +331,19 @@ def test_trust_badge_wording():
         state_mod.BACKTEST_PASSED = original
 
 
-def test_read_seeds_confirmed_reads_json_read_only():
-    """DX-02: read_seeds_confirmed parses data/stage1.json read-only (the JSON ships False)
-    and falls back to False on a missing/bad file — it never mutates the engine or the JSON."""
+def test_read_seeds_confirmed_reads_json_read_only(tmp_path):
+    """DX-02: read_seeds_confirmed parses a stage JSON read-only and falls back to False on a
+    missing/bad file — it never mutates the engine or the JSON. The shipped data/stage1.json now
+    confirms the VERIFIED Cologne seed order (seeds_confirmed=true, 2026-06-01); the mechanism
+    still reads whichever value the file holds."""
     from ui.state import read_seeds_confirmed
 
-    # The shipped JSON has seeds_confirmed=false -> initial banner state is "not confirmed".
-    assert read_seeds_confirmed() is False
+    # Shipped JSON: seeds are confirmed (seed order verified vs Liquipedia + Kalshi + R1 rule).
+    assert read_seeds_confirmed() is True
+    # Reads an explicit False flag from a file (exercises the read, not the shipped value).
+    false_file = tmp_path / "stage_false.json"
+    false_file.write_text(json.dumps({"seeds_confirmed": False, "teams": []}), encoding="utf-8")
+    assert read_seeds_confirmed(str(false_file)) is False
     # Missing file -> safe False fallback (never raises).
     assert read_seeds_confirmed("does/not/exist.json") is False
 
@@ -341,12 +369,14 @@ def _all_text(at):
     return "\n".join(parts)
 
 
-def test_trust_badge_caveated_until_both():
-    """UI-07: the header renders the EXACT caveated badge text and never a green/Budapest
-    'validated' state on first load — the backtest passed, but the shipped Cologne seeds are
-    unconfirmed (seeds_confirmed=false), so the both-gated badge stays caveated."""
+def test_trust_badge_caveated_until_both(monkeypatch):
+    """UI-07: when seeds are UNCONFIRMED the header renders the EXACT caveated badge text and
+    never a green/Budapest 'validated' state — the badge is gated on BOTH the backtest AND seeds.
+    The shipped JSON now confirms the seeds, so this test forces the unconfirmed state to exercise
+    the both-gate mechanism (independent of the shipped default)."""
     from ui.state import TRUST_BADGE_CAVEATED
 
+    monkeypatch.setattr("ui.state.read_seeds_confirmed", lambda *a, **k: False)
     at = _apptest().run()
     assert not at.exception
     text = _all_text(at)
@@ -357,9 +387,23 @@ def test_trust_badge_caveated_until_both():
     assert "backtest passed" not in text.lower()
 
 
-def test_seed_banner():
-    """DX-02: the persistent '⚠ Seeds are INFERRED' warning is present on first load, with a
-    field-by-field reconcile area listing the seed→team rows so the user can eyeball it."""
+def test_trust_badge_validated_with_shipped_confirmed_seeds():
+    """UI-07 (new shipped reality): with the shipped seeds_confirmed=true AND the backtest passed,
+    the header shows the VALIDATED badge and the INFERRED-seed warning is gone."""
+    from ui.state import TRUST_BADGE_VALIDATED
+
+    at = _apptest().run()
+    assert not at.exception
+    # The validated badge renders via st.success (not captured by _all_text's element list).
+    assert any(TRUST_BADGE_VALIDATED in s.value for s in at.success)
+    assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
+
+
+def test_seed_banner(monkeypatch):
+    """DX-02: when seeds are unconfirmed the persistent '⚠ Seeds are INFERRED' warning is present,
+    with a field-by-field reconcile area listing the seed→team rows. Forced-unconfirmed so it
+    tests the banner mechanism independent of the shipped (now confirmed) default."""
+    monkeypatch.setattr("ui.state.read_seeds_confirmed", lambda *a, **k: False)
     at = _apptest().run()
     assert not at.exception
     assert any("seeds are inferred" in w.value.lower() for w in at.warning)
@@ -369,11 +413,12 @@ def test_seed_banner():
     assert "FlyQuest" in text     # seed 16
 
 
-def test_seed_banner_dismissable():
+def test_seed_banner_dismissable(monkeypatch):
     """DX-02: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
-    drives session_state (the gate the trust badge reads)."""
+    drives session_state (the gate the trust badge reads). Forced-unconfirmed start."""
     from ui.state import KEY_SEEDS_CONFIRMED
 
+    monkeypatch.setattr("ui.state.read_seeds_confirmed", lambda *a, **k: False)
     at = _apptest().run()
     assert not at.exception
     # First load: banner present, toggle off.

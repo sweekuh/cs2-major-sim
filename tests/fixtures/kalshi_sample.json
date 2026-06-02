@@ -1,14 +1,25 @@
 {
-  "_comment": "[ASSUMED — verify once Cologne markets post] Recorded-shape Kalshi trade-api/v2/markets response. A Cologne per-match market (GamerLegion to win vs NRG) quoted yes_bid/yes_ask in CENTS (0-100) — keyless public read. The yes-mid is ~a probability (vig_type=market): NEVER two-way de-vig. The CS2 series ticker is A5 [DEFERRED] and Kalshi esports coverage is sparse, so an empty markets:[] (no market posted) is a legitimate fail-soft path — see the 'empty' variant. Reconciled at the 05-03 live-verify checkpoint.",
+  "_comment": "[VERIFIED 2026-06-01 against live Kalshi /trade-api/v2/markets KXCS2GAME] Real-shape response. Each match = one event_ticker with TWO complementary markets (one per competitor). yes_sub_title = the competitor this YES market prices; the matchup (A vs. B) is parsed from title/rules_primary; yes_bid_dollars/yes_ask_dollars are DOLLAR strings (0-1); rules_primary carries the tournament. The parser dedupes per event_ticker to ONE opinion. GamerLegion yes-mid (0.67+0.69)/2 = 0.68. The 'empty' variant is the fail-soft no-market path (ODDS-05).",
   "markets": [
     {
-      "ticker": "KXCS2COLOGNE-26-GLNRG-GL",
-      "title": "Will GamerLegion beat NRG at IEM Cologne 2026?",
-      "team_a": "GamerLegion",
-      "team_b": "NRG",
-      "bo3": false,
-      "yes_bid": 66,
-      "yes_ask": 70
+      "event_ticker": "KXCS2GAME-26JUN020830NRGGL",
+      "ticker": "KXCS2GAME-26JUN020830NRGGL-GL",
+      "title": "Will GamerLegion win the NRG vs. GamerLegion CS2 match?",
+      "rules_primary": "If GamerLegion wins the IEM Cologne Major 2026: NRG vs. GamerLegion CS2 match originally scheduled for Jun 2, 2026, then the market resolves to Yes.",
+      "yes_sub_title": "GamerLegion",
+      "yes_bid_dollars": "0.6700",
+      "yes_ask_dollars": "0.6900",
+      "status": "active"
+    },
+    {
+      "event_ticker": "KXCS2GAME-26JUN020830NRGGL",
+      "ticker": "KXCS2GAME-26JUN020830NRGGL-NRG",
+      "title": "Will NRG win the NRG vs. GamerLegion CS2 match?",
+      "rules_primary": "If NRG wins the IEM Cologne Major 2026: NRG vs. GamerLegion CS2 match originally scheduled for Jun 2, 2026, then the market resolves to Yes.",
+      "yes_sub_title": "NRG",
+      "yes_bid_dollars": "0.3100",
+      "yes_ask_dollars": "0.3300",
+      "status": "active"
     }
   ],
   "empty": {

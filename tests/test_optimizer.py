@@ -113,7 +113,8 @@ def test_pge5_known_answer():
     """HANDOFF §6 CRITICAL: a tiny crafted sample yields the hand-computed P(>=5) exactly.
 
     Fixed ballot = 3-0:{1,2}, advance:{3,4,5,6,7,8}, 0-3:{9,10}. Correct counts per sim,
-    by hand (3-0 exact, advance = wins>=3, 0-3 exact):
+    by hand (3-0 exact, advance = exact 3-1/3-2, 0-3 exact). The answer is unchanged from the
+    old wins>=3 rule here because no advance-PICKED team (3..8) ever finishes 3-0 in these sims:
       sim A: 1,2=(3,0)✓✓; 3..8 advance ✓×6; 9,10=(0,3)✓✓            -> 10  (>=5)
       sim B: 1=(3,0)✓; 2=(3,1)✗; 3,4 advance ✓✓; 5..8 lose ✗; 9=(0,3)✓; 10✗ ->  4  (<5)
       sim C: 1,2=(3,0)✓✓; 3,4,5 advance ✓✓✓; 6..8 ✗; 9,10 ✗         ->  5  (>=5)
@@ -132,6 +133,37 @@ def test_pge5_known_answer():
     matrices = build_outcome_matrices(sample, IDS)
     ballot = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))
     assert p_ge5(ballot, matrices) == 0.5
+
+
+def test_advance_pick_requires_3_1_or_3_2():
+    """CRITICAL (Cologne rule): an ADVANCE-bucket pick is correct ONLY on an exact 3-1/3-2
+    finish. A 3-0 satisfies the 3-0 bucket, NEVER the advance bucket. This guards the fix from
+    the old `wins >= 3` scheme (which the existing fixtures could not catch because no advance
+    pick ever finishes 3-0 in them).
+    """
+    base = {i: (2, 3) for i in IDS}
+    # team 3 -> 3-0, team 4 -> 3-1, team 5 -> 3-2, team 6 -> 2-3 (out).
+    sim = {**base, 3: (3, 0), 4: (3, 1), 5: (3, 2), 6: (2, 3)}
+    is_30, is_adv, is_03 = build_outcome_matrices([sim], IDS)
+
+    # 3-0 finish: counts for the 3-0 bucket, NOT the advance bucket.
+    assert bool(is_30[3][0]) is True
+    assert bool(is_adv[3][0]) is False, "a 3-0 finish must NOT satisfy an advance pick (Cologne)"
+    # 3-1 and 3-2: advance-bucket hits, not 3-0.
+    assert bool(is_adv[4][0]) is True and bool(is_adv[5][0]) is True
+    assert bool(is_30[4][0]) is False and bool(is_30[5][0]) is False
+    # 2-3: neither.
+    assert bool(is_adv[6][0]) is False and bool(is_30[6][0]) is False
+
+    # P(>=5) penalises putting a 3-0-bound team in the advance bucket. An all-3-0 sim where the
+    # advance picks ALL go 3-0 scores 0 advance hits under the Cologne rule (would be 6 under
+    # the old wins>=3 rule).
+    all_30 = {**{i: (2, 3) for i in IDS}, 1: (3, 0), 2: (3, 0),
+              3: (3, 0), 4: (3, 0), 5: (3, 0), 6: (3, 0), 7: (3, 0), 8: (3, 0)}
+    mtx = build_outcome_matrices([all_30], IDS)
+    ballot = Ballot((1, 2), (3, 4, 5, 6, 7, 8), (9, 10))  # advance picks all finish 3-0
+    # 2 correct (the 3-0 bucket) < 5 -> P(>=5) == 0 (was 8 correct / 1.0 under the old rule).
+    assert p_ge5(ballot, mtx) == 0.0
 
 
 def test_optimizer_consumes_sample_not_mc(monkeypatch):

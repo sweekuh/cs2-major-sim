@@ -201,12 +201,15 @@ def test_polymarket_parse_fixture(teams):
 
 
 def test_kalshi_parse_fixture(teams):
-    """Kalshi parses yes_bid/yes_ask -> p_a_raw ≈ mid, vig_type==market."""
+    """Kalshi parses yes_bid_dollars/yes_ask_dollars -> p_a_raw ≈ mid, vig_type==market.
+
+    Two complementary markets per event_ticker dedupe to ONE opinion. The GamerLegion side
+    quotes yes_bid_dollars 0.67 / yes_ask_dollars 0.69 -> mid 0.68 for GamerLegion (lower id).
+    """
     raw = _load("kalshi_sample.json")
     quotes = KalshiProvider().get_quotes(raw, teams=teams)
     [q] = [x for x in quotes if x.match == _EXPECTED_MATCH]
     assert q.vig_type == "market"
-    # yes_bid 66, yes_ask 70 -> mid 68 cents -> 0.68 for GamerLegion (lower id).
     assert q.p_a_raw == pytest.approx(0.68, abs=1e-3)
     assert q.match == _EXPECTED_MATCH
 

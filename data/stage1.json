@@ -1,11 +1,11 @@
 {
-  "_comment": "[INFERRED] Cologne 2026 Stage-1 seeds + default ratings (HANDOFF §3). Editable; reconcile against the official seed list at lock. M80=6, NRG=9, Liquid=13 confirmed; rest inferred from announced R1 pairings + HLTV late-May 2026 order. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here).",
+  "_comment": "[CONFIRMED 2026-06-01] Cologne 2026 Stage-1 seed order verified against the official Valve Global Standings seeding: Liquipedia Stage-1 Invites + Overview standings table (same order), cross-checked by the R1 pairing rule (seed i vs i+8 reproduces all 8 live matchups exactly: engine = Kalshi = Liquipedia) and known global ranks (GamerLegion #11 < B8 #15 < BetBoom #17 < MIBR #20). Ratings here are the rating-only fallback prior; when live odds are loaded the app back-solves market-calibrated ratings. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here).",
   "stage": {
     "size": 16,
     "advance_at_wins": 3,
     "eliminate_at_losses": 3
   },
-  "seeds_confirmed": false,
+  "seeds_confirmed": true,
   "teams": [
     { "seed": 1, "name": "GamerLegion", "rating": 92 },
     { "seed": 2, "name": "B8", "rating": 78 },
