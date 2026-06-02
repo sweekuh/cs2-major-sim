@@ -145,14 +145,14 @@ engine/             pure compute core (no streamlit/httpx)
 odds/               OddsPapi + Kalshi parsers, de-vig, log-opinion pool (pure numpy)
 scripts/fetch_odds  the ONE place that contacts providers + writes the cache
 tests/              128 tests incl. the Budapest backtest gate
-.planning/          the GSD planning trail (requirements, roadmap, audits)
 docs/LESSONS.md     what we learned and would do differently
+ROADMAP.md          shipped vs next   ·   STATUS.md  current state
 ```
 
 ## Stack
 
 Python ≥3.12 · numpy 2.4 · Streamlit 1.57 · httpx (odds only) · python-dotenv · `uv`. No pandas,
-no scipy. Planned and built with a GSD-style phased workflow (the trail is in `.planning/`).
+no scipy. Planned and built with a phased, test-gated workflow (see `ROADMAP.md` / `STATUS.md`).
 
 ## Event-day cold-start drill (30 seconds)
 

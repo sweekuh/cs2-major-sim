@@ -121,7 +121,7 @@ post]`, and every one of them was wrong about the real response shape. Lessons:
 
 ## What process actually helped
 
-- **Planning artifacts that encode decisions.** The `.planning/` trail and short "memory" notes
+- **Planning artifacts that encode decisions.** A phased planning trail plus short decision notes
   (e.g. "advance pick scores on 3-1/3-2, not 3-0"; "the n=N inflation, fixed, watch for reverts")
   are what flagged both bugs as known risks. Cheap to write, paid for themselves twice.
 - **Adversarial review with a revert check.** Having a second pass independently reproduce the
