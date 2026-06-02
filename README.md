@@ -152,7 +152,7 @@ docs/LESSONS.md     what we learned and would do differently
 ## Stack
 
 Python ≥3.12 · numpy 2.4 · Streamlit 1.57 · httpx (odds only) · python-dotenv · `uv`. No pandas,
-no scipy. Built with [GSD](https://github.com/) planning and reviewed with gstack.
+no scipy. Planned and built with a GSD-style phased workflow (the trail is in `.planning/`).
 
 ## Event-day cold-start drill (30 seconds)
 
