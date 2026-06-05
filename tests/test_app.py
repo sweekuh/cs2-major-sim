@@ -435,6 +435,44 @@ def test_seed_banner_dismissable(monkeypatch):
     assert at.session_state[KEY_SEEDS_CONFIRMED] is True
 
 
+def test_per_stage_seed_banner():
+    """STG-05: the [INFERRED]-seed banner is PER-STAGE — each stage reads its OWN fixture's
+    seeds_confirmed flag, so confirming one stage cannot dismiss another's banner.
+
+    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2's is false → the
+    loud warning shows. The Stage-2 confirm toggle is keyed 'seeds_confirmed_stage2' (distinct
+    from Stage 1's 'seeds_confirmed_stage1'), proving the per-stage session key. No monkeypatch
+    of read_seeds_confirmed — the per-stage state is driven by the real committed fixtures."""
+    from ui.state import KEY_STAGE
+
+    # Stage 1 (default): the shipped fixture confirms the seeds → no INFERRED-seed warning, and
+    # no Stage-2 toggle yet (that key only appears once Stage 2 is the active stage).
+    at = _apptest().run()
+    assert not at.exception
+    assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
+    s1_toggle_keys = {w.key for w in getattr(at, "toggle", [])}
+    assert "seeds_confirmed_stage2" not in s1_toggle_keys
+
+    # Switch to Stage 2 (inject the selector's session value, as the LIVE/isolation tests do —
+    # robust to the selector widget type). Stage 2's fixture is seeds_confirmed=false.
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    # Stage 2 SHOWS the INFERRED-seed warning (its fixture is unconfirmed).
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "Stage 2 (seeds_confirmed:false) must show the INFERRED-seed banner"
+    )
+    # The Stage-2 confirm toggle is keyed per-stage — distinct from Stage 1's key.
+    s2_toggle_keys = {w.key for w in getattr(at, "toggle", [])}
+    assert "seeds_confirmed_stage2" in s2_toggle_keys, (
+        "the confirm toggle must be keyed 'seeds_confirmed_stage2' (per-stage), proving the "
+        "banner state is scoped to the active stage"
+    )
+    assert "seeds_confirmed_stage1" not in s2_toggle_keys, (
+        "only the active stage's toggle renders — Stage 1's key must not leak into the Stage-2 view"
+    )
+
+
 def test_odds_off_banner_failsoft(monkeypatch):
     """ODDS-08 (honest live/off, D1): with no ODDSPAPI_KEY AND no loaded cache, the status reads
     'odds off … manual ratings' (driven by the CACHE, not the env key) and the app never crashes.
