@@ -1,0 +1,28 @@
+{
+  "_comment": "[INFERRED] Phase-6 Stage-3 fixture. The real Stage-3 qualifier seeds DERIVE from the Stage-2 final via the Phase-7 inter-stage Buchholz seeding chain (8 Stage-2 advancers + 8 VRS-invited, ranked by final Buchholz) — these placeholder names/ratings are NOT the real bracket. seeds_confirmed=false so the per-stage [INFERRED]-seed banner shows. stage.all_bo3=true is an INERT carried flag this phase: Phase 8 consumes it to make every Stage-3 match Bo3 (BO-01); nothing reads it in Phase 6. All v3 Swiss stages are size 16.",
+  "stage": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3,
+    "all_bo3": true
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "Stage3 Seed 1", "rating": 82 },
+    { "seed": 2, "name": "Stage3 Seed 2", "rating": 78 },
+    { "seed": 3, "name": "Stage3 Seed 3", "rating": 74 },
+    { "seed": 4, "name": "Stage3 Seed 4", "rating": 71 },
+    { "seed": 5, "name": "Stage3 Seed 5", "rating": 67 },
+    { "seed": 6, "name": "Stage3 Seed 6", "rating": 64 },
+    { "seed": 7, "name": "Stage3 Seed 7", "rating": 61 },
+    { "seed": 8, "name": "Stage3 Seed 8", "rating": 58 },
+    { "seed": 9, "name": "Stage3 Seed 9", "rating": 56 },
+    { "seed": 10, "name": "Stage3 Seed 10", "rating": 54 },
+    { "seed": 11, "name": "Stage3 Seed 11", "rating": 52 },
+    { "seed": 12, "name": "Stage3 Seed 12", "rating": 50 },
+    { "seed": 13, "name": "Stage3 Seed 13", "rating": 48 },
+    { "seed": 14, "name": "Stage3 Seed 14", "rating": 46 },
+    { "seed": 15, "name": "Stage3 Seed 15", "rating": 44 },
+    { "seed": 16, "name": "Stage3 Seed 16", "rating": 42 }
+  ]
+}
