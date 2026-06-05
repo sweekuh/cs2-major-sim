@@ -390,7 +390,9 @@ def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
     rk = freeze_ratings(ratings)
     lk = freeze_locked({})
     # Call through the cached wrapper (cache_data wraps but still computes on first call).
-    result = run_mc_cached(rk, 40.0, 2000, lk)
+    # stage_id is the new REAL leading positional (Phase 6, STG-04); "stage1" loads the same
+    # teams as load_teams(), so the Stage-1 equivalence below still holds exactly.
+    result = run_mc_cached("stage1", rk, 40.0, 2000, lk)
     assert isinstance(result, Result)
     assert result.n == 2000
 

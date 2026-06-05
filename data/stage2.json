@@ -1,0 +1,27 @@
+{
+  "_comment": "[INFERRED] Minimal Phase-6 SECOND fixture, used only so the cross-stage cache-isolation test (STG-04) has a real second stage to switch to. The team set deliberately DIFFERS from data/stage1.json so a Stage 1 -> Stage 2 switch is observably different. seeds_confirmed=false so the per-stage [INFERRED]-seed banner shows. Real Stage-2 qualifier seeds (8 Stage-1 qualifiers by final Buchholz + 8 VRS-invited) are DERIVED in Phase 7 — these placeholder names/ratings are NOT the real bracket.",
+  "stage": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "Stage2 Seed 1", "rating": 80 },
+    { "seed": 2, "name": "Stage2 Seed 2", "rating": 76 },
+    { "seed": 3, "name": "Stage2 Seed 3", "rating": 72 },
+    { "seed": 4, "name": "Stage2 Seed 4", "rating": 70 },
+    { "seed": 5, "name": "Stage2 Seed 5", "rating": 66 },
+    { "seed": 6, "name": "Stage2 Seed 6", "rating": 64 },
+    { "seed": 7, "name": "Stage2 Seed 7", "rating": 60 },
+    { "seed": 8, "name": "Stage2 Seed 8", "rating": 58 },
+    { "seed": 9, "name": "Stage2 Seed 9", "rating": 56 },
+    { "seed": 10, "name": "Stage2 Seed 10", "rating": 54 },
+    { "seed": 11, "name": "Stage2 Seed 11", "rating": 52 },
+    { "seed": 12, "name": "Stage2 Seed 12", "rating": 50 },
+    { "seed": 13, "name": "Stage2 Seed 13", "rating": 48 },
+    { "seed": 14, "name": "Stage2 Seed 14", "rating": 46 },
+    { "seed": 15, "name": "Stage2 Seed 15", "rating": 44 },
+    { "seed": 16, "name": "Stage2 Seed 16", "rating": 42 }
+  ]
+}
