@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-06-05T23:33:09.606Z"
+status: verifying
+stopped_at: Completed 06-04-PLAN.md (Phase 6 complete)
+last_updated: "2026-06-05T23:55:48.568Z"
 last_activity: 2026-06-05
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -28,13 +28,13 @@ See: .planning/PROJECT.md (updated 2026-05-30 after v1.0)
 Phase: 6 (Multi-stage scaffold + live-results seam) — EXECUTING
 Plan: 4 of 4 (Plan 01 COMPLETE)
 Milestone: **v3 (Full-Major) — ROADMAP COMPLETE** (started 2026-06-02; roadmap fixed 2026-06-02). Scope: live-results auto-ingest + Stage 2 Swiss + Stage 3 Swiss (all-Bo3) + 8-team playoffs (Bo5 GF, nested round-weighted ballot). Format verified vs Wikipedia (3 Swiss stages + playoff). Planning kept LOCAL-ONLY (public master purged `.planning/`).
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Predecessor: **v1.0 COMPLETE** — tagged `v1.0`, 54/54 reqs, 113 tests green, GATE-01 GREEN; plus PRs #6-#9 (live odds, P0 fixes, public forecast page).
 Last activity: 2026-06-05
 
 **Phase 6 Plan 01 (06-01) COMPLETE** — STG-01 (`engine.teams.load_stage` sibling, frozen path byte-identical) + STG-04 (`stage_id` a real leading positional in both `run_mc_cached`/`optimize_cached`, stage selector in app.py, cross-stage cache isolation proven). 6 atomic commits (c7aca2c→6a5191d). Full suite 134 passed, GATE-01 green. Next: 06-02.
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 **v3 phase map (6-9):**
 
@@ -83,6 +83,7 @@ Progress: [████████░░] 75%
 | Phase 06 P01 | 35 min | 4 tasks | 8 files |
 | Phase 06 P02 | 13 min | 2 tasks | 5 files |
 | Phase 06 P03 | 20 | 2 tasks | 9 files |
+| Phase 06 P04 | 80 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,7 @@ Recent decisions affecting current work:
 - [Phase 5]: Odds placed last — fails soft, never gates; first run needs no API key. The v3 results seam (P6) mirrors this read-only-cache fail-soft pattern byte-for-byte.
 - [Phase 6 P01]: STG-04 cross-stage isolation proven via fixture-load divergence + AppTest (not counts_advance inequality) — the Swiss engine is name-independent, so identical seed-ratings give identical counts; the load-bearing isolation is that stage_id selects a different fixture per stage in run_mc_cached/optimize_cached.
 - [Phase 6 P03]: Results seam shipped as a structural twin of the odds seam — ui/results_loader.py (json+pathlib, four-branch fail-soft None) + scripts/fetch_results.py (lazy httpx, FINISHED-only parse, slug-first drop-on-unresolved join, atomic versioned write). Froze the STACK.md row shape {match:[lo,hi],winner,round_idx,bo,status,provider_slugs}. Live slugs/endpoints are [VERIFY AT EVENT TIME]; built+tested on recorded fixtures. Full suite 140 green, GATE-01 green.
+- [Phase 6 P04]: Live-results seam wired into the app — fetched FINISHED rows pre-fill KEY_LOCKED through the EXISTING validate_lock path (no engine edit); results _meta.fetched_at folded into the run cache key (_combined_fetched_at) so a fresh fetch re-fires the conditional re-sim; conflict-with-a-manual-lock is an atomic validate-before-remove confirm (manual lock preserved on an engine-illegal fetched lock); _stage_int_for reconciles the _meta.stage int vs stage_id str on both sides. Phase 6 COMPLETE (4/4), suite 147 green, GATE-01 green, zero engine edits.
 
 ### Pending Todos
 
@@ -126,8 +128,8 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-06-05T23:33:09.600Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-06-05T23:55:32.998Z
+Stopped at: Completed 06-04-PLAN.md (Phase 6 complete)
 Resume path: `/gsd-execute-phase 6` — continue with 06-02 (per-stage `[INFERRED]`-seed banner + stage3/playoffs fixtures, STG-05).
 
 **Completed Milestone:** v1.0 (Phases 1-5) — 14 plans — shipped 2026-05-30

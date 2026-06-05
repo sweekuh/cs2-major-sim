@@ -55,7 +55,7 @@ Full phase details (goals, plans, seams, decisions) archived in `.planning/miles
 
 **v3 — Full-Major (Phases 6-9):**
 
-- [ ] **Phase 6: Multi-stage scaffold + live-results seam** — stage-id-in-cache-key correctness gate + stage selector + per-stage fixtures; the fail-soft live-results auto-ingest seam (applies to Stage 1 NOW; pre-fills `locked`; the input the seeding chain consumes)
+- [x] **Phase 6: Multi-stage scaffold + live-results seam** — stage-id-in-cache-key correctness gate + stage selector + per-stage fixtures; the fail-soft live-results auto-ingest seam (applies to Stage 1 NOW; pre-fills `locked`; the input the seeding chain consumes) — COMPLETE 2026-06-05 (4/4 plans, 147 tests green, GATE-01 green)
 - [ ] **Phase 7: Stage 2 + inter-stage seeding chain** — Stage 2 Swiss on the FROZEN engine (proves "different teams only") + the pure, deterministic `engine/seeding.py` that derives Stage N+1 seeds from Stage N final Buchholz
 - [ ] **Phase 8: Stage 3 (all-Bo3)** — the single keyword-only `all_bo3` flag (rating-fallback branch only; market path untouched); GATE-01 stays green + no-double-Bo3 the gate
 - [ ] **Phase 9: Playoff bracket + Bo5 + nested ballot optimizer** — the 8-team single-elim sim (Bo3 QF/SF + Bo5 GF), the verified Bo5 closed form, and the NEW nested round-weighted ballot optimizer (joint-AND objective, brute-force ~16 brackets)
@@ -77,7 +77,7 @@ Full phase details (goals, plans, seams, decisions) archived in `.planning/miles
 - [x] 06-01-PLAN.md — Slice 1 (the pivot): stage selector + `load_stage(path)` + `stage_id` in BOTH cache keys (STG-01, STG-04) [Wave 1] — DONE 2026-06-05 (134 tests green, GATE-01 green)
 - [x] 06-02-PLAN.md — Slice 2: per-stage `[INFERRED]`-seed banner + stage3/playoffs fixtures (STG-05) [Wave 2] — DONE 2026-06-05 (135 tests green, GATE-01 green)
 - [x] 06-03-PLAN.md — Slice 3: read-only results seam — `ui/results_loader.py` + `scripts/fetch_results.py` (RES-01, RES-04, RES-05) [Wave 2] — DONE 2026-06-05 (140 tests green, GATE-01 green)
-- [ ] 06-04-PLAN.md — Slice 4: wire results into app — pre-fill `locked` via `validate_lock` + conflict-confirm + provenance (RES-02, RES-03) [Wave 3]
+- [x] 06-04-PLAN.md — Slice 4: wire results into app — pre-fill `locked` via `validate_lock` + conflict-confirm + provenance (RES-02, RES-03) [Wave 3] — DONE 2026-06-05 (147 tests green, GATE-01 green, zero engine edits)
 **UI hint**: yes
 **Verify pass**: confirm the Cologne tournament slug/id on bo3.gg + PandaScore at ingest and seed `data/team_aliases.json` (gstack `/browse`) — a thin event-time verify, not a research phase.
 **GATE-01:** must stay green (loader generalization must not touch `load_teams`/`_DEFAULT_FIXTURE`).
@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Pick'Em Optimizer | 2/2 | Complete | 2026-05-29 |
 | 4. Conditional Re-Sim + Live Mode | 2/2 | Complete | 2026-05-29 |
 | 5. Odds Ensemble | 3/3 | Complete (live-slug /browse confirm DEFERRED) | 2026-05-30 |
-| 6. Multi-stage scaffold + live-results seam | 3/4 | In Progress (06-01, 06-02, 06-03 done) | - |
+| 6. Multi-stage scaffold + live-results seam | 4/4 | Complete | 2026-06-05 |
 | 7. Stage 2 + inter-stage seeding chain | 0/TBD | Not started | - |
 | 8. Stage 3 (all-Bo3) | 0/TBD | Not started | - |
 | 9. Playoff bracket + Bo5 + nested ballot optimizer | 0/TBD | Not started | - |
