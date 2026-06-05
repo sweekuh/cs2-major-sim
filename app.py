@@ -932,6 +932,127 @@ def _combined_fetched_at(odds_fetched_at):
     return (odds_fetched_at, results_fetched_at)
 
 
+def _apply_fetched_conflict(pending: tuple[int, int, int]) -> None:
+    """ATOMIC, VALIDATE-FIRST confirm of a fetched result that conflicts with a MANUAL lock (RES-03).
+
+    The ordering is pinned (T-06-11 data integrity): (a) build the prospective lock list AS IF the
+    conflicting manual entry were removed (on a COPY — session_state is not mutated yet); (b) run the
+    EXISTING guard on that prospective-without-the-fetched state — legal_pairings_for_round then
+    validate_lock; (c) ONLY on validate_lock == None commit the swap (remove the manual entry, add the
+    fetched one, tag provenance 'auto', clear the pending); (d) on a reason DO NOT remove the manual
+    entry and DO NOT add the fetched one — KEY_LOCKED stays exactly as it was (manual lock intact) and
+    the reason is surfaced. The manual lock is NEVER removed before a successful validation."""
+    round_idx, w_f, ell_f = pending
+    pair = frozenset((w_f, ell_f))
+    locked_results = list(st.session_state.get(KEY_LOCKED, []))
+
+    # The conflicting MANUAL entry covering the same pair (if any).
+    manual_entry = next(
+        (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+    )
+    # Prospective state WITHOUT the conflicting manual entry and WITHOUT the fetched one yet — the
+    # exact set validate_lock must judge the fetched lock against (mirrors _commit_lock's contract).
+    prospective = [e for e in locked_results if e is not manual_entry]
+
+    try:
+        legal = legal_pairings_for_round(teams, prospective, S, round_idx)
+    except Exception as exc:  # noqa: BLE001 — incomplete prefix: surface, mutate nothing (RES-04)
+        st.error(str(exc))
+        return
+    reason = validate_lock((w_f, ell_f), round_idx, prospective, teams, legal)
+    if reason is not None:
+        # Engine-illegal fetched lock — DO NOT remove the manual entry, DO NOT add the fetched one.
+        # KEY_LOCKED stays exactly as it was; surface the reason. (validate before remove — T-06-11.)
+        st.error(reason)
+        return
+    # Legal — commit the swap atomically: manual entry dropped, fetched one added, provenance 'auto'.
+    st.session_state[KEY_LOCKED] = add_lock(prospective, round_idx, w_f, ell_f)
+    new_prov = dict(st.session_state.get(KEY_LOCK_PROVENANCE, {}))
+    if manual_entry is not None:
+        new_prov.pop(frozenset((manual_entry[1], manual_entry[2])), None)
+    new_prov[pair] = "auto"
+    st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+    st.session_state.pop(KEY_PENDING_RESULT_CONFLICT, None)
+
+
+def _render_results_conflict(name_of: dict[int, str]) -> None:
+    """Render the LOUD conflict notice + explicit confirm control for a stashed pending conflict.
+
+    A fetched result that disagrees with a MANUAL lock for the same pair is NEVER silently applied
+    (RES-03). Show the diff loudly (team names HTML-escaped at the boundary — T-06-13) plus an
+    explicit 'Apply fetched result' button that routes through the atomic validate-first swap. The
+    manual lock stays intact until the user confirms (and stays intact if the fetched lock is
+    engine-illegal). Renders nothing when there is no pending conflict."""
+    pending = st.session_state.get(KEY_PENDING_RESULT_CONFLICT)
+    if not pending:
+        return
+    round_idx, w_f, ell_f = pending
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    pair = frozenset((w_f, ell_f))
+    manual_entry = next(
+        (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+    )
+    w_name = html.escape(str(name_of.get(w_f, w_f)))
+    ell_name = html.escape(str(name_of.get(ell_f, ell_f)))
+    if manual_entry is not None:
+        m_w = html.escape(str(name_of.get(manual_entry[1], manual_entry[1])))
+        m_ell = html.escape(str(name_of.get(manual_entry[2], manual_entry[2])))
+        st.warning(
+            f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+            f"{ell_name}, but you manually locked {m_w} beat {m_ell}. Confirm to overwrite your "
+            f"manual lock with the fetched result — your manual lock is kept until you confirm."
+        )
+    else:
+        st.warning(
+            f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+            f"{ell_name}. Confirm to apply it."
+        )
+    if st.button("Apply fetched result", key="apply_fetched_result_btn"):
+        _apply_fetched_conflict(pending)
+
+
+def _render_results_provenance(name_of: dict[int, str]) -> None:
+    """Surface fetched-results staleness + per-lock provenance (auto vs manual) (RES-03).
+
+    Staleness: read the results cache's _meta.fetched_at and render its relative age via the EXISTING
+    ui.render.fmt_age/is_stale (a stale cache shows an st.warning prompting a re-fetch — the same
+    discipline the odds panel uses). Provenance: list each locked pair tagged 'auto' (fetched) or
+    'manual' (user-entered) so the user can see which results came from the fetch. Names HTML-escaped
+    (T-06-13). Renders nothing when there is no results cache and no locks."""
+    from datetime import datetime, timezone
+
+    results = load_results_cache()
+    if results:
+        fetched_at = results.get("_meta", {}).get("fetched_at")
+        now = datetime.now(timezone.utc)
+        age = fmt_age(fetched_at, now)
+        if is_stale(fetched_at, now):
+            st.warning(
+                f"Fetched results may be stale (fetched {age}) — click "
+                f"“Fetch latest results” to refresh."
+            )
+        else:
+            st.caption(f"Fetched results: {age}.")
+
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
+    if not locked_results:
+        return
+    lines = []
+    for (round_idx, w, ell) in locked_results:
+        source = prov.get(frozenset((w, ell)), "manual")  # missing -> manual (pre-Phase-6 default)
+        w_name = html.escape(str(name_of.get(w, w)))
+        ell_name = html.escape(str(name_of.get(ell, ell)))
+        badge = "auto (fetched)" if source == "auto" else "manual"
+        lines.append(f"R{round_idx + 1}: {w_name} beat {ell_name} — <em>{badge}</em>")
+    st.markdown(
+        "<div style='font-size:0.85rem;color:#9aa4b2'>Locked results · "
+        + " &nbsp;|&nbsp; ".join(lines)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+
 def _render_lock_controls(name_of: dict[int, str]) -> None:
     """Round-by-round winner pickers writing KEY_LOCKED (D1/RESIM-01); round R gated on R-1.
 
@@ -1156,6 +1277,12 @@ with main:
         ids = [t.id for t in teams]
 
         st.subheader("Lock results")
+        # RES-03: a fetched result that conflicts with a manual lock surfaces a LOUD notice + an
+        # explicit confirm here (rendered BEFORE the lock controls so the conflict is unmissable);
+        # the atomic validate-first swap keeps the manual lock intact on an engine-illegal fetched
+        # lock. Then the provenance/staleness line surfaces auto-vs-manual + fetched_at freshness.
+        _render_results_conflict(name_of)
+        _render_results_provenance(name_of)
         _render_lock_controls(name_of)
 
         st.subheader("Your picks — status")

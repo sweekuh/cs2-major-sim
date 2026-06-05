@@ -1128,6 +1128,12 @@ def _finished_row(lo, hi, winner, *, round_idx=0, bo=1):
     }
 
 
+def _ss_get(at, key, default=None):
+    """Read at.session_state[key] safely — AppTest's SessionState proxy has no .get() (subscript
+    only), so mirror dict.get via a presence check. Used by the conflict/provenance tests."""
+    return at.session_state[key] if key in at.session_state else default
+
+
 def _patch_results(monkeypatch, cache):
     """Monkeypatch BOTH the loader module and app.py's imported alias to return ``cache``.
 
@@ -1248,3 +1254,98 @@ def test_no_network_on_rerun_with_results(monkeypatch):
     at.button(key="run_btn").click().run()  # a rerun
     assert not at.exception
     assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_fetch_conflict_requires_confirm(monkeypatch):
+    """RES-03 / T-06-11: a fetched result for a pair the user MANUALLY locked with the OPPOSITE
+    winner does NOT silently overwrite KEY_LOCKED. A loud conflict notice is shown + a pending
+    conflict stashed; KEY_LOCKED keeps the manual lock until the user explicitly confirms. After a
+    LEGAL confirm KEY_LOCKED reflects the fetched winner, tagged provenance 'auto'."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Fetched result: 9 beat 1 (opposite of the manual lock the user will hold: 1 beat 9).
+    row = _finished_row(1, 9, winner=9, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([row], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Establish the MANUAL lock 1 beat 9 (opposite the fetched 9 beat 1) and re-run.
+    at.session_state[KEY_LOCKED] = [(0, 1, 9)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 9)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # The conflict was stashed (NOT silently applied); the manual lock is intact; a loud notice shows.
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == (0, 9, 1)
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "manual lock must survive until confirm"
+    assert (0, 9, 1) not in list(at.session_state[KEY_LOCKED]), "fetched winner not applied pre-confirm"
+    assert any("conflict" in w.value.lower() for w in at.warning), "a loud conflict warning must render"
+
+    # Explicit confirm (a LEGAL swap — same R1 pair, opposite winner): KEY_LOCKED now holds 9 beat 1.
+    at.button(key="apply_fetched_result_btn").click().run()
+    assert not at.exception
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 9, 1) in locked, "after confirm the fetched winner is applied"
+    assert (0, 1, 9) not in locked, "the manual lock was atomically swapped out on a legal confirm"
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((9, 1))) == "auto"
+
+
+def test_conflict_confirm_validates_before_remove(monkeypatch):
+    """RES-03 / T-06-11 (the atomicity guard): confirming a fetched result for the SAME pair whose
+    proposed lock is ENGINE-ILLEGAL (validate_lock returns a reason — here a non-pairing for the
+    round) leaves the original MANUAL lock PRESERVED (KEY_LOCKED unchanged, the manual entry not
+    removed) and surfaces the validate_lock reason. The remove-manual + add-fetched happens ONLY on a
+    successful validate_lock — never remove-then-fail."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Manual lock for the pair {1,5} (NOT an R1 pairing — R1 is i vs i+8, so {1,9}). Injected directly
+    # to represent a manual lock; the fetched conflict proposes the OPPOSITE winner for the SAME pair.
+    # On confirm the prospective swap validates {5,1} at R1 -> "not paired this round" -> rejected.
+    row = _finished_row(1, 5, winner=5, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([row], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = [(0, 1, 5)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 5)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    # The conflict is stashed (same pair, opposite winner, manual provenance).
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == (0, 5, 1)
+
+    locked_before = list(at.session_state[KEY_LOCKED])
+    # Confirm — but the fetched lock is engine-illegal (non-pairing) -> rejected, manual preserved.
+    at.button(key="apply_fetched_result_btn").click().run()
+    assert not at.exception
+    assert list(at.session_state[KEY_LOCKED]) == locked_before, (
+        "an engine-illegal fetched lock must NOT remove the manual lock (validate before remove)"
+    )
+    assert (0, 1, 5) in list(at.session_state[KEY_LOCKED]), "the manual lock is preserved"
+    # The validate_lock reason is surfaced (the 'not paired this round' string).
+    assert any("not paired this round" in e.value.lower() for e in at.error), (
+        "the validate_lock reason must be surfaced on a rejected confirm"
+    )
+
+
+def test_provenance_and_staleness_surfaced(monkeypatch):
+    """RES-03: a loaded results cache surfaces _meta.fetched_at via the existing fmt_age/is_stale (a
+    stale cache shows the stale warning), and each lock's provenance (auto vs manual) is rendered."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED
+
+    # A STALE fetched_at (well past the 2h threshold) so is_stale -> True deterministically.
+    row = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(
+        monkeypatch,
+        _results_cache([row], stage=1, fetched_at="2020-01-01T00:00:00+00:00"),
+    )
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # The fetched result auto-locked (provenance auto), so a provenance badge + staleness surface.
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED])
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((1, 9))) == "auto"
+    text = _all_text(at)
+    # Staleness surfaced via the existing helper copy.
+    assert "stale" in text.lower(), "a stale results cache must surface a stale notice"
+    # Per-lock provenance rendered (auto vs manual wording).
+    assert "auto" in text.lower(), "auto-fetched provenance must be surfaced"
