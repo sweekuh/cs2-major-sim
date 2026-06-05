@@ -23,8 +23,9 @@ The load-bearing facts these tests pin:
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
+
+import pytest
 
 from engine.teams import load_stage
 from scripts.fetch_results import _parse_bo3gg, _parse_pandascore, _load_aliases, main
@@ -42,17 +43,31 @@ def _stage1_teams():
     return teams
 
 
-def test_finished_fixture_parses():
+@pytest.fixture
+def booby_trapped_httpx(monkeypatch):
+    """Mirror test_app.test_app_makes_no_network_on_rerun: replace every httpx network entrypoint
+    with a raiser, so any network access from the parse path fails LOUDLY. This is order-independent
+    (httpx may already be imported by an earlier test) and strictly stronger than a sys.modules
+    check — it proves the parse path never CALLS httpx (T-06-09)."""
+    import httpx
+
+    class _Boom:
+        def __getattr__(self, name):
+            raise AssertionError(f"httpx.{name} called on the parse path — T-06-09 violation")
+
+    for attr in ("get", "post", "request", "Client", "AsyncClient", "stream"):
+        monkeypatch.setattr(httpx, attr, _Boom(), raising=False)
+
+
+def test_finished_fixture_parses(booby_trapped_httpx):
     """RES-01: parsing the recorded bo3.gg FINISHED response yields frozen-schema rows; a
-    non-finished row is EXCLUDED; a garbled row is DROPPED (never raises). No httpx imported."""
+    non-finished row is EXCLUDED; a garbled row is DROPPED (never raises). The parse path makes
+    NO httpx network call (httpx is booby-trapped to raise — T-06-09)."""
     teams = _stage1_teams()
     aliases = _load_aliases(_REPO_ROOT / "data" / "team_aliases.json")
     raw = _load("bo3gg_finished_sample.json")
 
     rows = _parse_bo3gg(raw, teams=teams, aliases=aliases)
-
-    # The parse path must NOT have pulled httpx into the interpreter.
-    assert "httpx" not in sys.modules, "the parse path must not import httpx (T-06-09)"
 
     # Every emitted row carries the frozen schema, FINISHED-only, sorted match tuple.
     for row in rows:
@@ -80,10 +95,11 @@ def test_finished_fixture_parses():
     assert len(rows) == 2, f"expected 2 finished+resolved rows, got {len(rows)}: {rows}"
 
 
-def test_unresolved_team_fails_soft():
+def test_unresolved_team_fails_soft(booby_trapped_httpx):
     """RES-05 / T-06-08: a row whose teams resolve slug-first yields the SORTED match + winner
     engine id; a row with a team absent from team_aliases.json AND unresolvable via resolve_id is
-    DROPPED — never joined to a wrong engine id. Proven against BOTH provider parsers."""
+    DROPPED — never joined to a wrong engine id. Proven against BOTH provider parsers (and the
+    parse path makes no httpx call — booby-trapped)."""
     teams = _stage1_teams()
     aliases = _load_aliases(_REPO_ROOT / "data" / "team_aliases.json")
 
@@ -100,7 +116,6 @@ def test_unresolved_team_fails_soft():
     ps_rows = _parse_pandascore(
         _load("pandascore_finished_sample.json"), teams=teams, aliases=aliases
     )
-    assert "httpx" not in sys.modules, "the parse path must not import httpx (T-06-09)"
     assert len(ps_rows) == 1, f"expected 1 finished+resolved PandaScore row, got {ps_rows}"
     # BetBoom(4) beat Liquid(13): sorted match [4, 13], winner 4.
     assert ps_rows[0]["match"] == [4, 13]
@@ -130,3 +145,24 @@ def test_main_writes_versioned_cache(tmp_path):
     # The two resolvable FINISHED bo3.gg rows are present.
     matches = {tuple(r["match"]) for r in on_disk["results"]}
     assert (1, 9) in matches and (7, 8) in matches
+
+
+def test_httpx_is_lazy_not_top_level():
+    """T-06-09: httpx must NOT be imported at the fetcher's module top — it is lazy-imported INSIDE
+    the live-fetch helper ONLY, so the parsers run with no httpx installed and httpx never enters
+    the app import path. Static source assertion (order-independent — does not depend on whether an
+    earlier test already imported httpx into sys.modules)."""
+    import ast
+
+    import scripts.fetch_results as fr
+
+    src = Path(fr.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    # No top-level (module-body) `import httpx` / `from httpx import ...`.
+    for node in tree.body:
+        if isinstance(node, ast.Import):
+            assert all(a.name != "httpx" for a in node.names), "httpx must not be a top-level import"
+        if isinstance(node, ast.ImportFrom):
+            assert node.module != "httpx", "httpx must not be a top-level from-import"
+    # httpx IS referenced somewhere (the lazy live-fetch import) — the seam exists.
+    assert "import httpx" in src, "the live-fetch helper must lazy-import httpx"
