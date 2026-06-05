@@ -9,6 +9,12 @@ files.zip
 # it; the app only ever READS it via ui/odds_loader.py.
 data/odds_cache.json
 
+# Fetched live-results cache (a runtime artifact, not source — RES-01). Its ABSENCE is the normal
+# first-run state and is handled fail-soft (manual entry + banner). scripts/fetch_results.py writes
+# it; the app only ever READS it via ui/results_loader.py. (data/team_aliases.json + data/stageN.json
+# are NOT ignored — those are committed source.)
+data/results_cache.json
+
 # Python
 __pycache__/
 *.py[cod]
