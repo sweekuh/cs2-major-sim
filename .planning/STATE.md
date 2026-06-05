@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: roadmap created — 4 phases (6-9), dependency-forced order, 19/19 reqs mapped. Next is `/gsd-plan-phase 6`.
+status: executing
 stopped_at: v3 ROADMAP created (Phases 6-9)
-last_updated: "2026-06-05T07:06:41.905Z"
-last_activity: 2026-06-02
+last_updated: "2026-06-05T22:46:17.783Z"
+last_activity: 2026-06-05 -- Phase 6 Plan 01 executed (STG-01 load_stage + STG-04 stage_id cache key; 134 tests green, GATE-01 green)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -21,16 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-30 after v1.0)
 
 **Core value:** Honestly-calibrated probabilities for the exact quantities Pick'Em scores on — P(3-0)/P(advance)/P(0-3) per team and P(≥5/10) per ballot — including conditional re-sim, without laundering guesses into false precision.
-**Current focus:** v1.0 SHIPPED (Cologne Swiss-stage Pick'Em, Phases 1-5). v3 Full-Major ROADMAP COMPLETE — Phases 6-9. Next: `/gsd-plan-phase 6` (Multi-stage scaffold + live-results seam).
+**Current focus:** Phase 6 — Multi-stage scaffold + live-results seam
 
 ## Current Position
 
+Phase: 6 (Multi-stage scaffold + live-results seam) — EXECUTING
+Plan: 2 of 4 (Plan 01 COMPLETE)
 Milestone: **v3 (Full-Major) — ROADMAP COMPLETE** (started 2026-06-02; roadmap fixed 2026-06-02). Scope: live-results auto-ingest + Stage 2 Swiss + Stage 3 Swiss (all-Bo3) + 8-team playoffs (Bo5 GF, nested round-weighted ballot). Format verified vs Wikipedia (3 Swiss stages + playoff). Planning kept LOCAL-ONLY (public master purged `.planning/`).
-Status: roadmap created — 4 phases (6-9), dependency-forced order, 19/19 reqs mapped. Next is `/gsd-plan-phase 6`.
+Status: Executing Phase 6
 Predecessor: **v1.0 COMPLETE** — tagged `v1.0`, 54/54 reqs, 113 tests green, GATE-01 GREEN; plus PRs #6-#9 (live odds, P0 fixes, public forecast page).
-Last activity: 2026-06-02
+Last activity: 2026-06-05 -- Phase 6 Plan 01 executed (STG-01 load_stage + STG-04 stage_id cache key; 134 tests green, GATE-01 green)
 
-Progress: v1.0 [██████████] 100% shipped · v3 [░░░░░░░░░░] 0% (0/4 phases — roadmap complete, planning Phase 6 next)
+**Phase 6 Plan 01 (06-01) COMPLETE** — STG-01 (`engine.teams.load_stage` sibling, frozen path byte-identical) + STG-04 (`stage_id` a real leading positional in both `run_mc_cached`/`optimize_cached`, stage selector in app.py, cross-stage cache isolation proven). 6 atomic commits (c7aca2c→6a5191d). Full suite 134 passed, GATE-01 green. Next: 06-02.
+
+Progress: v1.0 [██████████] 100% shipped · v3 Phase 6 [██░░░░░░░░] 25% (1/4 plans — 06-01 done)
 
 **v3 phase map (6-9):**
 
@@ -76,6 +80,7 @@ Progress: v1.0 [██████████] 100% shipped · v3 [░░░░
 | Phase 05 P01 | 25 min | 3 tasks | 10 files |
 | Phase 05 P02 | 75 min | 3 tasks | 6 files |
 | Phase 05 P03 | 75 min | 2 tasks | 8 files |
+| Phase 06 P01 | 35 min | 4 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -90,6 +95,7 @@ Recent decisions affecting current work:
 - [Phase 1]: Backtest is a slice-1 HARD GATE, not post-hoc validation — only check proving greedy rematch resolution matches Valve's priority table.
 - [Phase 1]: Buchholz = `Σ(opp.wins − opp.losses)`, single seeding code path (eng-review P0). v3 seeding chain (P7) imports the canonical `engine.probs.difficulty` — never a second copy.
 - [Phase 5]: Odds placed last — fails soft, never gates; first run needs no API key. The v3 results seam (P6) mirrors this read-only-cache fail-soft pattern byte-for-byte.
+- [Phase 6 P01]: STG-04 cross-stage isolation proven via fixture-load divergence + AppTest (not counts_advance inequality) — the Swiss engine is name-independent, so identical seed-ratings give identical counts; the load-bearing isolation is that stage_id selects a different fixture per stage in run_mc_cached/optimize_cached.
 
 ### Pending Todos
 
@@ -117,13 +123,13 @@ Items acknowledged and carried forward:
 
 ## Session Continuity
 
-Last session: 2026-06-02
-Stopped at: v3 ROADMAP created (Phases 6-9)
-Resume path: `/gsd-plan-phase 6` — Multi-stage scaffold + live-results seam (stage-id cache key STG-04 is the pivot; results seam mirrors the odds seam; usable for Stage 1 immediately).
+Last session: 2026-06-05
+Stopped at: Phase 6 Plan 01 (06-01) COMPLETE — STG-01 + STG-04 landed (6 commits c7aca2c→6a5191d; 134 tests green, GATE-01 green)
+Resume path: `/gsd-execute-phase 6` — continue with 06-02 (per-stage `[INFERRED]`-seed banner + stage3/playoffs fixtures, STG-05).
 
 **Completed Milestone:** v1.0 (Phases 1-5) — 14 plans — shipped 2026-05-30
-**Current Milestone:** v3 (Full-Major) — ROADMAP COMPLETE — Phases 6-9 (0/4) — 2026-06-02
+**Current Milestone:** v3 (Full-Major) — Phase 6 IN PROGRESS — 1/4 plans done (06-01) — 2026-06-05
 
-Next: `/gsd-plan-phase 6` to decompose Phase 6 (Multi-stage scaffold + live-results seam) into executable plans.
+Next: execute 06-02 (Slice 2 — per-stage seed banner + stage3/playoffs fixtures, STG-05).
 
 **Planned Phase:** 6 (Multi-stage scaffold + live-results seam) — 4 plans — 2026-06-05T07:06:41.892Z

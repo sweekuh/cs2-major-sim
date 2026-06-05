@@ -74,7 +74,7 @@ Full phase details (goals, plans, seams, decisions) archived in `.planning/miles
   4. Provider team identities join to internal ids slug-first via `data/team_aliases.json`; an unresolved team or a fetch that conflicts with a manual lock is surfaced loudly and requires explicit confirm — never a silent overwrite or a fabricated lock (RES-05, RES-03).
   5. A missing key / network failure / unavailable source degrades to manual entry + a banner — never a crash or a gate; first run needs no results source, and per-stage `[INFERRED]`-seed banners persist with editable seeds until each stage is confirmed (RES-04, STG-05).
 **Plans**: 4 plans (3 waves — MVP vertical slices)
-- [ ] 06-01-PLAN.md — Slice 1 (the pivot): stage selector + `load_stage(path)` + `stage_id` in BOTH cache keys (STG-01, STG-04) [Wave 1]
+- [x] 06-01-PLAN.md — Slice 1 (the pivot): stage selector + `load_stage(path)` + `stage_id` in BOTH cache keys (STG-01, STG-04) [Wave 1] — DONE 2026-06-05 (134 tests green, GATE-01 green)
 - [ ] 06-02-PLAN.md — Slice 2: per-stage `[INFERRED]`-seed banner + stage3/playoffs fixtures (STG-05) [Wave 2]
 - [ ] 06-03-PLAN.md — Slice 3: read-only results seam — `ui/results_loader.py` + `scripts/fetch_results.py` (RES-01, RES-04, RES-05) [Wave 2]
 - [ ] 06-04-PLAN.md — Slice 4: wire results into app — pre-fill `locked` via `validate_lock` + conflict-confirm + provenance (RES-02, RES-03) [Wave 3]
