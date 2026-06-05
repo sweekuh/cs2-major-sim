@@ -121,8 +121,9 @@ def test_locked_in_cache_key():
     lk_empty = freeze_locked({})
     lk_locked = freeze_locked({frozenset({1, 9}): 1})
     assert lk_empty != lk_locked
-    r_empty = run_mc_cached(rk, 40.0, 2000, lk_empty)
-    r_locked = run_mc_cached(rk, 40.0, 2000, lk_locked)
+    # stage_id is the new REAL leading positional (Phase 6, STG-04) — both calls carry "stage1".
+    r_empty = run_mc_cached("stage1", rk, 40.0, 2000, lk_empty)
+    r_locked = run_mc_cached("stage1", rk, 40.0, 2000, lk_locked)
     # Different locked -> the engine saw a different lock -> distinct results (>=1 P moves).
     assert r_empty.counts_advance != r_locked.counts_advance
 
@@ -537,8 +538,9 @@ def test_live_lock_changes_cache_key():
     # A new key with the non-empty locked_key appeared (the empty-locked key may also remain).
     new_keys = post_keys - pre_keys
     assert new_keys, "a locked Run must create a new cache entry on the non-empty locked key"
-    # Every cache key is (ratings_key, S, N, locked_key); a new one carries a non-empty locked_key.
-    assert any(k[3] != () for k in new_keys)
+    # Every cache key is (stage_id, ratings_key, S, N, locked_key); a new one carries a non-empty
+    # locked_key — at index 4 now that stage_id leads (Phase 6, STG-04).
+    assert any(k[4] != () for k in new_keys)
 
 
 def test_live_lock_moves_p_advance():
@@ -549,7 +551,7 @@ def test_live_lock_moves_p_advance():
     at = _go_live_small(_apptest().run())
     assert not at.exception
     cache = at.session_state["mc_cache"]
-    pre_key = next(k for k in cache if k[3] == ())
+    pre_key = next(k for k in cache if k[4] == ())
     pre_p_adv = cache[pre_key].p_advance()
 
     w, ell = _first_legal_r1_lock()
@@ -558,7 +560,7 @@ def test_live_lock_moves_p_advance():
     assert not at.exception
 
     cache = at.session_state["mc_cache"]
-    post_key = next(k for k in cache if k[3] != ())
+    post_key = next(k for k in cache if k[4] != ())
     post_p_adv = cache[post_key].p_advance()
     # >=1 P(advance) moves (the locked winner's pair is now deterministic -> counts shift).
     assert any(
@@ -681,7 +683,7 @@ def test_live_delta_anchor_uses_pre_key():
     assert anchor_pre is not None
 
     cache = at.session_state["mc_cache"]
-    pre_key = next(k for k in cache if k[3] == ())
+    pre_key = next(k for k in cache if k[4] == ())
     pre_result = cache[pre_key]
 
     w, ell = _first_legal_r1_lock()
@@ -695,7 +697,7 @@ def test_live_delta_anchor_uses_pre_key():
 
     # `before` is computed on the pre_key Result's OWN sample (not the post-lock result).
     cache = at.session_state["mc_cache"]
-    post_key = next(k for k in cache if k[3] != ())
+    post_key = next(k for k in cache if k[4] != ())
     post_result = cache[post_key]
     ids = [t.id for t in load_teams()]
     before, after = pge5_delta(anchor_post, pre_result, post_result, ids)
