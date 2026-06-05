@@ -1017,3 +1017,35 @@ def test_fresh_fetch_invalidates_cache(monkeypatch, tmp_path):
     assert keys_after_second - keys_after_first, (
         "a fresh fetch (new _meta.fetched_at) must invalidate the memoized Result (T-05-STALEBAND)"
     )
+
+
+def test_stage_switch_isolates_cache():
+    """STG-04 (integration): running Stage 1, then switching to Stage 2 via the selector and
+    Running, creates an mc_cache key whose LEADING element is 'stage2'; the prior Stage-1 key
+    (leading 'stage1') stays distinct — no cache key is shared across stages, so one stage can
+    never serve the other's per-team numbers."""
+    from ui.state import KEY_STAGE
+
+    # Default stage is Stage 1 — run it first to memoize a 'stage1'-leading key.
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    stage1_keys = set(at.session_state["mc_cache"].keys())
+    assert stage1_keys, "the first (Stage-1) run must memoize a key"
+    assert all(k[0] == "stage1" for k in stage1_keys), (
+        "every key from the default-stage run must lead with 'stage1'"
+    )
+
+    # Switch to Stage 2 and Run again (inject the selector's session value, as the LIVE tests
+    # inject KEY_LOCKED — robust to the selector widget type).
+    at.session_state[KEY_STAGE] = "stage2"
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    all_keys = set(at.session_state["mc_cache"].keys())
+    stage2_keys = {k for k in all_keys if k[0] == "stage2"}
+    assert stage2_keys, "running under Stage 2 must create a 'stage2'-leading cache key"
+    # The Stage-1 key is still present and distinct — no key is shared across stages.
+    assert stage1_keys & stage2_keys == set(), "no cache key may be shared across stages"
+    assert all(k[0] == "stage1" for k in stage1_keys)
