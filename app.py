@@ -38,6 +38,7 @@ from engine.optimizer import build_outcome_matrices
 from engine.teams import load_stage, load_teams
 from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, optimize_cached
 from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
+from ui.results_loader import load_results_cache  # json-only results read seam (NO httpx — RES-04)
 from ui.render import (
     ballot_columns,
     bracket_columns_html,
@@ -60,13 +61,16 @@ from ui.state import (
     DEFAULT_MODE,
     FIXED_SEED,
     KEY_LIVE_ANCHOR,
+    KEY_LOCK_PROVENANCE,
     KEY_LOCKED,
     KEY_MC_CACHE,
     KEY_MODE,
     KEY_N_INPUT,
     KEY_ODDS_OUTCOME,
     KEY_PENDING_LOCK,
+    KEY_PENDING_RESULT_CONFLICT,
     KEY_RATINGS_EDITOR,
+    KEY_RESULTS_OUTCOME,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
     KEY_STAGE,
@@ -101,6 +105,12 @@ MAX_CACHE_ENTRIES = 8
 if KEY_MC_CACHE not in st.session_state:
     st.session_state[KEY_MC_CACHE] = {}
 
+# The active run's results-cache _meta.fetched_at, set by _prefill_results_into_locked() in the
+# main block and folded into the run cache key via _combined_fetched_at (RES-02 re-sim re-fire). It
+# is a module global (not session_state) because it is derived fresh every run from the read-only
+# results cache — None until the pre-fill runs / when there is no results cache.
+_RESULTS_FETCHED_AT = None
+
 # Active stage (Phase 6, STG-04). The stage selector below WRITES KEY_STAGE; on first load it is
 # not yet set, so default to "stage1" (the zero-config first-run stage — DX-01). On reruns the
 # selected stage already lives in session_state, so the module globals below bind to it BEFORE the
@@ -127,6 +137,30 @@ _PROVIDER_LABELS = {
     "kalshi": "Kalshi",
     "polymarket": "Polymarket",
 }
+
+
+# Canonical stage_id (str) <-> stage number (int) mapping (Phase 6, RES-02 / T-06-12). The frozen
+# results-cache schema stores _meta.stage as an INTEGER (1) while the app tracks stage_id as a STRING
+# ("stage1"); a naive ``_meta.stage == stage_id`` is ``1 == "stage1"`` -> always False -> auto-prefill
+# silently never fires. This ONE helper is the single source the filter uses on BOTH sides, and it
+# matches scripts.fetch_results._stage_number EXACTLY (the fetcher writes _meta.stage via the same
+# mapping) so the schema and the comparison can never drift into a second representation.
+_STAGE_NUMBERS = {"stage1": 1, "stage2": 2, "stage3": 3, "playoffs": 4}
+
+
+def _stage_int_for(stage_id: str) -> int:
+    """Map a stage_id ('stage1'|'stage2'|'stage3'|'playoffs') -> its 1-based stage number (int).
+
+    Raises ValueError on an unknown stage_id (a typo must fail loud, never silently mis-filter).
+    Matches scripts.fetch_results._stage_number so the fetcher-written _meta.stage and this filter
+    always agree — the ONE canonical reconciliation of the int-vs-str mismatch (T-06-12).
+    """
+    n = _STAGE_NUMBERS.get(stage_id)
+    if n is None:
+        raise ValueError(
+            f"unknown stage_id {stage_id!r}; expected one of {sorted(_STAGE_NUMBERS)}"
+        )
+    return n
 
 
 def _fmt_fetched(iso) -> str:
@@ -357,6 +391,43 @@ with controls:
                 st.session_state[KEY_ODDS_OUTCOME] = (
                     "error",
                     f"Odds fetch failed (running rating-only): {exc}",
+                )
+        st.rerun()
+
+    # --- Live-results fetch (RES-01/02, Phase 6) -----------------------------------------
+    # The ONE path that contacts the results providers — an explicit USER action OUT of the
+    # render path. Mirrors the odds button EXACTLY: it LAZY-imports scripts.fetch_results (which
+    # pulls httpx) INSIDE the click branch only, so a plain rerun never imports the network deps
+    # (T-06-09b — test_no_network_on_rerun_with_results is the guard). The persisted-outcome stash
+    # is load-bearing: a message drawn before st.rerun() is discarded — stash + render next run.
+    st.caption("Live results (optional)")
+    _r_outcome = st.session_state.pop(KEY_RESULTS_OUTCOME, None)
+    if _r_outcome:
+        {"success": st.success, "info": st.info, "error": st.error}.get(_r_outcome[0], st.info)(
+            _r_outcome[1]
+        )
+    if st.button("Fetch latest results", key="fetch_results_btn"):
+        with st.spinner("Fetching finished results…"):
+            try:
+                from scripts.fetch_results import main as _fetch_results_main  # LAZY — click only
+
+                cache = _fetch_results_main(stage_id=stage_id)  # the ACTIVE stage
+                n_rows = len(cache.get("results", []))
+                if n_rows:
+                    st.session_state[KEY_RESULTS_OUTCOME] = (
+                        "success",
+                        f"Fetched {n_rows} finished result(s) — auto-locking the current stage.",
+                    )
+                else:
+                    # A valid empty fetch (no finished series posted yet) is fail-soft, not an error.
+                    st.session_state[KEY_RESULTS_OUTCOME] = (
+                        "info",
+                        "No finished results yet (none posted for this stage) — manual entry still works.",
+                    )
+            except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
+                st.session_state[KEY_RESULTS_OUTCOME] = (
+                    "error",
+                    f"Results fetch failed (manual entry still works): {exc}",
                 )
         st.rerun()
 
@@ -641,6 +712,11 @@ def _run_or_serve():
     # invalid / empty cache -> (ratings, None, None) unchanged: the rating-only path, no behavior
     # change, the existing 'live odds off' banner stays (DX-01/ODDS-08).
     ratings, market_blend, fetched_at = _odds_from_cache(ratings)
+    # Phase 6 (RES-02): fold the RESULTS cache's _meta.fetched_at into the SAME fetched_at slot as
+    # the odds timestamp, so a fresh results fetch (new _meta.fetched_at) forces a cache MISS and the
+    # conditional re-sim re-fires even when the auto-locked set is unchanged. The pre-fill already
+    # ran in the main block (KEY_LOCKED carries the auto-locked results); here we only thread the ts.
+    fetched_at = _combined_fetched_at(fetched_at)
     # Phase 4 fill point: the engine ``locked`` dict is DERIVED from KEY_LOCKED (the ordered
     # lock list) via the pure projection, then flows through the UNCHANGED freeze_locked ->
     # locked_key -> cache_key path so a non-empty lock changes the key and re-sims (RESIM-01).
@@ -671,6 +747,7 @@ def _live_anchor(ratings: dict, ids: list[int]):
     the pre_key matches a real cache entry (no separate rating-only baseline under live odds).
     """
     ratings, market_blend, fetched_at = _odds_from_cache(ratings)
+    fetched_at = _combined_fetched_at(fetched_at)  # fold the results ts too (RES-02 consistency)
     pre_lock_result, pre_key = _compute_or_serve(
         ratings, {}, stage_id, market_blend, fetched_at
     )  # empty-locked = pre_key (stage_id LEADS the key — Phase 6, STG-04)
@@ -749,6 +826,110 @@ def _commit_lock(pending: tuple[int, int, int]) -> None:
         st.session_state[KEY_LOCKED] = add_lock(
             locked_results, round_idx, winner_id, loser_id
         )
+        # A manually-committed lock is authoritative ground truth — tag provenance "manual" so a
+        # later conflicting fetch cannot silently overwrite it (RES-03, T-06-11).
+        prov = dict(st.session_state.get(KEY_LOCK_PROVENANCE, {}))
+        prov[frozenset((winner_id, loser_id))] = "manual"
+        st.session_state[KEY_LOCK_PROVENANCE] = prov
+
+
+def _row_to_pending(row) -> tuple[int, int, int] | None:
+    """Project ONE frozen-schema result row to a ``(round_idx, winner_id, loser_id)`` pending lock.
+
+    Recovers the loser from the SORTED ``match`` [lo, hi] tuple: ``ell = lo if winner == hi else hi``.
+    Returns ``None`` (drop) on a malformed row (bad shape / winner not in the pair) — a mis-shaped
+    fetched row must never raise into the UI or fabricate a lock (T-06-10 fail-soft)."""
+    try:
+        lo, hi = row["match"]
+        w = row["winner"]
+    except (KeyError, TypeError, ValueError):
+        return None
+    if w == lo:
+        ell = hi
+    elif w == hi:
+        ell = lo
+    else:
+        return None  # winner not one of the matched pair — drop (never mis-attribute)
+    try:
+        round_idx = int(row["round_idx"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return (round_idx, w, ell)
+
+
+def _prefill_results_into_locked() -> str | None:
+    """Pre-fill the ACTIVE stage's KEY_LOCKED from fetched FINISHED results (RES-02). Returns the
+    results cache's ``_meta.fetched_at`` (or ``None`` when there is no cache) so the run cache key
+    can fold it in — a FRESH fetch then forces a MISS and the conditional re-sim re-fires.
+
+    Every fetched row routes through the SAME guard a manual lock uses — ``legal_pairings_for_round``
+    (prefix guard) -> ``validate_lock`` (the five illegal cases) -> ``add_lock`` — NO bypass, NO
+    engine edit (T-06-10). The active-stage filter compares ``int(_meta.stage)`` to
+    ``_stage_int_for(stage_id)`` through the ONE canonical helper (never a raw ``int == str`` that
+    silently no-ops — T-06-12). A fetched row whose pair already has a MANUAL lock with a DIFFERENT
+    winner is NOT auto-applied: it is stashed as a pending conflict for the explicit confirm control
+    (RES-03, handled in _render_results_conflict) — never a silent overwrite.
+    """
+    results = load_results_cache()
+    if not results:
+        return None
+    fetched_at = results.get("_meta", {}).get("fetched_at")
+    try:
+        active_stage_int = _stage_int_for(stage_id)
+        cache_stage_int = int(results.get("_meta", {}).get("stage"))
+    except (TypeError, ValueError):
+        return fetched_at  # an unknown/garbled stage filters to nothing — fail-soft, still fold ts
+    if cache_stage_int != active_stage_int:
+        return fetched_at  # results are for another stage — do not prefill (canonical int compare)
+
+    rows = results.get("results") or []
+    for row in rows:
+        pending = _row_to_pending(row)
+        if pending is None:
+            continue
+        round_idx, w, ell = pending
+        locked_results = st.session_state.get(KEY_LOCKED, [])
+        prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
+        pair = frozenset((w, ell))
+
+        # Already locked? Check for a CONFLICT with a manual lock (RES-03) before anything else.
+        existing = next(
+            (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+        )
+        if existing is not None:
+            ex_w = existing[1]
+            if ex_w != w and prov.get(pair, "manual") == "manual":
+                # Conflicts with a MANUAL lock — stash a pending conflict, never silently overwrite.
+                st.session_state[KEY_PENDING_RESULT_CONFLICT] = pending
+            continue  # same pair already locked (agreeing, or auto, or conflict-stashed) — skip
+
+        # Not yet locked — run the SAME validate path as a manual lock (no bypass).
+        try:
+            legal = legal_pairings_for_round(teams, locked_results, S, round_idx)
+        except Exception:  # noqa: BLE001 — incomplete prefix: skip this row, never raise (RES-04)
+            continue
+        reason = validate_lock((w, ell), round_idx, locked_results, teams, legal)
+        if reason is not None:
+            continue  # illegal fetched lock — rejected (existing reason), KEY_LOCKED untouched
+        st.session_state[KEY_LOCKED] = add_lock(locked_results, round_idx, w, ell)
+        new_prov = dict(prov)
+        new_prov[pair] = "auto"  # provenance: auto-fetched (RES-03)
+        st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+    return fetched_at
+
+
+def _combined_fetched_at(odds_fetched_at):
+    """Fold BOTH the odds and the results cache timestamps into the SINGLE cache-key fetched_at slot.
+
+    A fresh fetch from EITHER source must invalidate the memoized Result. Returns a tuple
+    ``(odds_fetched_at, results_fetched_at)`` (or the lone odds value when there is no results
+    cache) — any change in either element changes the run cache key (RES-02 re-sim re-fire +
+    T-05-STALEBAND), so a new results _meta.fetched_at re-fires the re-sim even with an unchanged
+    locked set. ``_RESULTS_FETCHED_AT`` is set by _prefill_results_into_locked earlier in the run."""
+    results_fetched_at = _RESULTS_FETCHED_AT
+    if results_fetched_at is None:
+        return odds_fetched_at
+    return (odds_fetched_at, results_fetched_at)
 
 
 def _render_lock_controls(name_of: dict[int, str]) -> None:
@@ -931,6 +1112,12 @@ def _render_odds_drilldown(blended) -> None:
 
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
 with main:
+    # Phase 6 (RES-02): pre-fill the active stage's KEY_LOCKED from fetched FINISHED results BEFORE
+    # anything consumes KEY_LOCKED (the run flow + the LIVE lock controls). Every fetched lock routes
+    # through the existing validate path (no bypass, no engine edit); a conflict with a manual lock is
+    # stashed for explicit confirm, never silently applied. The returned _meta.fetched_at is folded
+    # into the run cache key (via _combined_fetched_at) so a fresh fetch re-fires the conditional re-sim.
+    _RESULTS_FETCHED_AT = _prefill_results_into_locked()
     result, error_msg, cache_key = _run_or_serve()
     # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
     # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->

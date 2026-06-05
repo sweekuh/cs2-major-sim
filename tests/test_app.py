@@ -1091,3 +1091,160 @@ def test_stage_switch_isolates_cache():
     # The Stage-1 key is still present and distinct — no key is shared across stages.
     assert stage1_keys & stage2_keys == set(), "no cache key may be shared across stages"
     assert all(k[0] == "stage1" for k in stage1_keys)
+
+
+# --- Phase 6 Slice 4: live-results seam wired into the app (RES-02/03/04) -----------------
+#
+# These AppTest cases exercise the "Fetch latest results" button, the fetched-result pre-fill of
+# KEY_LOCKED via the EXISTING validate path (no engine edit), the fetched_at-in-cache-key re-sim
+# re-fire, the int-vs-str canonical stage filter, and the atomic conflict-confirm against a manual
+# lock. The results cache is supplied per-test via monkeypatching ui.results_loader.load_results_cache
+# (mirroring the odds-cache tests). N is kept small (2000) per the latency budget.
+
+
+def _results_cache(rows, *, stage=1, fetched_at="2026-06-04T00:00:00+00:00", source="bo3gg"):
+    """A frozen-schema results-cache dict (mirrors scripts.fetch_results.main's write shape).
+
+    ``stage`` is the INTEGER stage number the frozen schema stores in _meta (1 for "stage1"); the
+    app's canonical _stage_int_for reconciles it against the str stage_id. ``rows`` are the
+    {match:[lo,hi], winner, round_idx, bo, status, provider_slugs} result rows.
+    """
+    return {
+        "_meta": {"fetched_at": fetched_at, "version": 1, "source": source, "stage": stage},
+        "results": list(rows),
+    }
+
+
+def _finished_row(lo, hi, winner, *, round_idx=0, bo=1):
+    """One FINISHED frozen-schema result row (match is the SORTED [lo, hi] engine-id tuple)."""
+    a, b = sorted((lo, hi))
+    return {
+        "match": [a, b],
+        "winner": winner,
+        "round_idx": round_idx,
+        "bo": bo,
+        "status": "finished",
+        "provider_slugs": [f"slug{a}", f"slug{b}"],
+    }
+
+
+def _patch_results(monkeypatch, cache):
+    """Monkeypatch BOTH the loader module and app.py's imported alias to return ``cache``.
+
+    app.py may either ``from ui.results_loader import load_results_cache`` (binding a local alias) or
+    call it qualified; patching both the source module attr and the app attr (raising=False) covers
+    whichever binding the wiring uses, so the test is robust to the import style."""
+    import ui.results_loader as rloader
+
+    monkeypatch.setattr(rloader, "load_results_cache", lambda *a, **k: cache)
+    monkeypatch.setattr("app.load_results_cache", lambda *a, **k: cache, raising=False)
+
+
+def test_fetched_results_prefill_locked(monkeypatch):
+    """RES-02 / T-06-10 + T-06-12: a FINISHED row whose _meta.stage is the INTEGER 1 pre-fills
+    KEY_LOCKED while the active stage_id is the STRING 'stage1' — the canonical int-vs-str filter
+    FIRES (the row is NOT silently skipped). The non-empty locked_key produces a NEW mc_cache key
+    (re-sim fires). An ILLEGAL fetched row (a non-pairing for the round) is REJECTED via the existing
+    validate_lock reason and does NOT mutate KEY_LOCKED."""
+    from ui.state import KEY_LOCKED
+
+    # A legal R1 result (1 beats 9 — seed i vs i+8 is the R1 pairing) PLUS an illegal non-pairing
+    # row (1 vs 2 are NOT paired in R1) that validate_lock must reject without mutating KEY_LOCKED.
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    illegal = _finished_row(2, 3, winner=2, round_idx=0)  # 2 vs 3 is not an R1 pairing
+    _patch_results(monkeypatch, _results_cache([legal, illegal], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # The legal fetched result auto-locked (1 beat 9); the illegal one did not.
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 1, 9) in locked, "the FINISHED int-stage-1 row must pre-fill KEY_LOCKED (filter fired)"
+    assert not any(frozenset((w, ell)) == frozenset((2, 3)) for (_r, w, ell) in locked), (
+        "an illegal non-pairing fetched row must be rejected, never locked"
+    )
+    # The non-empty locked_key produced a cache key with a populated locked element (re-sim fired).
+    keys = set(at.session_state["mc_cache"].keys())
+    assert any(k[4] != () for k in keys), "the auto-locked result must produce a non-empty locked cache key"
+
+
+def test_fetched_at_refires_resim(monkeypatch):
+    """RES-02 re-sim re-fire: with the SAME (stage_id, ratings, S, N, locked) two results caches
+    differing ONLY in _meta.fetched_at produce DIFFERENT run cache keys (the fetched_at element
+    differs) — a fresh fetch forces a MISS so the conditional re-sim re-fires even with an unchanged
+    locked set. Unit form: assert _cache_key_for(...) with two fetched_at values differs in its last
+    element (and the wired run threads the RESULTS fetched_at into that slot)."""
+    import importlib
+
+    app = importlib.import_module("app")
+
+    ratings = {i: 50.0 for i in range(1, 17)}
+    locked = {frozenset((1, 9)): 1}
+    k1 = app._cache_key_for(ratings, locked, "stage1", "2026-06-04T00:00:00+00:00")
+    k2 = app._cache_key_for(ratings, locked, "stage1", "2026-06-04T12:00:00+00:00")
+    # Identical except the trailing fetched_at slot — a fresh fetch timestamp changes the key.
+    assert k1[:-1] == k2[:-1], "only the fetched_at slot should differ"
+    assert k1[-1] != k2[-1], "two different fetched_at values must yield different cache keys (re-sim re-fires)"
+
+    # End-to-end: two results caches with the SAME locked set but different fetched_at each add a
+    # distinct mc_cache key (the RESULTS fetched_at is threaded into the run cache key).
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([legal], stage=1, fetched_at="2026-06-04T00:00:00+00:00"))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    keys_first = set(at.session_state["mc_cache"].keys())
+
+    _patch_results(monkeypatch, _results_cache([legal], stage=1, fetched_at="2026-06-04T12:00:00+00:00"))
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    keys_second = set(at.session_state["mc_cache"].keys())
+    assert keys_second - keys_first, (
+        "a fresh _meta.fetched_at (same locked set) must add a NEW run cache key — the re-sim re-fires"
+    )
+
+
+def test_no_results_failsoft(monkeypatch):
+    """RES-04 fail-soft: with NO results cache and NO key the app renders + Runs (manual locking
+    still works), no exception. The pre-fill must degrade to a no-op when load_results_cache is None."""
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
+    _patch_results(monkeypatch, None)
+
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    # Manual locking still works day one — switch to LIVE, inject a manual lock, re-run, no crash.
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(at)
+    assert not at.exception
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    assert (0, w, ell) in list(at.session_state[KEY_LOCKED])
+
+
+def test_no_network_on_rerun_with_results(monkeypatch):
+    """T-06-09b: with the results seam WIRED (a results cache present) and httpx booby-trapped to
+    RAISE on any attribute access, a rerun makes NO network call and still renders probability
+    content — proving scripts.fetch_results is lazy-imported (click branch only), never on rerun."""
+    import httpx
+
+    class _Boom:
+        def __getattr__(self, name):
+            raise AssertionError(f"httpx.{name} called on a rerun — results seam network leak")
+
+    for attr in ("get", "post", "request", "Client", "AsyncClient", "stream"):
+        monkeypatch.setattr(httpx, attr, _Boom(), raising=False)
+
+    # The results seam is active (a valid cache present) — the pre-fill reads it via the json loader.
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([legal], stage=1))
+
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()  # a rerun
+    assert not at.exception
+    assert any("advance" in m.value.lower() for m in at.markdown)

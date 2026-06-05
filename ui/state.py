@@ -54,6 +54,22 @@ KEY_RUN_BUTTON = "run_btn"
 # handler and rendered on the NEXT run so the message survives the st.rerun() that the fetch
 # triggers (a message drawn before st.rerun() is discarded — the toast-lost bug, fixed 2026-05-31).
 KEY_ODDS_OUTCOME = "odds_fetch_outcome"
+# Persisted "Fetch latest results" outcome: ("success"|"info"|"error", message). Same one-shot
+# stash/render/pop discipline as KEY_ODDS_OUTCOME (Phase 6, RES-02) — the message is stashed in the
+# fetch-results click handler and rendered on the NEXT run after the st.rerun() the fetch triggers.
+KEY_RESULTS_OUTCOME = "results_fetch_outcome"
+# Phase 6 (RES-03) conflict-confirm + provenance keys.
+# KEY_PENDING_RESULT_CONFLICT stashes the ONE fetched (round_idx, winner_id, loser_id) lock that
+# conflicts with an existing MANUAL lock for the same pair — set by the pre-fill loop, consumed by
+# the explicit "Apply fetched result" confirm control. A conflicting fetch is NEVER silently applied
+# (the manual lock is authoritative ground truth); the swap is validated BEFORE the manual lock is
+# removed (atomic — manual lock preserved on an engine-illegal fetched lock).
+KEY_PENDING_RESULT_CONFLICT = "pending_result_conflict"
+# KEY_LOCK_PROVENANCE maps a lock pair frozenset((winner, loser)) -> "auto"|"manual": "manual" is
+# tagged at the _commit_lock site (a user-entered lock); "auto" is tagged when a fetched result
+# pre-fills a lock. A missing entry reads as "manual" (the pre-Phase-6 default — every prior lock
+# was user-entered). The conflict gate keys off this so an auto-fetch never clobbers a manual lock.
+KEY_LOCK_PROVENANCE = "lock_provenance"
 
 # --- Phase 4 LIVE-mode keys (RESIM-01..04) -----------------------------------------------
 # KEY_LOCKED holds the ordered source-of-truth list of locked results:
