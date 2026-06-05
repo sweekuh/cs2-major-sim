@@ -69,7 +69,6 @@ from ui.state import (
     KEY_RATINGS_EDITOR,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
-    KEY_SEEDS_CONFIRMED,
     KEY_STAGE,
     MAX_N,
     Mode,
@@ -159,13 +158,20 @@ def _render_header_strip() -> None:
       3. Fail-soft odds banner (ODDS-08): a one-line ``st.info`` when no ODDSPAPI_KEY is set —
          never crashes, never imports httpx/python-dotenv.
     """
-    # Seed the seeds_confirmed session_state from the read-only JSON flag on first load only;
-    # thereafter the in-session toggle owns it. Setting the key BEFORE the widget is created
-    # makes it the toggle's initial value (Streamlit binds the widget to the existing key).
-    if KEY_SEEDS_CONFIRMED not in st.session_state:
-        st.session_state[KEY_SEEDS_CONFIRMED] = read_seeds_confirmed()
+    # PER-STAGE seed-confirm state (STG-05). The banner is scoped to the ACTIVE stage_id: each
+    # stage carries its OWN seeds_confirmed flag in its committed fixture (stage1.json ships true;
+    # stage2/3/playoffs ship false), so confirming one stage can never dismiss another's banner.
+    # The session key is therefore per-stage (f"seeds_confirmed_{stage_id}"), seeded on first load
+    # of THAT stage from its own fixture via read_seeds_confirmed(_path_for_stage(stage_id)) —
+    # read-only, fail-safe to False (banner shows) on any error, never mutating the JSON/engine.
+    seeds_key = f"seeds_confirmed_{stage_id}"
+    # Seed from the read-only JSON flag on first load of this stage only; thereafter the in-session
+    # toggle owns it. Setting the key BEFORE the widget is created makes it the toggle's initial
+    # value (Streamlit binds the widget to the existing key).
+    if seeds_key not in st.session_state:
+        st.session_state[seeds_key] = read_seeds_confirmed(_path_for_stage(stage_id))
 
-    seeds_confirmed = bool(st.session_state.get(KEY_SEEDS_CONFIRMED, False))
+    seeds_confirmed = bool(st.session_state.get(seeds_key, False))
 
     # 1. Trust badge — caveated while BACKTEST_PASSED is False (UI-07, Pitfall 6: both, not one).
     if trust_badge_state(seeds_confirmed) == "validated":
@@ -198,7 +204,7 @@ def _render_header_strip() -> None:
     # never-red/green rule). On True it dismisses the banner and is the gate the badge reads.
     st.toggle(
         "Seeds confirmed (dismiss the INFERRED-seed banner)",
-        key=KEY_SEEDS_CONFIRMED,
+        key=seeds_key,
     )
 
     # 3. Live-odds status panel (D1) — reads the LOADED cache, NOT the env key (honest live/off).

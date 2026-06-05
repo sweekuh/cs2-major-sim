@@ -415,9 +415,13 @@ def test_seed_banner(monkeypatch):
 
 
 def test_seed_banner_dismissable(monkeypatch):
-    """DX-02: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
-    drives session_state (the gate the trust badge reads). Forced-unconfirmed start."""
-    from ui.state import KEY_SEEDS_CONFIRMED
+    """DX-02 / STG-05: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
+    drives session_state (the gate the trust badge reads). The banner+toggle are now PER-STAGE
+    (STG-05), so on the default Stage 1 the toggle key is 'seeds_confirmed_stage1'.
+    Forced-unconfirmed start (monkeypatch read_seeds_confirmed → False)."""
+    # Default stage is Stage 1 (DX-01 zero-config first run), so the per-stage confirm key is
+    # f"seeds_confirmed_{stage_id}" == "seeds_confirmed_stage1".
+    seeds_key = "seeds_confirmed_stage1"
 
     monkeypatch.setattr("ui.state.read_seeds_confirmed", lambda *a, **k: False)
     at = _apptest().run()
@@ -425,14 +429,14 @@ def test_seed_banner_dismissable(monkeypatch):
     # First load: banner present, toggle off.
     assert any("seeds are inferred" in w.value.lower() for w in at.warning)
 
-    # Find the seeds-confirmed toggle (st.toggle preferred; checkbox is the sanctioned fallback).
+    # Find the per-stage seeds-confirmed toggle (st.toggle preferred; checkbox is the fallback).
     widgets = list(getattr(at, "toggle", [])) + list(getattr(at, "checkbox", []))
-    tog = next(w for w in widgets if w.key == KEY_SEEDS_CONFIRMED)
+    tog = next(w for w in widgets if w.key == seeds_key)
     tog.set_value(True).run()
     assert not at.exception
     # After confirming, the INFERRED-seed warning is gone (dismissed).
     assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
-    assert at.session_state[KEY_SEEDS_CONFIRMED] is True
+    assert at.session_state[seeds_key] is True
 
 
 def test_per_stage_seed_banner():

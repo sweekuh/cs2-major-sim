@@ -100,7 +100,10 @@ TRUST_BADGE_VALIDATED = (
     "engine validated vs Valve rulebook unit tests + full round-by-round backtest"
 )
 
-# The session_state key the seeds-confirmed toggle binds to (the gate the badge reads).
+# Legacy base name of the seeds-confirmed session key (the gate the trust badge reads). Phase 6
+# (STG-05) made the banner PER-STAGE: app.py now binds the toggle to f"seeds_confirmed_{stage_id}"
+# (e.g. "seeds_confirmed_stage1"), seeded from that stage's own fixture flag, so confirming one
+# stage cannot dismiss another's banner. This constant is kept as the documented base name.
 KEY_SEEDS_CONFIRMED = "seeds_confirmed"
 
 # Optional odds-provider env var (Phase 5/ODDS-08). Presence is checked WITHOUT importing
