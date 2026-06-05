@@ -35,8 +35,8 @@ from engine.live import (
 )
 from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
-from engine.teams import load_teams
-from ui.cache import freeze_locked, freeze_ratings, optimize_cached
+from engine.teams import load_stage, load_teams
+from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, optimize_cached
 from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
 from ui.render import (
     ballot_columns,
@@ -70,6 +70,7 @@ from ui.state import (
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
     KEY_SEEDS_CONFIRMED,
+    KEY_STAGE,
     MAX_N,
     Mode,
     TRUST_BADGE_CAVEATED,
@@ -101,7 +102,13 @@ MAX_CACHE_ENTRIES = 8
 if KEY_MC_CACHE not in st.session_state:
     st.session_state[KEY_MC_CACHE] = {}
 
-teams = load_teams()  # DX-01 zero-config: data/stage1.json (or in-code default), no API key
+# Active stage (Phase 6, STG-04). The stage selector below WRITES KEY_STAGE; on first load it is
+# not yet set, so default to "stage1" (the zero-config first-run stage — DX-01). On reruns the
+# selected stage already lives in session_state, so the module globals below bind to it BEFORE the
+# header/controls render. The globals are RE-BOUND once more right after the selector widget runs,
+# so a same-run stage change takes effect for every downstream render path.
+stage_id = st.session_state.get(KEY_STAGE, "stage1")
+teams, _stage_cfg = load_stage(_path_for_stage(stage_id))  # DX-01 zero-config: Stage 1, no API key
 by_seed = {t.seed: t for t in teams}
 
 # --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
@@ -252,6 +259,24 @@ else:
         "Live — lock results round-by-round and re-sim from here. "
         "Each pick shows live / dead / secured with a P(≥5)-from-here delta."
     )
+
+# Stage selector (Phase 6, STG-01/04). Options ARE the stage_ids so session_state[KEY_STAGE] always
+# holds a stage_id (consumed by _path_for_stage); format_func renders the friendly label. Default
+# (first option) is "stage1" — the zero-config first-run stage (DX-01). Writing KEY_STAGE re-keys the
+# whole MC/optimizer cache so a stage switch can never serve the prior stage's numbers (STG-04).
+_STAGE_LABELS = {"stage1": "Stage 1", "stage2": "Stage 2"}
+stage_id = st.selectbox(
+    "Stage",
+    options=list(_STAGE_LABELS.keys()),
+    format_func=lambda s: _STAGE_LABELS.get(s, s),
+    key=KEY_STAGE,
+    label_visibility="collapsed",
+)
+# Re-bind the module globals to the SELECTED stage so every downstream render path (header reconcile
+# rows, ratings editor, bracket, run flow) uses this stage's teams — not the top-of-module Stage-1
+# default. Stage 1 stays the zero-config first-run default (same teams as before).
+teams, _stage_cfg = load_stage(_path_for_stage(stage_id))
+by_seed = {t.seed: t for t in teams}
 
 controls, main = st.columns([1, 3], gap="medium")
 
@@ -547,17 +572,22 @@ def _odds_from_cache(base_ratings: dict):
     return ratings, market_blend, cache.get("_meta", {}).get("fetched_at")
 
 
-def _cache_key_for(ratings: dict, locked: dict, fetched_at=None):
-    """The ``(ratings_key, S, int(N), locked_key, fetched_at)`` cache tuple.
+def _cache_key_for(ratings: dict, locked: dict, stage_id: str, fetched_at=None):
+    """The ``(stage_id, ratings_key, S, int(N), locked_key, fetched_at)`` cache tuple.
+
+    ``stage_id`` LEADS the tuple (Phase 6, STG-04) so it scopes the WHOLE key — a stage switch can
+    never serve the prior stage's memoized Result. The element order MUST match ``optimize_cached``'s
+    params after ``_result`` (stage_id, ratings_key, S, N, locked_key, fetched_at) because the ballot
+    panel splats ``optimize_cached(result, *cache_key)``; a reorder here silently corrupts that call.
 
     ``fetched_at`` (the cache's ``_meta.fetched_at``, or None when rating-only) is folded into the
     key so a FRESH fetch that moves only the epistemic ``var`` (not the back-solved ratings) still
     invalidates the memoized Result — no stale epistemic band is served (T-05-STALEBAND).
     """
-    return (freeze_ratings(ratings), S, int(N), freeze_locked(locked), fetched_at)
+    return (stage_id, freeze_ratings(ratings), S, int(N), freeze_locked(locked), fetched_at)
 
 
-def _compute_or_serve(ratings: dict, locked: dict, market_blend=None, fetched_at=None):
+def _compute_or_serve(ratings: dict, locked: dict, stage_id: str, market_blend=None, fetched_at=None):
     """Get-or-compute the MC Result for the run key — returns (result, cache_key).
 
     Single source for BOTH the current Run and the LIVE empty-locked anchor compute. A cache
@@ -566,10 +596,12 @@ def _compute_or_serve(ratings: dict, locked: dict, market_blend=None, fetched_at
     CR-01 single-compute guard stays green even when LIVE mode also computes the empty-locked
     pre_key (a different key from the locked run).
 
-    ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at`` is folded
-    into the cache key so a fresh fetch (moved var) invalidates the memoized Result (T-05-STALEBAND).
+    ``stage_id`` LEADS the cache key (Phase 6, STG-04) so a stage switch never serves the prior
+    stage's Result. ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at``
+    is folded into the cache key so a fresh fetch (moved var) invalidates the memoized Result
+    (T-05-STALEBAND).
     """
-    cache_key = _cache_key_for(ratings, locked, fetched_at)
+    cache_key = _cache_key_for(ratings, locked, stage_id, fetched_at)
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         return cache[cache_key], cache_key
@@ -608,7 +640,9 @@ def _run_or_serve():
     # locked_key -> cache_key path so a non-empty lock changes the key and re-sims (RESIM-01).
     # In PRE_STAGE / first-run the list is empty -> locked == {} (no behavior change).
     locked = locked_dict(st.session_state.get(KEY_LOCKED, []))
-    result, cache_key = _compute_or_serve(ratings, locked, market_blend, fetched_at)
+    result, cache_key = _compute_or_serve(
+        ratings, locked, stage_id, market_blend, fetched_at
+    )
     return result, None, cache_key
 
 
@@ -618,7 +652,7 @@ def _live_anchor(ratings: dict, ids: list[int]):
     Captured ONCE, from the EMPTY-locked pre_key Result, and stored in KEY_LIVE_ANCHOR so it
     NEVER re-optimizes per round (the arrow would be meaningless otherwise). Returns
     ``(anchor_ballot, pre_lock_result)``:
-      pre_key       = (freeze_ratings(ratings), S, int(N), freeze_locked({}))
+      pre_key       = (stage_id, freeze_ratings(ratings), S, int(N), freeze_locked({}), fetched_at)
       pre_lock_result = mc_cache[pre_key] if present else ONE explicit compute on pre_key
                         (memoized — a DISTINCT key from the locked run, so CR-01 stays green)
       anchor        = optimize_cached(pre_lock_result, *pre_key).recommended  (Ballot B)
@@ -632,8 +666,8 @@ def _live_anchor(ratings: dict, ids: list[int]):
     """
     ratings, market_blend, fetched_at = _odds_from_cache(ratings)
     pre_lock_result, pre_key = _compute_or_serve(
-        ratings, {}, market_blend, fetched_at
-    )  # empty-locked = pre_key
+        ratings, {}, stage_id, market_blend, fetched_at
+    )  # empty-locked = pre_key (stage_id LEADS the key — Phase 6, STG-04)
     anchor = st.session_state.get(KEY_LIVE_ANCHOR)
     if anchor is None:
         anchor = optimize_cached(pre_lock_result, *pre_key).recommended

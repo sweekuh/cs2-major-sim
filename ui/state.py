@@ -44,7 +44,8 @@ DEFAULT_MODE = Mode.PRE_STAGE
 
 # session_state key constants (single source so app.py + tests agree on the names).
 KEY_MODE = "mode"
-KEY_MC_CACHE = "mc_cache"          # dict: (ratings_key, S, N, locked_key) -> Result
+KEY_STAGE = "active_stage"          # str: the selected stage_id ('stage1'|'stage2'|...) — Phase 6, STG-04
+KEY_MC_CACHE = "mc_cache"          # dict: (stage_id, ratings_key, S, N, locked_key) -> Result
 KEY_RATINGS_EDITOR = "ratings_editor"
 KEY_S_SLIDER = "S_slider"
 KEY_N_INPUT = "N_input"
