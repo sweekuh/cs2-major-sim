@@ -140,6 +140,68 @@ def load_teams(path: Path | str | None = None) -> list[Team]:
     return _teams_from_rows(rows)
 
 
+# --- Multi-stage siblings (Phase 6, STG-01) ----------------------------------------------
+# NEW SIBLINGS of the byte-frozen GATE-01 path above (_validate_fixture / load_teams). They
+# generalize the loader to ANY per-stage fixture (Stage 2/3 / playoffs) WITHOUT editing — or
+# being reached by — the frozen Stage-1 functions. _validate_fixture stays literal STAGE_SIZE;
+# this sibling parameterizes the same checks on the fixture's OWN declared stage.size.
+
+
+def _validate_fixture_for_size(rows: dict[int, tuple[str, float]], size: int) -> None:
+    """Size-parameterized twin of _validate_fixture (threat T-06-01, V5 input validation).
+
+    Same loud-fail contract as the frozen _validate_fixture — exactly ``size`` unique seeds
+    1..size, unique team names, finite in-range ratings — but checked against the ``size``
+    parameter (read from the fixture's ``stage.size``) instead of the literal STAGE_SIZE, so
+    a non-16 stage (e.g. the 8-team playoff bracket) validates against its OWN size. A bad
+    fixture raises rather than silently corrupting every pairing.
+    """
+    seeds = list(rows.keys())
+    if len(seeds) != size:
+        raise ValueError(f"fixture must have exactly {size} teams, got {len(seeds)}")
+    if set(seeds) != set(range(1, size + 1)):
+        raise ValueError(f"seeds must be exactly 1..{size}, got {sorted(seeds)}")
+    names = [name for name, _ in rows.values()]
+    if len(set(names)) != len(names):
+        raise ValueError("duplicate team name in fixture")
+    for seed, (name, rating) in rows.items():
+        if not isinstance(rating, (int, float)):
+            raise ValueError(f"rating for seed {seed} ({name}) is not numeric: {rating!r}")
+        # NaN check (NaN != NaN) and a sane bound for a 0..100-ish strength scale.
+        if rating != rating or not (0 < rating < 1000):
+            raise ValueError(f"rating for seed {seed} ({name}) out of range: {rating!r}")
+
+
+def load_stage(path: str | Path) -> tuple[list[Team], dict]:
+    """Load any per-stage fixture, validated against its OWN declared stage.size.
+
+    Returns ``(teams, stage_config)`` where ``teams`` is the seed-ordered list[Team] (same
+    ordering as _teams_from_rows) and ``stage_config`` carries at least ``size`` and
+    ``seeds_confirmed`` (plus any other keys from the JSON ``stage`` block). load_teams /
+    _DEFAULT_FIXTURE / _validate_fixture (the GATE-01 path) are NOT called and NOT edited —
+    this is a pure sibling. Reuses load_teams's dup-seed guard (``if seed in rows``). Imports
+    no streamlit/httpx (functional-core invariant).
+    """
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    stage = raw.get("stage") or {}
+    size = int(stage.get("size", STAGE_SIZE))
+    rows: dict[int, tuple[str, float]] = {}
+    for entry in raw["teams"]:
+        seed = entry["seed"]
+        if seed in rows:
+            raise ValueError(f"duplicate seed {seed} in {path}")
+        rows[seed] = (entry["name"], entry["rating"])
+    _validate_fixture_for_size(rows, size)
+    teams = [
+        Team(id=s, name=n, seed=s, rating=float(r)) for s, (n, r) in sorted(rows.items())
+    ]
+    return teams, {
+        "size": size,
+        "seeds_confirmed": bool(raw.get("seeds_confirmed", False)),
+        **stage,
+    }
+
+
 def build_round1_pairs(teams: list[Team]) -> list[tuple[Team, Team]]:
     """Derive the Round-1 pairings from the single seed->team map (ENG-01).
 
