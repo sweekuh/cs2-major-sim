@@ -230,6 +230,16 @@ def _render_header_strip() -> None:
         st.warning(
             "⚠ Seeds are INFERRED — verify vs the official seed list before trusting outputs."
         )
+        if stage_id == "stage2":
+            # Finding B (plan-eng-review 2026-06-06): the two halves of the Stage-2 field have
+            # DIFFERENT trust levels — say so, so a glance distinguishes "verified-but-unconfirmed
+            # invited" from "derived-from-your-locks qualifiers".
+            st.caption(
+                "Stage-2 seeds: 1-8 are the directly-invited teams (names verified vs "
+                "Liquipedia/HLTV, order by VRS rank) — NOT yet hand-confirmed; 9-16 derive from "
+                "your locked Stage-1 finals (Buchholz). Reconcile BOTH vs the official Stage-2 "
+                "bracket before flipping 'seeds confirmed'."
+            )
         with st.expander("Reconcile seeds vs the official list", expanded=False):
             st.caption(
                 "Eyeball each seed→team against the official Cologne 2026 seed list, then "
@@ -280,6 +290,20 @@ def _render_header_strip() -> None:
         st.caption(
             "odds off — using manual ratings. Fetch to price the sim from live markets "
             "(Polymarket + Kalshi need no key; add ODDSPAPI_KEY for Pinnacle)."
+        )
+
+    # Finding A (plan-eng-review 2026-06-06): on Stage 2/3 in rating-only mode, ratings carry
+    # FORWARD from the pre-event prior — they do NOT reflect how teams actually played the prior
+    # stage (only seed POSITION reaches here, via the Buchholz seeding chain). Say so loudly so
+    # nobody reads carried-forward strength as form-aware. Loading this stage's odds re-anchors
+    # strength to the market (which has seen the prior stage). Stage 1 is the pre-event baseline,
+    # so this note is scoped to the later stages only.
+    if stage_id in ("stage2", "stage3") and not blended:
+        st.info(
+            "Rating-only: team strength is the carried-forward pre-event prior and does NOT "
+            f"reflect {'Stage-1' if stage_id == 'stage2' else 'earlier-stage'} map performance — "
+            "only seed position carries over (via Buchholz). Load this stage's odds for "
+            "market-calibrated numbers."
         )
 
 
