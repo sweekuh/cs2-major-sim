@@ -1,5 +1,5 @@
 {
-  "_comment": "[PLACEHOLDER — VERIFY AT EVENT TIME] provider slug -> internal Team name (the slug-first join map for scripts/fetch_results.py, RES-05). These are PLACEHOLDER bo3.gg/PandaScore slugs for the Cologne 2026 Stage-1 teams (engine names from data/stage1.json); the REAL provider slugs are seeded at the event-time gstack /browse verify once Cologne fixtures post. The map is EDITABLE and fully fail-soft: the fetcher resolves each provider team SLUG via an exact hit here FIRST, then falls back to odds/_match.resolve_id name-substring matching, then DROPS the row + logs a loud warning on no match — an unresolved team is NEVER guessed into a wrong engine id (a mis-join would fabricate a lock that corrupts the re-sim + the Phase-7 seeding chain). This file is COMMITTED (like data/stage1.json), NOT a runtime artifact.",
+  "_comment": "[PLACEHOLDER — VERIFY AT EVENT TIME] provider slug -> internal Team name (the slug-first join map for scripts/fetch_results.py, RES-05). PLACEHOLDER bo3.gg/PandaScore slugs for the Cologne 2026 teams (Stage-1 engine names from data/stage1.json + the Stage-2 invited-8 from data/stage2.json); the REAL provider slugs are seeded at the event-time gstack /browse verify once Cologne fixtures post. Multiple slug variants may map to ONE internal name (a JSON object with distinct keys) to widen the exact-hit odds. The map is EDITABLE and fully fail-soft: the fetcher resolves each provider team SLUG via an exact hit here FIRST, then falls back to odds/_match.resolve_id name-substring matching, then DROPS the row + logs a loud warning on no match — an unresolved team is NEVER guessed into a wrong engine id (a mis-join would fabricate a lock that corrupts the re-sim + the Phase-7 seeding chain). This file is COMMITTED (like data/stage1.json), NOT a runtime artifact.",
   "gamerlegion": "GamerLegion",
   "b8": "B8",
   "heroic": "HEROIC",
@@ -15,5 +15,19 @@
   "team-liquid": "Liquid",
   "lynn-vision": "Lynn Vision",
   "thunder-downunder": "THUNDER dOWNUNDER",
-  "flyquest": "FlyQuest"
+  "flyquest": "FlyQuest",
+
+  "team-spirit": "Spirit",
+  "spirit": "Spirit",
+  "legacy": "Legacy",
+  "astralis": "Astralis",
+  "fut-esports": "FUT Esports",
+  "fut": "FUT Esports",
+  "g2-esports": "G2",
+  "g2": "G2",
+  "pain-gaming": "paiN",
+  "pain": "paiN",
+  "9z-team": "9z",
+  "9z": "9z",
+  "monte": "Monte"
 }
