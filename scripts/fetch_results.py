@@ -377,6 +377,14 @@ def main(
                 source = provider if source == "none" else f"{source}+{provider}"
                 break  # the first provider with FINISHED rows wins (bo3.gg primary)
 
+    # Sort rows by round_idx at WRITE time (HI-01) so the persisted artifact is deterministic,
+    # human-readable, AND already in round order for the app's prefill prefix precondition. The
+    # live bo3.gg feed is reverse-chronological (sort=-start_date); writing rounds in order means
+    # the app's single prefill pass auto-locks every round (the read side sorts too, belt-and-
+    # suspenders, so a hand-edited or older cache still converges in one pass). Stable sort keeps
+    # the within-round provider order. round_idx is an int on every emitted row (_emit_row schema).
+    results.sort(key=lambda r: r.get("round_idx", 0))
+
     cache = {
         "_meta": {
             # ISO-8601 UTC at WRITE time — the app's run cache key folds this in (T-06-STALEBAND).

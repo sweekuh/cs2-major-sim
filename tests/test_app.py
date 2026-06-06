@@ -1349,3 +1349,77 @@ def test_provenance_and_staleness_surfaced(monkeypatch):
     assert "stale" in text.lower(), "a stale results cache must surface a stale notice"
     # Per-lock provenance rendered (auto vs manual wording).
     assert "auto" in text.lower(), "auto-fetched provenance must be surfaced"
+
+
+# --- Phase 6 code-review fixes (06-REVIEW HI-01 / HI-02 / ME-01 / ME-02) ------------------
+#
+# Regression tests for the four live-results *application*-layer findings. Each is written to
+# FAIL against the pre-fix single-pass / scalar-conflict / unscoped-banner code and pass after
+# the fix. They use the SAME helpers (_results_cache / _finished_row / _patch_results /
+# _go_live_small) as the Phase-6 Slice-4 tests above.
+
+
+def _r1_full_lock_rows():
+    """The 8 R1 result rows for the default fixture (seed i vs i+8), lower id wins each match.
+
+    Returns ``list[(round_idx=0, winner_id, loser_id)]`` covering EVERY R1 pairing — a fully
+    locked R1 prefix, which is the precondition for R2's legal pairings to be deterministic.
+    """
+    from engine.live import legal_pairings_for_round
+    from engine.teams import load_teams
+
+    r1 = legal_pairings_for_round(load_teams(), [], 40.0, 0)
+    return [(0, *sorted(p)) for p in sorted(r1, key=lambda p: sorted(p))]  # lower id wins
+
+
+def test_reverse_round_results_prefill_in_one_pass(monkeypatch):
+    """HI-01 (06-REVIEW): a MULTI-ROUND results cache in REVERSE round order (the live bo3.gg
+    feed is reverse-chronological, sort=-start_date) must auto-lock EVERY round in ONE prefill
+    pass.
+
+    The pre-fix single pass iterates rows in cache order; an R2 row encountered first against a
+    still-empty lock list hits legal_pairings_for_round's "all prior rounds fully locked" prefix
+    guard, raises LivePrefixIncomplete, and the row is DROPPED — so only R1 locks this pass and
+    R2 silently vanishes until a later rerun. The fix sorts rows by round_idx (write side AND
+    read side) so the prefix is built in order and R2 locks in the same pass.
+
+    Constructed with the rows DELIBERATELY in reverse-round order (R2 row first, then the 8 R1
+    rows) so the test FAILS against the unsorted single-pass loop.
+
+    AppTest reruns the script several times during setup, and each rerun is a fresh prefill pass —
+    so the pre-fix loop CONVERGES across reruns (R1 locks, then R2 locks on a later pass), which
+    would mask the bug. To isolate ONE pass we reset KEY_LOCKED to empty and then do exactly ONE
+    final .run() (one script execution == one prefill pass); the assertion then exercises the
+    single-pass behavior the review flagged.
+    """
+    from ui.state import KEY_LOCKED
+
+    r1_rows = _r1_full_lock_rows()  # 8 rows at round_idx 0 (fully locks R1)
+    # One legal R2 result: with the full "lower id wins R1" prefix, [1,8] is an R2 pairing -> 1 beats 8.
+    r2_row = (1, 1, 8)
+    # Reverse-round order: the R2 row FIRST (newest-first), then the R1 rows — the exact order the
+    # reverse-chronological bo3.gg feed would produce, which drops R2 under the pre-fix single pass.
+    ordered = [r2_row, *r1_rows]
+    rows = [_finished_row(w, ell, winner=w, round_idx=ri) for (ri, w, ell) in ordered]
+    _patch_results(monkeypatch, _results_cache(rows, stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # Isolate a SINGLE prefill pass: clear any locks accumulated across the setup reruns, then run
+    # exactly once. Under the pre-fix unsorted loop this single pass locks all 8 R1 rows but DROPS
+    # the R2 row (its prefix guard raises because R1 is empty when the R2 row is hit first).
+    at.session_state[KEY_LOCKED] = []
+    at.run()
+    assert not at.exception
+
+    locked = list(at.session_state[KEY_LOCKED])
+    # ALL 8 R1 results locked in the single pass.
+    for (ri, w, ell) in r1_rows:
+        assert (ri, w, ell) in locked, f"R1 result {(ri, w, ell)} must auto-lock in one pass"
+    # AND the R2 result locked in the SAME pass (this is what the pre-fix single pass drops).
+    assert (1, 1, 8) in locked, (
+        "the R2 result must auto-lock in ONE pass despite the reverse-round cache order "
+        "(HI-01: the unsorted single pass drops every R2+ row)"
+    )
+

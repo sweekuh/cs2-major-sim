@@ -882,11 +882,18 @@ def _prefill_results_into_locked() -> str | None:
     if cache_stage_int != active_stage_int:
         return fetched_at  # results are for another stage — do not prefill (canonical int compare)
 
+    # Lock in ROUND ORDER so legal_pairings_for_round's "all prior rounds fully locked" precondition
+    # is satisfied in ONE pass (HI-01). The live bo3.gg feed is reverse-chronological
+    # (sort=-start_date), so an UNSORTED pass hits R5/R4/R3 rows first against a still-empty lock
+    # list, the prefix guard raises, and every R2+ row is dropped until a later rerun. Sorting by
+    # round_idx (here AND at WRITE time in scripts.fetch_results.main) makes the prefix build in
+    # order so all rounds auto-lock in this single pass. round_idx is validated by _row_to_pending
+    # (a malformed row -> None -> dropped before the sort key is read). Stable sort preserves the
+    # within-round provider order.
     rows = results.get("results") or []
-    for row in rows:
-        pending = _row_to_pending(row)
-        if pending is None:
-            continue
+    pendings = [p for p in (_row_to_pending(row) for row in rows) if p is not None]
+    pendings.sort(key=lambda p: p[0])  # p == (round_idx, winner_id, loser_id)
+    for pending in pendings:
         round_idx, w, ell = pending
         locked_results = st.session_state.get(KEY_LOCKED, [])
         prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
