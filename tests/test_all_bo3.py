@@ -31,9 +31,12 @@ import pytest
 
 import engine.montecarlo
 import engine.swiss
+from engine.montecarlo import run_mc
 from engine.probs import p_map, series, series_prob
 from engine.swiss import _play
-from engine.teams import load_teams
+from engine.teams import load_stage, load_teams
+
+STAGE3_PATH = "data/stage3.json"
 
 
 class _StubRng:
@@ -213,3 +216,90 @@ def test_all_bo3_false_is_byte_identical():
     assert explicit_false.counts_30 == base.counts_30
     assert explicit_false.counts_advance == base.counts_advance
     assert explicit_false.counts_03 == base.counts_03
+
+
+# --- STG-03: Stage-3 all-Bo3 structural invariants + SC-4 epistemic clamp -----------------
+# These join the BO-01 file per the validation map. They are BLACK-BOX assertions against the
+# unchanged run_mc path with all_bo3=True (the engine edit from Slice 1) on the [INFERRED]
+# Stage-3 fixture — mirroring tests/test_stage2.py (Sigma=2/8/2) and tests/test_epistemic.py
+# (band ⊇ Wilson). No engine source is imported-for-edit or modified here.
+
+
+def test_stage3_invariants_all_bo3():
+    """STG-03 (mirrors test_stage2_invariants): at N>=50k on the Stage-3 fixture with
+    all_bo3=True, ΣP(3-0)≈2, ΣP(0-3)≈2, ΣP(advance)≈8 within ±0.05 — the SAME structural
+    invariants Stage 1/2 pass, proving the all-Bo3 Stage 3 simulates correctly.
+
+    Bo3 compresses each individual matchup toward the favorite (series(p)=p²(3-2p)), but the
+    Swiss bracket structure is unchanged, so EVERY sim still yields exactly 2 teams 3-0, 2
+    teams 0-3, and 8 teams reaching 3 wins — hence the marginals sum to 2/2/8 regardless of Bo3.
+    """
+    teams, _cfg = load_stage(STAGE3_PATH)
+    N = 50000
+    r = run_mc(teams=teams, ratings=None, S=40.0, N=N, locked={}, seed=2024, all_bo3=True)
+    sum_30 = sum(c / N for c in r.counts_30.values())
+    sum_03 = sum(c / N for c in r.counts_03.values())
+    sum_adv = sum(c / N for c in r.counts_advance.values())
+    assert abs(sum_30 - 2.0) <= 0.05
+    assert abs(sum_03 - 2.0) <= 0.05
+    assert abs(sum_adv - 8.0) <= 0.05
+
+
+def test_stage3_per_sim_degenerate_all_bo3():
+    """STG-03 (mirrors test_stage2_per_sim_degenerate): under all_bo3=True every individual
+    Stage-3 sim has exactly 2 teams 3-0, 2 teams 0-3, and 8 teams reaching 3 wins — the
+    per-sim degenerate guarantee of the frozen simulate_stage, on all-Bo3 Stage-3 teams."""
+    teams, _cfg = load_stage(STAGE3_PATH)
+    r = run_mc(teams=teams, ratings=None, S=40.0, N=500, locked={}, seed=7, all_bo3=True)
+    assert len(r.sample) == 500
+    assert len(r.sample[0]) == len(teams)  # 16-team per-sim final record
+    for sim in r.sample:
+        recs = list(sim.values()) if isinstance(sim, dict) else list(sim)
+        assert sum(1 for w, l in recs if w == 3 and l == 0) == 2
+        assert sum(1 for w, l in recs if l == 3 and w == 0) == 2
+        assert sum(1 for w, l in recs if w == 3) == 8
+
+
+def test_epistemic_clamp_under_bo3_means():
+    """SC-4 (mirrors test_epistemic.py band ⊇ Wilson): under all_bo3=True, a hand-authored
+    market_blend carrying HIGH var on a matchup whose mean is a Bo3-compressed EXTREME (near 1)
+    does NOT raise, and the reported epistemic band ⊇ the inner Wilson (sampling) band.
+
+    The "1-9" id-bucket (seed 1 vs seed 9, R1) is oriented p = P(lower-id wins), so we author
+    p=0.97 (an extreme near-1 mean) with var=0.3 — DELIBERATELY far above p*(1-p)=0.0291, so it
+    MUST be clamped or rng.beta crashes (PROB-04, the thin-liquidity failure mode). The clamp is
+    the EXISTING beta_moment_fit: ``v = min(var, mean*(1-mean)*(1-eps))`` plus the mean clamp to
+    (eps, 1-eps). This test routes through THAT clamp only — it neither introduces nor asserts a
+    second clamp implementation.
+    """
+    teams, _cfg = load_stage(STAGE3_PATH)
+    market_blend = {"1-9": (0.97, 0.3)}  # near-1 Bo3-compressed mean, var >> p(1-p) -> must clamp
+
+    # (1) Does NOT raise: the high-var/extreme-mean run completes under the existing clamp.
+    r = run_mc(
+        teams=teams,
+        ratings=None,
+        S=40.0,
+        N=2000,
+        locked={},
+        seed=7,
+        market_blend=market_blend,
+        all_bo3=True,
+    )
+
+    # var>0 must drive K>1 epistemic outer draws (else the band ⊇ Wilson check is trivial).
+    assert r.n == len(r.sample)
+    assert r.n > 2000, "var>0 must run K>1 epistemic draws under Bo3-compressed means"
+
+    # (2) The reported epistemic band ⊇ the inner Wilson (sampling) band for the LOWER-id team
+    # (seed 1): the across-draw union is no TIGHTER than a single Wilson interval over K*N sims.
+    eps = 1e-9
+    lo_o, hi_o = r.band_advance[1]            # epistemic union
+    lo_i, hi_i = r.band_advance_sampling[1]   # inner Wilson over K*N sims
+    assert lo_o <= lo_i + eps and hi_i <= hi_o + eps, (
+        f"epistemic band [{lo_o:.4f},{hi_o:.4f}] must CONTAIN the inner Wilson band "
+        f"[{lo_i:.4f},{hi_i:.4f}] for the priced (seed-1) team"
+    )
+    assert (hi_o - lo_o) >= (hi_i - lo_i) - eps, (
+        "epistemic band width must be >= inner Wilson width (band ⊇ Wilson) under Bo3 + high var"
+    )
