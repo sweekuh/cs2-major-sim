@@ -23,7 +23,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from engine.probs import difficulty  # canonical Buchholz (ENG-03) — no second copy
-from engine.teams import ADVANCE_AT_WINS, Team
+from engine.swiss import simulate_stage  # FROZEN replay path (SEED-03 full-lock standings)
+from engine.teams import ADVANCE_AT_WINS, ELIMINATE_AT_LOSSES, Team
 
 
 @dataclass(frozen=True)
@@ -101,3 +102,113 @@ def seed_next_stage(
         s = 9 + offset
         seeds.append(Team(id=s, name=t.name, seed=s, rating=t.rating))
     return seeds
+
+
+# ===========================================================================
+# SEED-03 — completeness gate + full-lock replay standings (the auto-derive precondition).
+# ===========================================================================
+# These two helpers are the SEED-03 wiring side of the chain. Unlike seed_next_stage (which is
+# RNG-free and accepts an already-replayed {id: Team}), they DO the replay — so numpy enters the
+# module HERE and ONLY here. A fully-locked replay takes _play's deterministic locked branch and
+# never samples, so the throwaway rng below does NOT affect output (mirrors engine.live.derive_bracket
+# line 257 + the SEED-02 determinism claim on seed_next_stage is unaffected: the import is confined
+# to this region, asserted by test_seeding_is_pure). Both helpers CALL the frozen engine + REUSE the
+# engine.live full-lock precondition; they never mutate a frozen engine file (GATE-01 stays green).
+
+
+def final_standings_from_locked(
+    teams: list[Team],
+    locked_results: list[tuple[int, int, int]],
+    S: float,
+) -> dict[int, Team]:
+    """Replay a FULLY-LOCKED prior stage -> ``{id: Team}`` with ``.opps`` populated (RNG-invariant).
+
+    Builds the engine ``locked`` dict from the ordered ``list[(round_idx, winner_id, loser_id)]``
+    lock list via ``engine.live.locked_dict_from_results`` (the exact shape ``_play`` consumes),
+    then runs the SHIPPED ``simulate_stage`` once with a FRESH per-replay team set and a throwaway
+    rng. The returned Teams carry final ``.wins/.losses`` AND the opponent OBJECT set the canonical
+    ``difficulty()`` needs — i.e. the ``{id: Team}`` ``seed_next_stage`` consumes.
+
+    Determinism: a fully-locked prefix takes ``_play``'s deterministic locked branch for every match,
+    so the standings are independent of the throwaway rng seed (T-07-10 / engine.live.derive_bracket).
+    The numpy import is local to this helper to keep the SEED-02 purity claim on ``seed_next_stage``
+    sharp (the module-level derivation path stays RNG-free).
+    """
+    import numpy as np
+
+    from engine.live import locked_dict_from_results
+
+    locked = locked_dict_from_results(locked_results)
+    rng = np.random.default_rng(0)  # throwaway: a fully-locked stage is deterministic (no sampling)
+    return simulate_stage(_replay_fresh(teams), None, S, rng, dict(locked), pairings_out=[])
+
+
+def stage_is_complete(
+    teams: list[Team],
+    locked_results: list[tuple[int, int, int]],
+    S: float,
+) -> bool:
+    """True iff the prior stage is COMPLETE + validated -> the chain may auto-derive (SEED-03).
+
+    Complete means BOTH:
+      1. every round is FULLY locked (no unlocked prior game whose winner would otherwise be
+         sampled), AND
+      2. every team has terminated (``wins >= ADVANCE_AT_WINS`` or ``losses >= ELIMINATE_AT_LOSSES``).
+
+    Condition (1) REUSES the ``engine.live`` full-lock-prefix precondition rather than reinventing
+    it (decisions #5): we ask ``legal_pairings_for_round`` for the round PAST the last replayed round
+    inside a try/except — a partial prefix raises ``LivePrefixIncomplete`` (the EXACT exception SEED-03
+    names), so we return False and the app emits NO seed list (never seeds off sampled winners,
+    T-07-09 / Anti-Pattern 6). When the prefix is fully locked, that same call returns the next round's
+    pairing set (or, if the stage truly ended, raises "round N does not exist" — also handled as the
+    full-lock terminal case via the termination check below).
+
+    A partial/incomplete stage therefore yields False (-> no derivation); only a fully-locked,
+    fully-terminated stage yields True. This helper CALLS the frozen engine + reuses the live
+    precondition; it edits no engine file.
+    """
+    from engine.live import (
+        LivePrefixIncomplete,
+        legal_pairings_for_round,
+        locked_dict_from_results,
+    )
+
+    # Derive the standings (and round count) from the full-lock replay.
+    import numpy as np
+
+    pairings_out: list[list[frozenset]] = []
+    rng = np.random.default_rng(0)  # throwaway: a fully-locked stage is deterministic
+    by_id = simulate_stage(
+        _replay_fresh(teams), None, S, rng, dict(locked_dict_from_results(locked_results)),
+        pairings_out=pairings_out,
+    )
+    num_rounds = len(pairings_out)
+
+    # (1) Full-lock-prefix check via the reused live precondition. Ask for the round PAST the last
+    # the replay produced: an incomplete prefix raises LivePrefixIncomplete -> not complete. A
+    # fully-locked stage raises "round N does not exist" (round_idx >= len(pairings_out)) instead,
+    # which is NOT a partial-prefix failure — so we treat ONLY LivePrefixIncomplete-on-a-partial-prefix
+    # as incomplete and lean on the termination check (2) for the all-locked terminal case.
+    try:
+        legal_pairings_for_round(teams, locked_results, S, num_rounds)
+    except LivePrefixIncomplete as exc:
+        # Distinguish "a prior round is not fully locked" (partial -> incomplete) from
+        # "the stage has no round num_rounds" (fully locked, stage ended -> still possibly complete).
+        if "not fully locked" in str(exc) or "has no pairings" in str(exc):
+            return False
+        # else: "round N does not exist" — the prefix is fully locked; fall through to (2).
+
+    # (2) Every team terminated (3W or 3L). On a partial stage at least one team is still active.
+    return all(
+        t.wins >= ADVANCE_AT_WINS or t.losses >= ELIMINATE_AT_LOSSES for t in by_id.values()
+    )
+
+
+def _replay_fresh(template: list[Team]) -> list[Team]:
+    """Clean per-replay team set (id/name/seed/rating only; counters/opps reset).
+
+    Re-implemented locally (a one-line rebuild) so ``simulate_stage`` owns its Team objects and
+    never leaks wins/losses/opps back into the caller's ``teams`` — mirrors
+    ``engine.live._fresh_teams`` without importing a private helper at module scope.
+    """
+    return [Team(id=t.id, name=t.name, seed=t.seed, rating=t.rating) for t in template]
