@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
+status: ready_to_plan
 stopped_at: Completed 06-04-PLAN.md (Phase 6 complete)
 last_updated: "2026-06-05T23:55:48.568Z"
 last_activity: 2026-06-05
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
   completed_plans: 4
-  percent: 100
+  percent: 50
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-05-30 after v1.0)
 
 ## Current Position
 
-Phase: 6 (Multi-stage scaffold + live-results seam) — EXECUTING
-Plan: 4 of 4 (Plan 01 COMPLETE)
+Phase: 7
+Plan: Not started
 Milestone: **v3 (Full-Major) — ROADMAP COMPLETE** (started 2026-06-02; roadmap fixed 2026-06-02). Scope: live-results auto-ingest + Stage 2 Swiss + Stage 3 Swiss (all-Bo3) + 8-team playoffs (Bo5 GF, nested round-weighted ballot). Format verified vs Wikipedia (3 Swiss stages + playoff). Planning kept LOCAL-ONLY (public master purged `.planning/`).
-Status: Phase complete — ready for verification
+Status: Ready to plan
 Predecessor: **v1.0 COMPLETE** — tagged `v1.0`, 54/54 reqs, 113 tests green, GATE-01 GREEN; plus PRs #6-#9 (live odds, P0 fixes, public forecast page).
-Last activity: 2026-06-05
+Last activity: 2026-06-06
 
 **Phase 6 Plan 01 (06-01) COMPLETE** — STG-01 (`engine.teams.load_stage` sibling, frozen path byte-identical) + STG-04 (`stage_id` a real leading positional in both `run_mc_cached`/`optimize_cached`, stage selector in app.py, cross-stage cache isolation proven). 6 atomic commits (c7aca2c→6a5191d). Full suite 134 passed, GATE-01 green. Next: 06-02.
 
@@ -51,7 +51,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 14 (v1.0)
+- Total plans completed: 18 (v1.0)
 - Average duration: — min
 - Total execution time: 0.0 hours
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 01 | 4 | - | - |
 | 02 | 3 | - | - |
+| 6 | 4 | - | - |
 
 **Recent Trend:**
 

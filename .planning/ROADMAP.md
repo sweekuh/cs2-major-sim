@@ -139,7 +139,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Pick'Em Optimizer | 2/2 | Complete | 2026-05-29 |
 | 4. Conditional Re-Sim + Live Mode | 2/2 | Complete | 2026-05-29 |
 | 5. Odds Ensemble | 3/3 | Complete (live-slug /browse confirm DEFERRED) | 2026-05-30 |
-| 6. Multi-stage scaffold + live-results seam | 4/4 | Complete | 2026-06-05 |
+| 6. Multi-stage scaffold + live-results seam | 4/4 | Complete    | 2026-06-06 |
 | 7. Stage 2 + inter-stage seeding chain | 0/TBD | Not started | - |
 | 8. Stage 3 (all-Bo3) | 0/TBD | Not started | - |
 | 9. Playoff bracket + Bo5 + nested ballot optimizer | 0/TBD | Not started | - |
