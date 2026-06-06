@@ -51,16 +51,18 @@ class _StubRng:
         return self._value
 
 
-def _fake_team(team_id: int, *, seed: int, wins: int = 0, losses: int = 0):
-    """Duck-typed team for the _play unit assertions (id/seed/wins/losses/opps).
+def _fake_team(team_id: int, *, seed: int, wins: int = 0, losses: int = 0, rating: float = 0.0):
+    """Duck-typed team for the _play unit assertions (id/seed/wins/losses/opps/rating).
 
-    Mirrors tests/conftest.py::FakeTeam but constructed locally so these unit tests do not
-    depend on the full engine.teams fixture. ``opps`` is a set (identity-hashable) so
-    _record_match's ``a.opps.add(b)`` would work; _play itself never mutates opps.
+    Mirrors engine.teams.Team's attribute surface that _play reads. A ``rating`` attr IS
+    present because ``_play`` evaluates ``ratings.get(a.id, a.rating)`` — Python evaluates the
+    ``.get`` default (``a.rating``) eagerly even when the id key is present, so the object must
+    expose it. The explicit ``ratings`` dict passed in the tests still overrides this value;
+    ``rating`` here is only the never-selected fallback. ``opps`` is a set (identity-hashable).
     """
 
     class _FT:
-        __slots__ = ("id", "seed", "wins", "losses", "opps")
+        __slots__ = ("id", "seed", "wins", "losses", "opps", "rating")
 
         def __init__(self):
             self.id = team_id
@@ -68,6 +70,7 @@ def _fake_team(team_id: int, *, seed: int, wins: int = 0, losses: int = 0):
             self.wins = wins
             self.losses = losses
             self.opps = set()
+            self.rating = rating
 
     return _FT()
 
