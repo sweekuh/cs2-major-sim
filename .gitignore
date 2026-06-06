@@ -9,6 +9,10 @@ files.zip
 # it; the app only ever READS it via ui/odds_loader.py.
 data/odds_cache.json
 
+# Hourly fetch log written by scripts/fetch_odds_task.ps1 (the Task Scheduler wrapper) — a local
+# runtime log, not source. Holds only timestamps + match/provider counts (never the apiKey).
+data/odds_fetch.log
+
 # Fetched live-results cache (a runtime artifact, not source — RES-01). Its ABSENCE is the normal
 # first-run state and is handled fail-soft (manual entry + banner). scripts/fetch_results.py writes
 # it; the app only ever READS it via ui/results_loader.py. (data/team_aliases.json + data/stageN.json
