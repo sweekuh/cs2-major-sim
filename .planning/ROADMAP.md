@@ -92,7 +92,10 @@ Full phase details (goals, plans, seams, decisions) archived in `.planning/miles
   2. Stage N+1 qualifier seeds derive from Stage N's FINAL Buchholz via the canonical `engine.probs.difficulty` (one Buchholz definition, never a second copy); invited teams seed by VRS; the invited/qualifier merge follows the Valve rule held `[INFERRED]` + editable until confirmed (SEED-01).
   3. Seed derivation is a pure, file-I/O-free, RNG-free function with a documented tiebreak chain; identical prior-stage results yield byte-identical seeds across two runs (the two-run determinism test is the gate) (SEED-02). **[correctness gate]**
   4. When a stage's results are complete and validated (reusing the `LivePrefixIncomplete` guard), the next stage's seeds auto-derive from them; a partial/incomplete stage produces NO seed list (SEED-03).
-**Plans**: TBD
+**Plans**: 3 plans (2 waves — MVP vertical slices)
+- [ ] 07-01-PLAN.md — Slice 1: real Stage-2 fixture + Σ=2/8/2 invariant on the FROZEN engine (STG-02) [Wave 1]
+- [ ] 07-02-PLAN.md — Slice 2a: pure `engine/seeding.py` `seed_next_stage` + the SEED-02 two-run determinism gate (test-first) (SEED-01, SEED-02) [Wave 1]
+- [ ] 07-03-PLAN.md — Slice 2b: completeness-gated auto-derivation (`LivePrefixIncomplete`) + editable [INFERRED] session overlay (SEED-03) [Wave 2]
 **UI hint**: yes
 **Verify pass**: pull the Valve invited/qualifier seed-merge rule verbatim (MEDIUM-confidence gap; held `[INFERRED]` + editable until verified against the official Cologne seeding when Stages post).
 **GATE-01:** must stay green (Stage 2 reuses `simulate_stage` unchanged — if it needs an engine edit, the generalization is wrong).
@@ -140,6 +143,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Conditional Re-Sim + Live Mode | 2/2 | Complete | 2026-05-29 |
 | 5. Odds Ensemble | 3/3 | Complete (live-slug /browse confirm DEFERRED) | 2026-05-30 |
 | 6. Multi-stage scaffold + live-results seam | 4/4 | Complete    | 2026-06-06 |
-| 7. Stage 2 + inter-stage seeding chain | 0/TBD | Not started | - |
+| 7. Stage 2 + inter-stage seeding chain | 0/3 | Planned | - |
 | 8. Stage 3 (all-Bo3) | 0/TBD | Not started | - |
 | 9. Playoff bracket + Bo5 + nested ballot optimizer | 0/TBD | Not started | - |
