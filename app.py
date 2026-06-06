@@ -35,7 +35,7 @@ from engine.live import (
 )
 from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
-from engine.teams import load_stage, load_teams
+from engine.teams import load_stage
 from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, optimize_cached
 from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
 from ui.results_loader import load_results_cache  # json-only results read seam (NO httpx — RES-04)
