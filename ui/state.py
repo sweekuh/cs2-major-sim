@@ -44,7 +44,8 @@ DEFAULT_MODE = Mode.PRE_STAGE
 
 # session_state key constants (single source so app.py + tests agree on the names).
 KEY_MODE = "mode"
-KEY_MC_CACHE = "mc_cache"          # dict: (ratings_key, S, N, locked_key) -> Result
+KEY_STAGE = "active_stage"          # str: the selected stage_id ('stage1'|'stage2'|...) — Phase 6, STG-04
+KEY_MC_CACHE = "mc_cache"          # dict: (stage_id, ratings_key, S, N, locked_key) -> Result
 KEY_RATINGS_EDITOR = "ratings_editor"
 KEY_S_SLIDER = "S_slider"
 KEY_N_INPUT = "N_input"
@@ -53,6 +54,22 @@ KEY_RUN_BUTTON = "run_btn"
 # handler and rendered on the NEXT run so the message survives the st.rerun() that the fetch
 # triggers (a message drawn before st.rerun() is discarded — the toast-lost bug, fixed 2026-05-31).
 KEY_ODDS_OUTCOME = "odds_fetch_outcome"
+# Persisted "Fetch latest results" outcome: ("success"|"info"|"error", message). Same one-shot
+# stash/render/pop discipline as KEY_ODDS_OUTCOME (Phase 6, RES-02) — the message is stashed in the
+# fetch-results click handler and rendered on the NEXT run after the st.rerun() the fetch triggers.
+KEY_RESULTS_OUTCOME = "results_fetch_outcome"
+# Phase 6 (RES-03) conflict-confirm + provenance keys.
+# KEY_PENDING_RESULT_CONFLICT stashes the ONE fetched (round_idx, winner_id, loser_id) lock that
+# conflicts with an existing MANUAL lock for the same pair — set by the pre-fill loop, consumed by
+# the explicit "Apply fetched result" confirm control. A conflicting fetch is NEVER silently applied
+# (the manual lock is authoritative ground truth); the swap is validated BEFORE the manual lock is
+# removed (atomic — manual lock preserved on an engine-illegal fetched lock).
+KEY_PENDING_RESULT_CONFLICT = "pending_result_conflict"
+# KEY_LOCK_PROVENANCE maps a lock pair frozenset((winner, loser)) -> "auto"|"manual": "manual" is
+# tagged at the _commit_lock site (a user-entered lock); "auto" is tagged when a fetched result
+# pre-fills a lock. A missing entry reads as "manual" (the pre-Phase-6 default — every prior lock
+# was user-entered). The conflict gate keys off this so an auto-fetch never clobbers a manual lock.
+KEY_LOCK_PROVENANCE = "lock_provenance"
 
 # --- Phase 4 LIVE-mode keys (RESIM-01..04) -----------------------------------------------
 # KEY_LOCKED holds the ordered source-of-truth list of locked results:
@@ -67,6 +84,18 @@ KEY_LIVE_ANCHOR = "live_anchor_ballot"
 # the "Lock result" button handler. It is validated via engine.live.validate_lock BEFORE being
 # committed to KEY_LOCKED (D3/RESIM-03) — an illegal pending lock surfaces st.error and is dropped.
 KEY_PENDING_LOCK = "pending_lock"
+
+# --- Phase 7 inter-stage seeding chain (SEED-03) -----------------------------------------
+# KEY_DERIVED_SEEDS holds the per-stage derived-seed SESSION OVERLAY: the Stage N+1 seeds
+# auto-derived from a COMPLETE, fully-locked Stage N (via engine.seeding.stage_is_complete +
+# seed_next_stage). It is keyed by the DERIVED (next) stage_id ->  list[Team] so a stage switch
+# reads its own overlay. This is an editable [INFERRED] overlay the Stage-2 seed/ratings editor
+# reads as its starting rows — NOT a write to data/stage2.json (the committed fixture stays the
+# editable baseline; mirrors the Phase-6 results pre-fill which holds fetched data in session).
+# The overlay carries seeds_confirmed=false semantics: it NEVER flips seeds_confirmed_{stage_id},
+# so the per-stage [INFERRED] banner (STG-05) persists until the user reconciles vs the official
+# Stage-2 seed list. A partial/incomplete prior stage produces NO overlay (no seed list at all).
+KEY_DERIVED_SEEDS = "derived_seeds_overlay"
 
 # UI-05 canonical inline error copy (UI-SPEC Copywriting Contract — do not drift).
 BAD_RATING_MSG = "Ratings must be numbers. Fix the highlighted cell, then Run."
@@ -99,7 +128,10 @@ TRUST_BADGE_VALIDATED = (
     "engine validated vs Valve rulebook unit tests + full round-by-round backtest"
 )
 
-# The session_state key the seeds-confirmed toggle binds to (the gate the badge reads).
+# Legacy base name of the seeds-confirmed session key (the gate the trust badge reads). Phase 6
+# (STG-05) made the banner PER-STAGE: app.py now binds the toggle to f"seeds_confirmed_{stage_id}"
+# (e.g. "seeds_confirmed_stage1"), seeded from that stage's own fixture flag, so confirming one
+# stage cannot dismiss another's banner. This constant is kept as the documented base name.
 KEY_SEEDS_CONFIRMED = "seeds_confirmed"
 
 # Optional odds-provider env var (Phase 5/ODDS-08). Presence is checked WITHOUT importing

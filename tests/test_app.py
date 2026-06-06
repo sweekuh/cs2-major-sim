@@ -121,8 +121,9 @@ def test_locked_in_cache_key():
     lk_empty = freeze_locked({})
     lk_locked = freeze_locked({frozenset({1, 9}): 1})
     assert lk_empty != lk_locked
-    r_empty = run_mc_cached(rk, 40.0, 2000, lk_empty)
-    r_locked = run_mc_cached(rk, 40.0, 2000, lk_locked)
+    # stage_id is the new REAL leading positional (Phase 6, STG-04) — both calls carry "stage1".
+    r_empty = run_mc_cached("stage1", rk, 40.0, 2000, lk_empty)
+    r_locked = run_mc_cached("stage1", rk, 40.0, 2000, lk_locked)
     # Different locked -> the engine saw a different lock -> distinct results (>=1 P moves).
     assert r_empty.counts_advance != r_locked.counts_advance
 
@@ -414,9 +415,13 @@ def test_seed_banner(monkeypatch):
 
 
 def test_seed_banner_dismissable(monkeypatch):
-    """DX-02: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
-    drives session_state (the gate the trust badge reads). Forced-unconfirmed start."""
-    from ui.state import KEY_SEEDS_CONFIRMED
+    """DX-02 / STG-05: toggling 'seeds confirmed' dismisses the INFERRED-seed banner; the toggle
+    drives session_state (the gate the trust badge reads). The banner+toggle are now PER-STAGE
+    (STG-05), so on the default Stage 1 the toggle key is 'seeds_confirmed_stage1'.
+    Forced-unconfirmed start (monkeypatch read_seeds_confirmed → False)."""
+    # Default stage is Stage 1 (DX-01 zero-config first run), so the per-stage confirm key is
+    # f"seeds_confirmed_{stage_id}" == "seeds_confirmed_stage1".
+    seeds_key = "seeds_confirmed_stage1"
 
     monkeypatch.setattr("ui.state.read_seeds_confirmed", lambda *a, **k: False)
     at = _apptest().run()
@@ -424,14 +429,52 @@ def test_seed_banner_dismissable(monkeypatch):
     # First load: banner present, toggle off.
     assert any("seeds are inferred" in w.value.lower() for w in at.warning)
 
-    # Find the seeds-confirmed toggle (st.toggle preferred; checkbox is the sanctioned fallback).
+    # Find the per-stage seeds-confirmed toggle (st.toggle preferred; checkbox is the fallback).
     widgets = list(getattr(at, "toggle", [])) + list(getattr(at, "checkbox", []))
-    tog = next(w for w in widgets if w.key == KEY_SEEDS_CONFIRMED)
+    tog = next(w for w in widgets if w.key == seeds_key)
     tog.set_value(True).run()
     assert not at.exception
     # After confirming, the INFERRED-seed warning is gone (dismissed).
     assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
-    assert at.session_state[KEY_SEEDS_CONFIRMED] is True
+    assert at.session_state[seeds_key] is True
+
+
+def test_per_stage_seed_banner():
+    """STG-05: the [INFERRED]-seed banner is PER-STAGE — each stage reads its OWN fixture's
+    seeds_confirmed flag, so confirming one stage cannot dismiss another's banner.
+
+    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2's is false → the
+    loud warning shows. The Stage-2 confirm toggle is keyed 'seeds_confirmed_stage2' (distinct
+    from Stage 1's 'seeds_confirmed_stage1'), proving the per-stage session key. No monkeypatch
+    of read_seeds_confirmed — the per-stage state is driven by the real committed fixtures."""
+    from ui.state import KEY_STAGE
+
+    # Stage 1 (default): the shipped fixture confirms the seeds → no INFERRED-seed warning, and
+    # no Stage-2 toggle yet (that key only appears once Stage 2 is the active stage).
+    at = _apptest().run()
+    assert not at.exception
+    assert not any("seeds are inferred" in w.value.lower() for w in at.warning)
+    s1_toggle_keys = {w.key for w in getattr(at, "toggle", [])}
+    assert "seeds_confirmed_stage2" not in s1_toggle_keys
+
+    # Switch to Stage 2 (inject the selector's session value, as the LIVE/isolation tests do —
+    # robust to the selector widget type). Stage 2's fixture is seeds_confirmed=false.
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    # Stage 2 SHOWS the INFERRED-seed warning (its fixture is unconfirmed).
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "Stage 2 (seeds_confirmed:false) must show the INFERRED-seed banner"
+    )
+    # The Stage-2 confirm toggle is keyed per-stage — distinct from Stage 1's key.
+    s2_toggle_keys = {w.key for w in getattr(at, "toggle", [])}
+    assert "seeds_confirmed_stage2" in s2_toggle_keys, (
+        "the confirm toggle must be keyed 'seeds_confirmed_stage2' (per-stage), proving the "
+        "banner state is scoped to the active stage"
+    )
+    assert "seeds_confirmed_stage1" not in s2_toggle_keys, (
+        "only the active stage's toggle renders — Stage 1's key must not leak into the Stage-2 view"
+    )
 
 
 def test_odds_off_banner_failsoft(monkeypatch):
@@ -537,8 +580,9 @@ def test_live_lock_changes_cache_key():
     # A new key with the non-empty locked_key appeared (the empty-locked key may also remain).
     new_keys = post_keys - pre_keys
     assert new_keys, "a locked Run must create a new cache entry on the non-empty locked key"
-    # Every cache key is (ratings_key, S, N, locked_key); a new one carries a non-empty locked_key.
-    assert any(k[3] != () for k in new_keys)
+    # Every cache key is (stage_id, ratings_key, S, N, locked_key); a new one carries a non-empty
+    # locked_key — at index 4 now that stage_id leads (Phase 6, STG-04).
+    assert any(k[4] != () for k in new_keys)
 
 
 def test_live_lock_moves_p_advance():
@@ -549,7 +593,7 @@ def test_live_lock_moves_p_advance():
     at = _go_live_small(_apptest().run())
     assert not at.exception
     cache = at.session_state["mc_cache"]
-    pre_key = next(k for k in cache if k[3] == ())
+    pre_key = next(k for k in cache if k[4] == ())
     pre_p_adv = cache[pre_key].p_advance()
 
     w, ell = _first_legal_r1_lock()
@@ -558,7 +602,7 @@ def test_live_lock_moves_p_advance():
     assert not at.exception
 
     cache = at.session_state["mc_cache"]
-    post_key = next(k for k in cache if k[3] != ())
+    post_key = next(k for k in cache if k[4] != ())
     post_p_adv = cache[post_key].p_advance()
     # >=1 P(advance) moves (the locked winner's pair is now deterministic -> counts shift).
     assert any(
@@ -681,7 +725,7 @@ def test_live_delta_anchor_uses_pre_key():
     assert anchor_pre is not None
 
     cache = at.session_state["mc_cache"]
-    pre_key = next(k for k in cache if k[3] == ())
+    pre_key = next(k for k in cache if k[4] == ())
     pre_result = cache[pre_key]
 
     w, ell = _first_legal_r1_lock()
@@ -695,7 +739,7 @@ def test_live_delta_anchor_uses_pre_key():
 
     # `before` is computed on the pre_key Result's OWN sample (not the post-lock result).
     cache = at.session_state["mc_cache"]
-    post_key = next(k for k in cache if k[3] != ())
+    post_key = next(k for k in cache if k[4] != ())
     post_result = cache[post_key]
     ids = [t.id for t in load_teams()]
     before, after = pge5_delta(anchor_post, pre_result, post_result, ids)
@@ -1014,4 +1058,695 @@ def test_fresh_fetch_invalidates_cache(monkeypatch, tmp_path):
     # recomputed, NOT stale-served from the first run's memoized Result.
     assert keys_after_second - keys_after_first, (
         "a fresh fetch (new _meta.fetched_at) must invalidate the memoized Result (T-05-STALEBAND)"
+    )
+
+
+def test_stage_switch_isolates_cache():
+    """STG-04 (integration): running Stage 1, then switching to Stage 2 via the selector and
+    Running, creates an mc_cache key whose LEADING element is 'stage2'; the prior Stage-1 key
+    (leading 'stage1') stays distinct — no cache key is shared across stages, so one stage can
+    never serve the other's per-team numbers."""
+    from ui.state import KEY_STAGE
+
+    # Default stage is Stage 1 — run it first to memoize a 'stage1'-leading key.
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    stage1_keys = set(at.session_state["mc_cache"].keys())
+    assert stage1_keys, "the first (Stage-1) run must memoize a key"
+    assert all(k[0] == "stage1" for k in stage1_keys), (
+        "every key from the default-stage run must lead with 'stage1'"
+    )
+
+    # Switch to Stage 2 and Run again (inject the selector's session value, as the LIVE tests
+    # inject KEY_LOCKED — robust to the selector widget type).
+    at.session_state[KEY_STAGE] = "stage2"
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    all_keys = set(at.session_state["mc_cache"].keys())
+    stage2_keys = {k for k in all_keys if k[0] == "stage2"}
+    assert stage2_keys, "running under Stage 2 must create a 'stage2'-leading cache key"
+    # The Stage-1 key is still present and distinct — no key is shared across stages.
+    assert stage1_keys & stage2_keys == set(), "no cache key may be shared across stages"
+    assert all(k[0] == "stage1" for k in stage1_keys)
+
+
+# --- Phase 6 Slice 4: live-results seam wired into the app (RES-02/03/04) -----------------
+#
+# These AppTest cases exercise the "Fetch latest results" button, the fetched-result pre-fill of
+# KEY_LOCKED via the EXISTING validate path (no engine edit), the fetched_at-in-cache-key re-sim
+# re-fire, the int-vs-str canonical stage filter, and the atomic conflict-confirm against a manual
+# lock. The results cache is supplied per-test via monkeypatching ui.results_loader.load_results_cache
+# (mirroring the odds-cache tests). N is kept small (2000) per the latency budget.
+
+
+def _results_cache(rows, *, stage=1, fetched_at="2026-06-04T00:00:00+00:00", source="bo3gg"):
+    """A frozen-schema results-cache dict (mirrors scripts.fetch_results.main's write shape).
+
+    ``stage`` is the INTEGER stage number the frozen schema stores in _meta (1 for "stage1"); the
+    app's canonical _stage_int_for reconciles it against the str stage_id. ``rows`` are the
+    {match:[lo,hi], winner, round_idx, bo, status, provider_slugs} result rows.
+    """
+    return {
+        "_meta": {"fetched_at": fetched_at, "version": 1, "source": source, "stage": stage},
+        "results": list(rows),
+    }
+
+
+def _finished_row(lo, hi, winner, *, round_idx=0, bo=1):
+    """One FINISHED frozen-schema result row (match is the SORTED [lo, hi] engine-id tuple)."""
+    a, b = sorted((lo, hi))
+    return {
+        "match": [a, b],
+        "winner": winner,
+        "round_idx": round_idx,
+        "bo": bo,
+        "status": "finished",
+        "provider_slugs": [f"slug{a}", f"slug{b}"],
+    }
+
+
+def _ss_get(at, key, default=None):
+    """Read at.session_state[key] safely — AppTest's SessionState proxy has no .get() (subscript
+    only), so mirror dict.get via a presence check. Used by the conflict/provenance tests."""
+    return at.session_state[key] if key in at.session_state else default
+
+
+def _patch_results(monkeypatch, cache):
+    """Monkeypatch BOTH the loader module and app.py's imported alias to return ``cache``.
+
+    app.py may either ``from ui.results_loader import load_results_cache`` (binding a local alias) or
+    call it qualified; patching both the source module attr and the app attr (raising=False) covers
+    whichever binding the wiring uses, so the test is robust to the import style."""
+    import ui.results_loader as rloader
+
+    monkeypatch.setattr(rloader, "load_results_cache", lambda *a, **k: cache)
+    monkeypatch.setattr("app.load_results_cache", lambda *a, **k: cache, raising=False)
+
+
+def test_fetched_results_prefill_locked(monkeypatch):
+    """RES-02 / T-06-10 + T-06-12: a FINISHED row whose _meta.stage is the INTEGER 1 pre-fills
+    KEY_LOCKED while the active stage_id is the STRING 'stage1' — the canonical int-vs-str filter
+    FIRES (the row is NOT silently skipped). The non-empty locked_key produces a NEW mc_cache key
+    (re-sim fires). An ILLEGAL fetched row (a non-pairing for the round) is REJECTED via the existing
+    validate_lock reason and does NOT mutate KEY_LOCKED."""
+    from ui.state import KEY_LOCKED
+
+    # A legal R1 result (1 beats 9 — seed i vs i+8 is the R1 pairing) PLUS an illegal non-pairing
+    # row (1 vs 2 are NOT paired in R1) that validate_lock must reject without mutating KEY_LOCKED.
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    illegal = _finished_row(2, 3, winner=2, round_idx=0)  # 2 vs 3 is not an R1 pairing
+    _patch_results(monkeypatch, _results_cache([legal, illegal], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # The legal fetched result auto-locked (1 beat 9); the illegal one did not.
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 1, 9) in locked, "the FINISHED int-stage-1 row must pre-fill KEY_LOCKED (filter fired)"
+    assert not any(frozenset((w, ell)) == frozenset((2, 3)) for (_r, w, ell) in locked), (
+        "an illegal non-pairing fetched row must be rejected, never locked"
+    )
+    # The non-empty locked_key produced a cache key with a populated locked element (re-sim fired).
+    keys = set(at.session_state["mc_cache"].keys())
+    assert any(k[4] != () for k in keys), "the auto-locked result must produce a non-empty locked cache key"
+
+
+def test_fetched_at_refires_resim(monkeypatch):
+    """RES-02 re-sim re-fire: with the SAME (stage_id, ratings, S, N, locked) two results caches
+    differing ONLY in _meta.fetched_at produce DIFFERENT run cache keys (the fetched_at element
+    differs) — a fresh fetch forces a MISS so the conditional re-sim re-fires even with an unchanged
+    locked set. Unit form: assert _cache_key_for(...) with two fetched_at values differs in its last
+    element (and the wired run threads the RESULTS fetched_at into that slot)."""
+    import importlib
+
+    app = importlib.import_module("app")
+
+    ratings = {i: 50.0 for i in range(1, 17)}
+    locked = {frozenset((1, 9)): 1}
+    k1 = app._cache_key_for(ratings, locked, "stage1", "2026-06-04T00:00:00+00:00")
+    k2 = app._cache_key_for(ratings, locked, "stage1", "2026-06-04T12:00:00+00:00")
+    # Identical except the trailing fetched_at slot — a fresh fetch timestamp changes the key.
+    assert k1[:-1] == k2[:-1], "only the fetched_at slot should differ"
+    assert k1[-1] != k2[-1], "two different fetched_at values must yield different cache keys (re-sim re-fires)"
+
+    # End-to-end: two results caches with the SAME locked set but different fetched_at each add a
+    # distinct mc_cache key (the RESULTS fetched_at is threaded into the run cache key).
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([legal], stage=1, fetched_at="2026-06-04T00:00:00+00:00"))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    keys_first = set(at.session_state["mc_cache"].keys())
+
+    _patch_results(monkeypatch, _results_cache([legal], stage=1, fetched_at="2026-06-04T12:00:00+00:00"))
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    keys_second = set(at.session_state["mc_cache"].keys())
+    assert keys_second - keys_first, (
+        "a fresh _meta.fetched_at (same locked set) must add a NEW run cache key — the re-sim re-fires"
+    )
+
+
+def test_no_results_failsoft(monkeypatch):
+    """RES-04 fail-soft: with NO results cache and NO key the app renders + Runs (manual locking
+    still works), no exception. The pre-fill must degrade to a no-op when load_results_cache is None."""
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    monkeypatch.setattr("ui.odds_loader.load_odds_cache", lambda *a, **k: None)
+    _patch_results(monkeypatch, None)
+
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    # Manual locking still works day one — switch to LIVE, inject a manual lock, re-run, no crash.
+    from ui.state import KEY_LOCKED
+
+    at = _go_live_small(at)
+    assert not at.exception
+    w, ell = _first_legal_r1_lock()
+    at.session_state[KEY_LOCKED] = [(0, w, ell)]
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    assert (0, w, ell) in list(at.session_state[KEY_LOCKED])
+
+
+def test_no_network_on_rerun_with_results(monkeypatch):
+    """T-06-09b: with the results seam WIRED (a results cache present) and httpx booby-trapped to
+    RAISE on any attribute access, a rerun makes NO network call and still renders probability
+    content — proving scripts.fetch_results is lazy-imported (click branch only), never on rerun."""
+    import httpx
+
+    class _Boom:
+        def __getattr__(self, name):
+            raise AssertionError(f"httpx.{name} called on a rerun — results seam network leak")
+
+    for attr in ("get", "post", "request", "Client", "AsyncClient", "stream"):
+        monkeypatch.setattr(httpx, attr, _Boom(), raising=False)
+
+    # The results seam is active (a valid cache present) — the pre-fill reads it via the json loader.
+    legal = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([legal], stage=1))
+
+    at = _apptest().run()
+    assert not at.exception
+    at.button(key="run_btn").click().run()  # a rerun
+    assert not at.exception
+    assert any("advance" in m.value.lower() for m in at.markdown)
+
+
+def test_fetch_conflict_requires_confirm(monkeypatch):
+    """RES-03 / T-06-11: a fetched result for a pair the user MANUALLY locked with the OPPOSITE
+    winner does NOT silently overwrite KEY_LOCKED. A loud conflict notice is shown + a pending
+    conflict stashed; KEY_LOCKED keeps the manual lock until the user explicitly confirms. After a
+    LEGAL confirm KEY_LOCKED reflects the fetched winner, tagged provenance 'auto'."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Fetched result: 9 beat 1 (opposite of the manual lock the user will hold: 1 beat 9).
+    row = _finished_row(1, 9, winner=9, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([row], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Establish the MANUAL lock 1 beat 9 (opposite the fetched 9 beat 1) and re-run.
+    at.session_state[KEY_LOCKED] = [(0, 1, 9)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 9)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # The conflict was stashed (NOT silently applied); the manual lock is intact; a loud notice shows.
+    # The pending store is a per-pair dict (ME-01) keyed by the lock pair -> the pending lock tuple.
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 9)): (0, 9, 1)}
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "manual lock must survive until confirm"
+    assert (0, 9, 1) not in list(at.session_state[KEY_LOCKED]), "fetched winner not applied pre-confirm"
+    assert any("conflict" in w.value.lower() for w in at.warning), "a loud conflict warning must render"
+
+    # Explicit confirm (a LEGAL swap — same R1 pair, opposite winner): KEY_LOCKED now holds 9 beat 1.
+    # The confirm button is keyed per-pair (ME-01) on the SORTED pair ids -> {1,9} == _1_9.
+    at.button(key="apply_fetched_result_btn_1_9").click().run()
+    assert not at.exception
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 9, 1) in locked, "after confirm the fetched winner is applied"
+    assert (0, 1, 9) not in locked, "the manual lock was atomically swapped out on a legal confirm"
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((9, 1))) == "auto"
+
+
+def test_conflict_confirm_validates_before_remove(monkeypatch):
+    """RES-03 / T-06-11 (the atomicity guard): confirming a fetched result for the SAME pair whose
+    proposed lock is ENGINE-ILLEGAL (validate_lock returns a reason — here a non-pairing for the
+    round) leaves the original MANUAL lock PRESERVED (KEY_LOCKED unchanged, the manual entry not
+    removed) and surfaces the validate_lock reason. The remove-manual + add-fetched happens ONLY on a
+    successful validate_lock — never remove-then-fail."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Manual lock for the pair {1,5} (NOT an R1 pairing — R1 is i vs i+8, so {1,9}). Injected directly
+    # to represent a manual lock; the fetched conflict proposes the OPPOSITE winner for the SAME pair.
+    # On confirm the prospective swap validates {5,1} at R1 -> "not paired this round" -> rejected.
+    row = _finished_row(1, 5, winner=5, round_idx=0)
+    _patch_results(monkeypatch, _results_cache([row], stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = [(0, 1, 5)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 5)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    # The conflict is stashed (same pair, opposite winner, manual provenance) — per-pair dict (ME-01).
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 5)): (0, 5, 1)}
+
+    locked_before = list(at.session_state[KEY_LOCKED])
+    # Confirm — but the fetched lock is engine-illegal (non-pairing) -> rejected, manual preserved.
+    # The confirm button is keyed per-pair (ME-01) on the SORTED pair ids -> {1,5} == _1_5.
+    at.button(key="apply_fetched_result_btn_1_5").click().run()
+    assert not at.exception
+    assert list(at.session_state[KEY_LOCKED]) == locked_before, (
+        "an engine-illegal fetched lock must NOT remove the manual lock (validate before remove)"
+    )
+    assert (0, 1, 5) in list(at.session_state[KEY_LOCKED]), "the manual lock is preserved"
+    # The validate_lock reason is surfaced (the 'not paired this round' string).
+    assert any("not paired this round" in e.value.lower() for e in at.error), (
+        "the validate_lock reason must be surfaced on a rejected confirm"
+    )
+
+
+def test_provenance_and_staleness_surfaced(monkeypatch):
+    """RES-03: a loaded results cache surfaces _meta.fetched_at via the existing fmt_age/is_stale (a
+    stale cache shows the stale warning), and each lock's provenance (auto vs manual) is rendered."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED
+
+    # A STALE fetched_at (well past the 2h threshold) so is_stale -> True deterministically.
+    row = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(
+        monkeypatch,
+        _results_cache([row], stage=1, fetched_at="2020-01-01T00:00:00+00:00"),
+    )
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # The fetched result auto-locked (provenance auto), so a provenance badge + staleness surface.
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED])
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((1, 9))) == "auto"
+    text = _all_text(at)
+    # Staleness surfaced via the existing helper copy.
+    assert "stale" in text.lower(), "a stale results cache must surface a stale notice"
+    # Per-lock provenance rendered (auto vs manual wording).
+    assert "auto" in text.lower(), "auto-fetched provenance must be surfaced"
+
+
+# --- Phase 6 code-review fixes (06-REVIEW HI-01 / HI-02 / ME-01 / ME-02) ------------------
+#
+# Regression tests for the four live-results *application*-layer findings. Each is written to
+# FAIL against the pre-fix single-pass / scalar-conflict / unscoped-banner code and pass after
+# the fix. They use the SAME helpers (_results_cache / _finished_row / _patch_results /
+# _go_live_small) as the Phase-6 Slice-4 tests above.
+
+
+def _r1_full_lock_rows():
+    """The 8 R1 result rows for the default fixture (seed i vs i+8), lower id wins each match.
+
+    Returns ``list[(round_idx=0, winner_id, loser_id)]`` covering EVERY R1 pairing — a fully
+    locked R1 prefix, which is the precondition for R2's legal pairings to be deterministic.
+    """
+    from engine.live import legal_pairings_for_round
+    from engine.teams import load_teams
+
+    r1 = legal_pairings_for_round(load_teams(), [], 40.0, 0)
+    return [(0, *sorted(p)) for p in sorted(r1, key=lambda p: sorted(p))]  # lower id wins
+
+
+def test_reverse_round_results_prefill_in_one_pass(monkeypatch):
+    """HI-01 (06-REVIEW): a MULTI-ROUND results cache in REVERSE round order (the live bo3.gg
+    feed is reverse-chronological, sort=-start_date) must auto-lock EVERY round in ONE prefill
+    pass.
+
+    The pre-fix single pass iterates rows in cache order; an R2 row encountered first against a
+    still-empty lock list hits legal_pairings_for_round's "all prior rounds fully locked" prefix
+    guard, raises LivePrefixIncomplete, and the row is DROPPED — so only R1 locks this pass and
+    R2 silently vanishes until a later rerun. The fix sorts rows by round_idx (write side AND
+    read side) so the prefix is built in order and R2 locks in the same pass.
+
+    Constructed with the rows DELIBERATELY in reverse-round order (R2 row first, then the 8 R1
+    rows) so the test FAILS against the unsorted single-pass loop.
+
+    AppTest reruns the script several times during setup, and each rerun is a fresh prefill pass —
+    so the pre-fix loop CONVERGES across reruns (R1 locks, then R2 locks on a later pass), which
+    would mask the bug. To isolate ONE pass we reset KEY_LOCKED to empty and then do exactly ONE
+    final .run() (one script execution == one prefill pass); the assertion then exercises the
+    single-pass behavior the review flagged.
+    """
+    from ui.state import KEY_LOCKED
+
+    r1_rows = _r1_full_lock_rows()  # 8 rows at round_idx 0 (fully locks R1)
+    # One legal R2 result: with the full "lower id wins R1" prefix, [1,8] is an R2 pairing -> 1 beats 8.
+    r2_row = (1, 1, 8)
+    # Reverse-round order: the R2 row FIRST (newest-first), then the R1 rows — the exact order the
+    # reverse-chronological bo3.gg feed would produce, which drops R2 under the pre-fix single pass.
+    ordered = [r2_row, *r1_rows]
+    rows = [_finished_row(w, ell, winner=w, round_idx=ri) for (ri, w, ell) in ordered]
+    _patch_results(monkeypatch, _results_cache(rows, stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+
+    # Isolate a SINGLE prefill pass: clear any locks accumulated across the setup reruns, then run
+    # exactly once. Under the pre-fix unsorted loop this single pass locks all 8 R1 rows but DROPS
+    # the R2 row (its prefix guard raises because R1 is empty when the R2 row is hit first).
+    at.session_state[KEY_LOCKED] = []
+    at.run()
+    assert not at.exception
+
+    locked = list(at.session_state[KEY_LOCKED])
+    # ALL 8 R1 results locked in the single pass.
+    for (ri, w, ell) in r1_rows:
+        assert (ri, w, ell) in locked, f"R1 result {(ri, w, ell)} must auto-lock in one pass"
+    # AND the R2 result locked in the SAME pass (this is what the pre-fix single pass drops).
+    assert (1, 1, 8) in locked, (
+        "the R2 result must auto-lock in ONE pass despite the reverse-round cache order "
+        "(HI-01: the unsorted single pass drops every R2+ row)"
+    )
+
+
+def test_auto_lock_self_corrects_on_revised_fetch(monkeypatch):
+    """HI-02 (06-REVIEW): an AUTO-locked pair whose later fetch returns the OPPOSITE winner must
+    self-correct (no confirm) — a fresh fetch is the provider's revised ground truth, and auto is
+    not user ground truth. A MANUAL lock in the same situation still routes to the confirm gate.
+
+    Pre-fix: the conflict gate only fires for "manual" provenance; an "auto" lock disagreeing with
+    a fresh fetch falls through to `continue` — the stale auto-lock persists and the corrected
+    winner is dropped, with no path anywhere to update it. The fix re-applies the fetched result
+    through the SAME legal_pairings_for_round -> validate_lock -> add_lock path for auto locks.
+    """
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # First fetch: 1 beat 9 (auto-locked by the pre-fill).
+    _patch_results(monkeypatch, _results_cache([_finished_row(1, 9, winner=1, round_idx=0)], stage=1))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "first fetch auto-locks 1 beat 9"
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((1, 9))) == "auto"
+
+    # A REVISED fetch for the SAME pair with the OPPOSITE winner (9 beat 1) + a new fetched_at.
+    _patch_results(
+        monkeypatch,
+        _results_cache(
+            [_finished_row(1, 9, winner=9, round_idx=0)],
+            stage=1,
+            fetched_at="2026-06-04T12:00:00+00:00",
+        ),
+    )
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    locked = list(at.session_state[KEY_LOCKED])
+    # The auto-lock self-corrected to the revised winner — NO confirm gate for an auto value.
+    assert (0, 9, 1) in locked, "a revised fetch must self-correct the stale AUTO lock (HI-02)"
+    assert (0, 1, 9) not in locked, "the stale auto winner must be dropped on the revised fetch"
+    # Provenance stays auto; NO pending conflict was stashed (auto self-corrects without a human).
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((9, 1))) == "auto"
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) is None, (
+        "an auto self-correction must NOT route through the manual confirm gate"
+    )
+
+
+def test_manual_lock_still_routes_to_confirm_on_revised_fetch(monkeypatch):
+    """HI-02 (the unchanged half): a MANUAL lock whose fetch returns the opposite winner still
+    stashes a pending conflict and keeps the manual lock until the user confirms — the auto
+    self-correction must NOT leak into the manual path."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Fetched result: 9 beat 1 (opposite the manual lock the user holds: 1 beat 9).
+    _patch_results(monkeypatch, _results_cache([_finished_row(1, 9, winner=9, round_idx=0)], stage=1))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Establish the MANUAL lock 1 beat 9 and re-run.
+    at.session_state[KEY_LOCKED] = [(0, 1, 9)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 9)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # The MANUAL conflict is stashed (NOT silently overwritten); the manual lock survives. The
+    # pending store is a per-pair dict (ME-01) keyed by the lock pair -> the pending lock tuple.
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 9)): (0, 9, 1)}
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "manual lock survives until confirm"
+    assert (0, 9, 1) not in list(at.session_state[KEY_LOCKED]), "fetched winner not auto-applied over a manual lock"
+    assert any("conflict" in w.value.lower() for w in at.warning), "a loud conflict warning must render for a manual conflict"
+
+
+def test_two_manual_conflicts_both_surface(monkeypatch):
+    """ME-01 (06-REVIEW): TWO manual-lock conflicts in one fetch must BOTH surface — neither is
+    silently lost.
+
+    Pre-fix KEY_PENDING_RESULT_CONFLICT is a scalar overwritten on every conflicting pair, so only
+    the last-iterated conflict survives; the earlier one vanishes with no notice. The fix makes the
+    pending store keyed by pair and renders one confirm control per pending conflict.
+    """
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Two fetched R1 results, each the OPPOSITE of a manual lock the user holds:
+    #   fetched 9 beat 1   vs manual 1 beat 9
+    #   fetched 10 beat 2  vs manual 2 beat 10
+    rows = [
+        _finished_row(1, 9, winner=9, round_idx=0),
+        _finished_row(2, 10, winner=10, round_idx=0),
+    ]
+    _patch_results(monkeypatch, _results_cache(rows, stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Two MANUAL locks (opposite winners to the fetched rows).
+    at.session_state[KEY_LOCKED] = [(0, 1, 9), (0, 2, 10)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {
+        frozenset((1, 9)): "manual",
+        frozenset((2, 10)): "manual",
+    }
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # BOTH conflicts surfaced — neither manual lock was silently overwritten, both stay intact.
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 1, 9) in locked and (0, 2, 10) in locked, "both manual locks survive until confirm"
+    assert (0, 9, 1) not in locked and (0, 10, 2) not in locked, "neither fetched winner auto-applied"
+
+    # The pending-conflict store holds BOTH pending conflicts (keyed by pair), not just one.
+    pending = _ss_get(at, KEY_PENDING_RESULT_CONFLICT)
+    assert pending, "a pending-conflict store must exist"
+
+    def _pending_pairs(store):
+        """Pairs covered by the pending-conflict store, tolerant of shape.
+
+        Post-fix the store is a dict (pair -> pending) or list of pendings; pre-fix it is a single
+        scalar (round_idx, w, ell) tuple — handled so the test reaches its real assertion (only ONE
+        pair present) rather than crashing on the scalar's int subscript."""
+        entries = store.values() if isinstance(store, dict) else (
+            store if isinstance(store, (list, tuple)) and store and isinstance(store[0], (list, tuple))
+            else [store]
+        )
+        return {frozenset((p[1], p[2])) for p in entries}
+
+    pending_pairs = _pending_pairs(pending)
+    assert frozenset((1, 9)) in pending_pairs, "the FIRST manual conflict must not be lost (ME-01)"
+    assert frozenset((2, 10)) in pending_pairs, "the SECOND manual conflict must surface (ME-01)"
+
+    # Both conflict notices render LOUDLY (one confirm control per conflict).
+    warn_text = " ".join(w.value.lower() for w in at.warning)
+    assert warn_text.count("conflict") >= 2, "BOTH conflicts must render a loud notice, not just one"
+
+
+def test_provenance_banner_is_stage_scoped(monkeypatch):
+    """ME-02 (06-REVIEW): the fetched-results freshness/staleness banner must be STAGE-SCOPED — a
+    stage2 results cache while viewing stage1 must NOT claim stage1 has fetched results.
+
+    The pre-fill correctly refuses to apply a results cache whose _meta.stage differs from the
+    active stage, but _render_results_provenance read the cache independently and rendered the
+    freshness line WITHOUT any stage check. The fix gates the freshness block on the same canonical
+    int(_meta.stage) == _stage_int_for(stage_id) match the prefill uses.
+    """
+    from ui.state import KEY_LOCKED
+
+    # A STAGE 2 results cache (stale fetched_at so the banner WOULD show if unscoped), while the
+    # active stage stays the default stage1.
+    row = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(
+        monkeypatch,
+        _results_cache([row], stage=2, fetched_at="2020-01-01T00:00:00+00:00"),
+    )
+
+    at = _go_live_small(_apptest().run())  # default stage is stage1
+    assert not at.exception
+
+    # The stage-2 rows did NOT prefill the stage-1 locks (the prefill filter already enforces this).
+    assert (0, 1, 9) not in list(_ss_get(at, KEY_LOCKED, [])), (
+        "a stage-2 results cache must not prefill stage-1 locks"
+    )
+    # AND the provenance/freshness banner must NOT claim stage1 has fetched results.
+    text = _all_text(at).lower()
+    assert "fetched results" not in text, (
+        "the freshness banner must be stage-scoped — no 'Fetched results' on stage1 when the "
+        "cache is stage2 (ME-02)"
+    )
+    assert "results may be stale" not in text, (
+        "no stale-results warning for a cache that belongs to a different stage (ME-02)"
+    )
+
+
+# --- Plan 07-03: SEED-03 derived-seed overlay + persistent [INFERRED] banner -------------
+
+
+def _budapest_locks(through_round_idx: int) -> list[tuple[int, int, int]]:
+    """Stage-1 lock list (round_idx, winner_id, loser_id) from the verified Budapest fixture.
+
+    The fixture's seeds (1-16) are the engine team ids; the engine is name-independent, so this
+    by-seed lock list replays cleanly on the active Cologne Stage-1 fixture (same 16-seed structure)
+    to a deterministic 8-advancer finish. ``through_round_idx`` is inclusive (0-based: R1 == 0) — pass
+    a large value for the FULL stage, or 2 for rounds 0..2 only (a PARTIAL prefix)."""
+    fx = json.loads(
+        (Path(__file__).resolve().parent / "fixtures" / "budapest_2025_stage1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    name_to_seed = {name: int(s) for s, name in fx["seeding"].items()}
+    locks: list[tuple[int, int, int]] = []
+    for rnd in fx["rounds"]:
+        ridx = int(rnd["round"]) - 1
+        if ridx > through_round_idx:
+            continue
+        for m in rnd["matches"]:
+            locks.append((ridx, name_to_seed[m["winner"]], name_to_seed[m["loser"]]))
+    return locks
+
+
+def test_complete_stage1_derives_editable_stage2_overlay():
+    """SEED-03 (app wiring): a COMPLETE, fully-locked Stage 1 auto-derives the Stage-2 seeds into an
+    editable [INFERRED] session overlay (KEY_DERIVED_SEEDS['stage2']); switching to Stage 2 surfaces
+    the derive caption AND the per-stage [INFERRED] banner STILL shows (the overlay never flips
+    seeds_confirmed_stage2). Proves: complete -> 16-seed overlay; overlay is session-only (no fixture
+    write asserted by the Task-2 source guard); banner persists (false precision is never laundered)."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    # Stage 1 active (default) + the FULL Budapest lock list injected -> the run-block derivation fires.
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(99)  # every round locked -> complete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage2" in overlay, (
+        "a complete, fully-locked Stage 1 must derive a Stage-2 seed overlay (SEED-03)"
+    )
+    derived = overlay["stage2"]
+    assert [t.seed for t in derived] == list(range(1, 17)), "derived overlay is exactly seeds 1..16"
+
+    # Switch to Stage 2: the editor consumes the overlay (derive caption shows) AND the per-stage
+    # [INFERRED] banner STILL shows — the overlay carries seeds_confirmed=false semantics (T-07-11).
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    text = _all_text(at).lower()
+    assert "derived from the locked stage-1 finals" in text, (
+        "the Stage-2 editor must caption the derived [INFERRED] overlay"
+    )
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "the per-stage [INFERRED] banner MUST persist on the derived Stage-2 view (never auto-confirmed)"
+    )
+    assert _ss_get(at, "seeds_confirmed_stage2") is not True, (
+        "the derivation must NOT flip seeds_confirmed_stage2 — derived seeds stay [INFERRED]"
+    )
+
+
+def test_partial_stage1_yields_no_stage2_overlay():
+    """SEED-03 (app wiring): a PARTIAL Stage 1 (rounds 0..2 locked, rounds 3-4 unlocked -> not every
+    team terminated) produces NO Stage-2 overlay — the app never seeds off sampled winners (T-07-09).
+    KEY_DERIVED_SEEDS must NOT carry a 'stage2' entry."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(2)  # rounds 3-4 unlocked -> incomplete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage2" not in overlay, (
+        "a partial / incomplete Stage 1 must produce NO Stage-2 seed overlay (SEED-03 / Anti-Pattern 6)"
+    )
+
+
+def _spy_run_mc_progressive(monkeypatch):
+    """Patch engine.montecarlo.run_mc_progressive with a recorder that captures the ``all_bo3``
+    keyword it is called with and DELEGATES to the real generator so the run completes.
+
+    app.py does ``from engine.montecarlo import run_mc_progressive`` at import time (AppTest
+    triggers that on .run()), so we patch the source module BEFORE the AppTest run — the exact
+    spy pattern test_single_run_computes_mc_exactly_once uses. Returns the ``calls`` record.
+    """
+    import engine.montecarlo as mc
+
+    calls = {"all_bo3": [], "n": 0}
+    real = mc.run_mc_progressive
+
+    def _recording(*args, **kwargs):
+        calls["n"] += 1
+        calls["all_bo3"].append(kwargs.get("all_bo3", "ABSENT"))
+        yield from real(*args, **kwargs)
+
+    monkeypatch.setattr(mc, "run_mc_progressive", _recording)
+    return calls
+
+
+def test_stage3_runs_all_bo3(monkeypatch):
+    """STG-03 / T-08-06 (the wire): with STAGE 3 selected, the cache-miss compute path passes
+    ``all_bo3=True`` into run_mc_progressive — every Stage-3 match resolves through the Bo3
+    closed form.
+
+    Mirrors the test_single_run_computes_mc_exactly_once spy + the test_inferred_banner stage
+    switch (at.session_state[KEY_STAGE] = "stage3"). We assert the recorder saw all_bo3=True on
+    the run it drove. (data/stage3.json is the [INFERRED] all-Bo3 fixture finalized in Task 1.)
+    """
+    from ui.state import KEY_STAGE
+
+    calls = _spy_run_mc_progressive(monkeypatch)
+
+    # Switch to Stage 3 the same way the INFERRED-banner test switches to Stage 2: run once on the
+    # default stage, inject the selector's session value, then re-run (robust to the widget type).
+    at = _apptest()
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    # Only the Stage-3 Run should be observed below; clear any draws from the Stage-1 default run.
+    calls["all_bo3"].clear()
+    calls["n"] = 0
+
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    assert calls["n"] >= 1, "Stage 3 Run must drive run_mc_progressive at least once (cache miss)"
+    assert all(v is True for v in calls["all_bo3"]), (
+        f"Stage 3 must thread all_bo3=True into run_mc_progressive; recorded {calls['all_bo3']!r}"
+    )
+
+
+def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
+    """STG-03 companion / T-08-06: a NON-stage3 (Stage 1 default) Run passes all_bo3=False —
+    Stage 1/2/playoffs are unaffected, proving the wire is ``stage_id == 'stage3'`` EXACTLY.
+
+    The assertion is EXPLICIT (``is False``), not merely "not True"/absent, so it FAILS if the
+    flag ever leaked True off Stage 3 (plan-check defense-in-depth note 1). _drive_progress
+    defaults all_bo3=False, but _compute_or_serve always passes the computed bool, so the spy
+    sees a real ``False`` keyword on a Stage-1 run.
+    """
+    calls = _spy_run_mc_progressive(monkeypatch)
+
+    at = _apptest()  # Stage 1 is the default active stage (no KEY_STAGE override).
+    at.run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    assert calls["n"] >= 1, "the Stage-1 Run must drive run_mc_progressive at least once"
+    assert all(v is False for v in calls["all_bo3"]), (
+        f"a non-stage3 Run must pass all_bo3=False (Stage 1/2/playoffs unaffected); "
+        f"recorded {calls['all_bo3']!r}"
     )

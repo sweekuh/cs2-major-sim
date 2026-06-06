@@ -202,7 +202,7 @@ def _is_bo3(a, b) -> bool:
     )
 
 
-def _play(a, b, ratings, S, rng, locked, *, market_overrides=None):
+def _play(a, b, ratings, S, rng, locked, *, market_overrides=None, all_bo3=False):
     """Resolve one match, returning (winner, loser). Mutates nothing.
 
     If frozenset({a.id, b.id}) is in ``locked``, the locked winner is used
@@ -222,6 +222,12 @@ def _play(a, b, ratings, S, rng, locked, *, market_overrides=None):
     low-id) pair. The override flows through ``series_prob(market_series_prob=p_a)`` which
     is used DIRECTLY: series()/Bo3 is NOT re-applied (the market already prices the series,
     PROB-02).
+
+    ``all_bo3`` (keyword-only, default False = unchanged; BO-01) forces Bo3 on the
+    rating-fallback branch only: ``bo3=all_bo3 or _is_bo3(a, b)`` runs the match as Bo3 even
+    when neither team is one step from termination (the Stage-3 all-Bo3 mode). A market
+    override still bypasses Bo3 — series_prob returns market_series_prob directly regardless
+    of bo3 (PROB-02), so all_bo3 never re-Bo3's a priced match.
     """
     key = frozenset((a.id, b.id))
     if key in locked:
@@ -252,14 +258,14 @@ def _play(a, b, ratings, S, rng, locked, *, market_overrides=None):
     # series_prob honors a market override DIRECTLY (Bo3 NOT re-applied, PROB-02); with no
     # override it falls back to series(p_map(...), bo3) — byte-identical to the prior path.
     p_a = series_prob(
-        ra=ra, rb=rb, bo3=_is_bo3(a, b), market_series_prob=market_p_a, S=S
+        ra=ra, rb=rb, bo3=all_bo3 or _is_bo3(a, b), market_series_prob=market_p_a, S=S
     )  # P(a beats b), single draw
     if rng.random() < p_a:
         return a, b
     return b, a
 
 
-def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None, market_overrides=None):
+def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None, market_overrides=None, all_bo3=False):
     """Simulate one complete Valve Stage-1 Swiss and return {id: final Team}.
 
     ``teams`` are the (mutable) per-stage team objects — pass a FRESH ``load_teams()``
@@ -294,12 +300,16 @@ def simulate_stage(teams, ratings, S, rng, locked, *, pairings_out=None, market_
     team wins the series) for the imminent round's KNOWN matchups; threaded straight to
     ``_play`` which orients it to the lower-id team and uses it directly (Bo3 NOT re-applied,
     PROB-02). Default None reproduces the rating-only path byte-identically (GATE-01).
+
+    ``all_bo3`` (keyword-only, default False = byte-identical; BO-01): True runs the WHOLE
+    stage as Bo3 (the Stage-3 mode) by forwarding to ``_play(..., all_bo3=all_bo3)``; the
+    default False leaves every existing pairing/draw untouched (GATE-01).
     """
     by_id = {t.id: t for t in teams}
 
     def _record_match(a, b):
         winner, loser = _play(
-            a, b, ratings, S, rng, locked, market_overrides=market_overrides
+            a, b, ratings, S, rng, locked, market_overrides=market_overrides, all_bo3=all_bo3
         )
         winner.wins += 1
         loser.losses += 1

@@ -12,7 +12,10 @@ Last updated: 2026-06-02
 - Live odds from OddsPapi (Pinnacle) + Kalshi, back-solved into market-anchored ratings.
 - Conditional re-sim / live mode (lock results, re-sim from here).
 - Cologne seeds confirmed against the official bracket; trust badge reads validated.
-- **128 tests passing**, including regression guards for both probability fixes below.
+- **182 tests passing**, including a real-data Stage-1→Stage-2 seeding backtest (the actual
+  Cologne result → derived Stage-2 seeds) and the test-isolation fix (an autouse conftest fixture
+  shielding the suite from a real on-disk `data/results_cache.json` — a live cache had silently
+  broken 3 lock/derive AppTests).
 
 ## Recently fixed (both would have shown wrong numbers publicly)
 

@@ -166,6 +166,7 @@ def run_mc_progressive(
     n_chunks: int = DEFAULT_N_CHUNKS,
     market_blend: dict[str, tuple[float, float]] | None = None,
     k_epistemic: int = DEFAULT_EPISTEMIC_DRAWS,
+    all_bo3: bool = False,
 ) -> Iterator[Partial]:
     """Run N stage sims generator-first; yield a Partial per chunk, return the Result.
 
@@ -178,6 +179,10 @@ def run_mc_progressive(
     ``market_blend`` (keyword-only, the Phase-5 odds seam — default None = unchanged):
     ``dict["lo-hi" -> (p, var)]`` of the imminent round's market-priced matchups, ``p`` =
     P(lower-id team wins the series), ``var`` = raw cross-source (epistemic) variance.
+
+    ``all_bo3`` (keyword-only, default False = unchanged; BO-01): forwarded straight to
+    ``simulate_stage`` so True runs the stage all-Bo3 (the Stage-3 mode); False is the exact
+    rating-only path (GATE-01).
 
     Structure (RESEARCH Pattern 1/2/3 + D6):
       OUTER epistemic loop -> ``epistemic_draws`` yields K perturbed p-vectors when real
@@ -255,7 +260,7 @@ def run_mc_progressive(
             for _ in range(chunk_n):
                 by_id = simulate_stage(
                     _fresh_teams(teams), ratings, S, rng, locked,
-                    market_overrides=overrides,
+                    market_overrides=overrides, all_bo3=all_bo3,
                 )
                 rec: dict[int, tuple[int, int]] = {}
                 for tid, t in by_id.items():
@@ -346,6 +351,7 @@ def run_mc(
     n_chunks: int = DEFAULT_N_CHUNKS,
     market_blend: dict[str, tuple[float, float]] | None = None,
     k_epistemic: int = DEFAULT_EPISTEMIC_DRAWS,
+    all_bo3: bool = False,
 ) -> Result:
     """Drain run_mc_progressive and return the final Result (the cache-wrapper seam).
 
@@ -356,10 +362,13 @@ def run_mc(
     ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
     ``dict["lo-hi" -> (p, var)]`` of the imminent round's market-priced matchups; var>0
     drives the K-Beta epistemic outer loop, var all-zero / None is the exact no-op (GATE-01).
+
+    ``all_bo3`` (the Stage-3 seam — default False = unchanged; BO-01): forwarded to
+    ``run_mc_progressive`` so True runs the stage all-Bo3; False is byte-identical (GATE-01).
     """
     gen = run_mc_progressive(
         teams, ratings, S, N, locked or {}, seed=seed, n_chunks=n_chunks,
-        market_blend=market_blend, k_epistemic=k_epistemic,
+        market_blend=market_blend, k_epistemic=k_epistemic, all_bo3=all_bo3,
     )
     result: Result | None = None
     try:

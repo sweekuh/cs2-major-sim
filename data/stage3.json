@@ -1,0 +1,28 @@
+{
+  "_comment": "[INFERRED] Cologne 2026 Stage-3 (all-Bo3 Swiss) fixture — 16-team Swiss, top 8 advance, EVERY match Bo3 (BO-01, consumed by the engine all_bo3 flag this phase; STG-03). The REAL Stage-3 seeds DERIVE from the Stage-2 FINAL via the Phase-7 inter-stage seeding chain (engine/seeding.py): the 8 Stage-2 ADVANCERS + the 8 VRS-INVITED Stage-3 teams, merged and ranked by final Stage-2 Buchholz (Difficulty = Sigma(opp.wins - opp.losses)) with the documented tiebreak chain (losses asc -> -difficulty -> prior initial seed). The MERGE/seeding chain is owned by Phase 7 — this static file is the hand-editable FALLBACK only; do NOT build a new seeding path off it. The SPECIFIC Cologne Stage-3 invited 8 + the Stage-2 advancers are event-time data not yet posted, so seeds 1-8 (invited) and seeds 9-16 (Stage-2 advancers) below are [INFERRED] placeholders. Ratings are the rating-only fallback prior (0 < r < 1000, editable via the in-app ratings editor; when live odds load, the app back-solves market-calibrated ratings). seeds_confirmed=false keeps the per-stage [INFERRED] banner loud (STG-05). RECONCILE every seed/name/rating against the OFFICIAL Cologne Stage-3 seed list when it posts, and flip seeds_confirmed to true then. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). Mirrors data/stage2.json provenance style. (STG-03, BO-01)",
+  "stage": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3,
+    "all_bo3": true
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "[INFERRED] Invited Seed 1 (VRS #1)", "rating": 82 },
+    { "seed": 2, "name": "[INFERRED] Invited Seed 2 (VRS #2)", "rating": 78 },
+    { "seed": 3, "name": "[INFERRED] Invited Seed 3 (VRS #3)", "rating": 74 },
+    { "seed": 4, "name": "[INFERRED] Invited Seed 4 (VRS #4)", "rating": 71 },
+    { "seed": 5, "name": "[INFERRED] Invited Seed 5 (VRS #5)", "rating": 67 },
+    { "seed": 6, "name": "[INFERRED] Invited Seed 6 (VRS #6)", "rating": 64 },
+    { "seed": 7, "name": "[INFERRED] Invited Seed 7 (VRS #7)", "rating": 61 },
+    { "seed": 8, "name": "[INFERRED] Invited Seed 8 (VRS #8)", "rating": 58 },
+    { "seed": 9, "name": "[INFERRED] Stage-2 Advancer (seed 9)", "rating": 56 },
+    { "seed": 10, "name": "[INFERRED] Stage-2 Advancer (seed 10)", "rating": 54 },
+    { "seed": 11, "name": "[INFERRED] Stage-2 Advancer (seed 11)", "rating": 52 },
+    { "seed": 12, "name": "[INFERRED] Stage-2 Advancer (seed 12)", "rating": 50 },
+    { "seed": 13, "name": "[INFERRED] Stage-2 Advancer (seed 13)", "rating": 48 },
+    { "seed": 14, "name": "[INFERRED] Stage-2 Advancer (seed 14)", "rating": 46 },
+    { "seed": 15, "name": "[INFERRED] Stage-2 Advancer (seed 15)", "rating": 44 },
+    { "seed": 16, "name": "[INFERRED] Stage-2 Advancer (seed 16)", "rating": 42 }
+  ]
+}

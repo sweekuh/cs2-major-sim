@@ -1,0 +1,47 @@
+{
+  "_comment": "[PLACEHOLDER SHAPE — VERIFY AT EVENT TIME] Recorded PandaScore /csgo/matches FINISHED response (FALLBACK A) for the no-network parse test, shaped per 06-RESEARCH lines 331-332 (match: id, status, winner_id, opponents[]->{opponent:{id,name,acronym,slug}}, results[]->{team_id,score}, serie/tournament for scoping). Handcrafted to the documented shape; the REAL Cologne field names/slugs are reconciled at the event-time gstack /browse verify. Rows exercise the same branches as the bo3.gg fixture: a clean resolvable FINISHED row, a non-finished row excluded by the FINISHED-only filter, and an unresolvable-team row dropped on the slug-first join.",
+  "matches": [
+    {
+      "id": 800101,
+      "status": "finished",
+      "winner_id": 6004,
+      "number_of_games": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "opponents": [
+        { "opponent": { "id": 6004, "name": "BetBoom Team", "acronym": "BB", "slug": "betboom" } },
+        { "opponent": { "id": 6013, "name": "Team Liquid", "acronym": "TL", "slug": "team-liquid" } }
+      ],
+      "results": [
+        { "team_id": 6004, "score": 1 },
+        { "team_id": 6013, "score": 0 }
+      ]
+    },
+    {
+      "id": 800102,
+      "status": "running",
+      "winner_id": null,
+      "number_of_games": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "opponents": [
+        { "opponent": { "id": 6010, "name": "TYLOO", "acronym": "TYL", "slug": "tyloo" } },
+        { "opponent": { "id": 6014, "name": "Lynn Vision Gaming", "acronym": "LV", "slug": "lynn-vision" } }
+      ],
+      "results": []
+    },
+    {
+      "id": 800103,
+      "status": "finished",
+      "winner_id": 6404,
+      "number_of_games": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "opponents": [
+        { "opponent": { "id": 6404, "name": "Some Unlisted Squad", "acronym": "SUS", "slug": "unlisted-squad" } },
+        { "opponent": { "id": 6004, "name": "BetBoom Team", "acronym": "BB", "slug": "betboom" } }
+      ],
+      "results": [
+        { "team_id": 6404, "score": 1 },
+        { "team_id": 6004, "score": 0 }
+      ]
+    }
+  ]
+}

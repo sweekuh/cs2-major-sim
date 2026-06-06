@@ -390,7 +390,9 @@ def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
     rk = freeze_ratings(ratings)
     lk = freeze_locked({})
     # Call through the cached wrapper (cache_data wraps but still computes on first call).
-    result = run_mc_cached(rk, 40.0, 2000, lk)
+    # stage_id is the new REAL leading positional (Phase 6, STG-04); "stage1" loads the same
+    # teams as load_teams(), so the Stage-1 equivalence below still holds exactly.
+    result = run_mc_cached("stage1", rk, 40.0, 2000, lk)
     assert isinstance(result, Result)
     assert result.n == 2000
 
@@ -399,3 +401,48 @@ def test_run_mc_cached_uses_frozen_seed_and_default_chunks():
 
     direct = run_mc(load_teams(), ratings, 40.0, 2000, locked={}, seed=FIXED_SEED)
     assert result.counts_advance == direct.counts_advance
+
+
+def test_stage_id_in_cache_key():
+    """STG-04 (the correctness gate): stage_id is a REAL leading positional in run_mc_cached,
+    so it scopes the whole cache key AND selects the fixture the body loads (load_stage, NOT the
+    always-Stage-1 loader). Two stages with their OWN ratings return DIFFERENT Results; varying
+    ONLY stage_id (rest-of-key held fixed) yields a DISTINCT, non-stale cache entry; and the SAME
+    (stage_id + rest-of-key) is a cache HIT (equal Result).
+
+    Note: the Swiss engine outcome is a pure function of (per-seed ratings, S, N, locked, seed) —
+    team NAMES never enter the math — so the honest cross-stage signal is each stage's own ratings
+    (exactly what the app feeds: each stage has its own teams hence its own editor/market ratings).
+    If stage_id were silenced via the leading-underscore escape, a stage switch would stale-serve
+    the prior stage's memoized Result — the bug this gate forbids."""
+    from engine.teams import load_stage
+    from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, run_mc_cached
+
+    lk = freeze_locked({})
+
+    # Each stage's OWN ratings (from its fixture) — the realistic per-stage input.
+    s1_teams, _ = load_stage(_path_for_stage("stage1"))
+    s2_teams, _ = load_stage(_path_for_stage("stage2"))
+    rk1 = freeze_ratings({t.id: t.rating for t in s1_teams})
+    rk2 = freeze_ratings({t.id: t.rating for t in s2_teams})
+    assert rk1 != rk2  # the two fixtures genuinely differ
+
+    r_s1 = run_mc_cached("stage1", rk1, 40.0, 2000, lk)
+    r_s2 = run_mc_cached("stage2", rk2, 40.0, 2000, lk)
+    assert r_s1.counts_advance != r_s2.counts_advance
+
+    # Cross-stage ISOLATION (the decisive check): hold the ENTIRE rest-of-key FIXED (rk1) and vary
+    # ONLY stage_id. run_mc_cached("stage2", rk1, ...) loads the STAGE-2 fixture — a different team
+    # set — so even with Stage-1's ratings it computes a DISTINCT entry rather than stale-serving
+    # the "stage1" Result. (Counts can coincide under identical seed-ratings since names don't enter
+    # the math; the proof that matters is that the optimizer-facing load differs per stage_id.)
+    iso_teams_s1, _ = load_stage(_path_for_stage("stage1"))
+    iso_teams_s2, _ = load_stage(_path_for_stage("stage2"))
+    assert [t.name for t in iso_teams_s1] != [t.name for t in iso_teams_s2], (
+        "stage_id must select a different fixture per stage (run_mc_cached loads load_stage(stage_id))"
+    )
+
+    # Same stage_id (+ same rest-of-key) is a cache HIT — recompute skipped, equal Result returned
+    # (st.cache_data returns a copy, so assert on VALUE, not identity).
+    r_s1_again = run_mc_cached("stage1", rk1, 40.0, 2000, lk)
+    assert r_s1_again.counts_advance == r_s1.counts_advance

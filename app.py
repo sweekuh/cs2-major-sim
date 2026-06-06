@@ -27,6 +27,7 @@ import streamlit as st
 
 from engine.backsolve import fit_ratings, invert_series
 from engine.live import (
+    LivePrefixIncomplete,
     classify_pick,
     derive_bracket,
     legal_pairings_for_round,
@@ -35,9 +36,16 @@ from engine.live import (
 )
 from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
-from engine.teams import load_teams
-from ui.cache import freeze_locked, freeze_ratings, optimize_cached
+from engine.seeding import (
+    InvitedTeam,
+    final_standings_from_locked,
+    seed_next_stage,
+    stage_is_complete,
+)
+from engine.teams import load_stage
+from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, optimize_cached
 from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
+from ui.results_loader import load_results_cache  # json-only results read seam (NO httpx — RES-04)
 from ui.render import (
     ballot_columns,
     bracket_columns_html,
@@ -59,17 +67,21 @@ from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
     FIXED_SEED,
+    KEY_DERIVED_SEEDS,
     KEY_LIVE_ANCHOR,
+    KEY_LOCK_PROVENANCE,
     KEY_LOCKED,
     KEY_MC_CACHE,
     KEY_MODE,
     KEY_N_INPUT,
     KEY_ODDS_OUTCOME,
     KEY_PENDING_LOCK,
+    KEY_PENDING_RESULT_CONFLICT,
     KEY_RATINGS_EDITOR,
+    KEY_RESULTS_OUTCOME,
     KEY_RUN_BUTTON,
     KEY_S_SLIDER,
-    KEY_SEEDS_CONFIRMED,
+    KEY_STAGE,
     MAX_N,
     Mode,
     TRUST_BADGE_CAVEATED,
@@ -101,7 +113,19 @@ MAX_CACHE_ENTRIES = 8
 if KEY_MC_CACHE not in st.session_state:
     st.session_state[KEY_MC_CACHE] = {}
 
-teams = load_teams()  # DX-01 zero-config: data/stage1.json (or in-code default), no API key
+# The active run's results-cache _meta.fetched_at, set by _prefill_results_into_locked() in the
+# main block and folded into the run cache key via _combined_fetched_at (RES-02 re-sim re-fire). It
+# is a module global (not session_state) because it is derived fresh every run from the read-only
+# results cache — None until the pre-fill runs / when there is no results cache.
+_RESULTS_FETCHED_AT = None
+
+# Active stage (Phase 6, STG-04). The stage selector below WRITES KEY_STAGE; on first load it is
+# not yet set, so default to "stage1" (the zero-config first-run stage — DX-01). On reruns the
+# selected stage already lives in session_state, so the module globals below bind to it BEFORE the
+# header/controls render. The globals are RE-BOUND once more right after the selector widget runs,
+# so a same-run stage change takes effect for every downstream render path.
+stage_id = st.session_state.get(KEY_STAGE, "stage1")
+teams, _stage_cfg = load_stage(_path_for_stage(stage_id))  # DX-01 zero-config: Stage 1, no API key
 by_seed = {t.seed: t for t in teams}
 
 # --- Header strip + two-mode toggle (UI-01) ----------------------------------------------
@@ -121,6 +145,30 @@ _PROVIDER_LABELS = {
     "kalshi": "Kalshi",
     "polymarket": "Polymarket",
 }
+
+
+# Canonical stage_id (str) <-> stage number (int) mapping (Phase 6, RES-02 / T-06-12). The frozen
+# results-cache schema stores _meta.stage as an INTEGER (1) while the app tracks stage_id as a STRING
+# ("stage1"); a naive ``_meta.stage == stage_id`` is ``1 == "stage1"`` -> always False -> auto-prefill
+# silently never fires. This ONE helper is the single source the filter uses on BOTH sides, and it
+# matches scripts.fetch_results._stage_number EXACTLY (the fetcher writes _meta.stage via the same
+# mapping) so the schema and the comparison can never drift into a second representation.
+_STAGE_NUMBERS = {"stage1": 1, "stage2": 2, "stage3": 3, "playoffs": 4}
+
+
+def _stage_int_for(stage_id: str) -> int:
+    """Map a stage_id ('stage1'|'stage2'|'stage3'|'playoffs') -> its 1-based stage number (int).
+
+    Raises ValueError on an unknown stage_id (a typo must fail loud, never silently mis-filter).
+    Matches scripts.fetch_results._stage_number so the fetcher-written _meta.stage and this filter
+    always agree — the ONE canonical reconciliation of the int-vs-str mismatch (T-06-12).
+    """
+    n = _STAGE_NUMBERS.get(stage_id)
+    if n is None:
+        raise ValueError(
+            f"unknown stage_id {stage_id!r}; expected one of {sorted(_STAGE_NUMBERS)}"
+        )
+    return n
 
 
 def _fmt_fetched(iso) -> str:
@@ -152,13 +200,20 @@ def _render_header_strip() -> None:
       3. Fail-soft odds banner (ODDS-08): a one-line ``st.info`` when no ODDSPAPI_KEY is set —
          never crashes, never imports httpx/python-dotenv.
     """
-    # Seed the seeds_confirmed session_state from the read-only JSON flag on first load only;
-    # thereafter the in-session toggle owns it. Setting the key BEFORE the widget is created
-    # makes it the toggle's initial value (Streamlit binds the widget to the existing key).
-    if KEY_SEEDS_CONFIRMED not in st.session_state:
-        st.session_state[KEY_SEEDS_CONFIRMED] = read_seeds_confirmed()
+    # PER-STAGE seed-confirm state (STG-05). The banner is scoped to the ACTIVE stage_id: each
+    # stage carries its OWN seeds_confirmed flag in its committed fixture (stage1.json ships true;
+    # stage2/3/playoffs ship false), so confirming one stage can never dismiss another's banner.
+    # The session key is therefore per-stage (f"seeds_confirmed_{stage_id}"), seeded on first load
+    # of THAT stage from its own fixture via read_seeds_confirmed(_path_for_stage(stage_id)) —
+    # read-only, fail-safe to False (banner shows) on any error, never mutating the JSON/engine.
+    seeds_key = f"seeds_confirmed_{stage_id}"
+    # Seed from the read-only JSON flag on first load of this stage only; thereafter the in-session
+    # toggle owns it. Setting the key BEFORE the widget is created makes it the toggle's initial
+    # value (Streamlit binds the widget to the existing key).
+    if seeds_key not in st.session_state:
+        st.session_state[seeds_key] = read_seeds_confirmed(_path_for_stage(stage_id))
 
-    seeds_confirmed = bool(st.session_state.get(KEY_SEEDS_CONFIRMED, False))
+    seeds_confirmed = bool(st.session_state.get(seeds_key, False))
 
     # 1. Trust badge — caveated while BACKTEST_PASSED is False (UI-07, Pitfall 6: both, not one).
     if trust_badge_state(seeds_confirmed) == "validated":
@@ -175,6 +230,16 @@ def _render_header_strip() -> None:
         st.warning(
             "⚠ Seeds are INFERRED — verify vs the official seed list before trusting outputs."
         )
+        if stage_id == "stage2":
+            # Finding B (plan-eng-review 2026-06-06): the two halves of the Stage-2 field have
+            # DIFFERENT trust levels — say so, so a glance distinguishes "verified-but-unconfirmed
+            # invited" from "derived-from-your-locks qualifiers".
+            st.caption(
+                "Stage-2 seeds: 1-8 are the directly-invited teams (names verified vs "
+                "Liquipedia/HLTV, order by VRS rank) — NOT yet hand-confirmed; 9-16 derive from "
+                "your locked Stage-1 finals (Buchholz). Reconcile BOTH vs the official Stage-2 "
+                "bracket before flipping 'seeds confirmed'."
+            )
         with st.expander("Reconcile seeds vs the official list", expanded=False):
             st.caption(
                 "Eyeball each seed→team against the official Cologne 2026 seed list, then "
@@ -191,7 +256,7 @@ def _render_header_strip() -> None:
     # never-red/green rule). On True it dismisses the banner and is the gate the badge reads.
     st.toggle(
         "Seeds confirmed (dismiss the INFERRED-seed banner)",
-        key=KEY_SEEDS_CONFIRMED,
+        key=seeds_key,
     )
 
     # 3. Live-odds status panel (D1) — reads the LOADED cache, NOT the env key (honest live/off).
@@ -227,6 +292,20 @@ def _render_header_strip() -> None:
             "(Polymarket + Kalshi need no key; add ODDSPAPI_KEY for Pinnacle)."
         )
 
+    # Finding A (plan-eng-review 2026-06-06): on Stage 2/3 in rating-only mode, ratings carry
+    # FORWARD from the pre-event prior — they do NOT reflect how teams actually played the prior
+    # stage (only seed POSITION reaches here, via the Buchholz seeding chain). Say so loudly so
+    # nobody reads carried-forward strength as form-aware. Loading this stage's odds re-anchors
+    # strength to the market (which has seen the prior stage). Stage 1 is the pre-event baseline,
+    # so this note is scoped to the later stages only.
+    if stage_id in ("stage2", "stage3") and not blended:
+        st.info(
+            "Rating-only: team strength is the carried-forward pre-event prior and does NOT "
+            f"reflect {'Stage-1' if stage_id == 'stage2' else 'earlier-stage'} map performance — "
+            "only seed position carries over (via Buchholz). Load this stage's odds for "
+            "market-calibrated numbers."
+        )
+
 
 _render_header_strip()
 
@@ -253,12 +332,43 @@ else:
         "Each pick shows live / dead / secured with a P(≥5)-from-here delta."
     )
 
+# Stage selector (Phase 6, STG-01/04). Options ARE the stage_ids so session_state[KEY_STAGE] always
+# holds a stage_id (consumed by _path_for_stage); format_func renders the friendly label. Default
+# (first option) is "stage1" — the zero-config first-run stage (DX-01). Writing KEY_STAGE re-keys the
+# whole MC/optimizer cache so a stage switch can never serve the prior stage's numbers (STG-04).
+_STAGE_LABELS = {"stage1": "Stage 1", "stage2": "Stage 2", "stage3": "Stage 3"}
+stage_id = st.selectbox(
+    "Stage",
+    options=list(_STAGE_LABELS.keys()),
+    format_func=lambda s: _STAGE_LABELS.get(s, s),
+    key=KEY_STAGE,
+    label_visibility="collapsed",
+)
+# Re-bind the module globals to the SELECTED stage so every downstream render path (header reconcile
+# rows, ratings editor, bracket, run flow) uses this stage's teams — not the top-of-module Stage-1
+# default. Stage 1 stays the zero-config first-run default (same teams as before).
+teams, _stage_cfg = load_stage(_path_for_stage(stage_id))
+by_seed = {t.seed: t for t in teams}
+
 controls, main = st.columns([1, 3], gap="medium")
 
 # --- Controls column ---------------------------------------------------------------------
 with controls:
     st.subheader("Ratings")
-    rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in teams]
+    # SEED-03: when this stage has a derived-seed SESSION overlay (auto-derived from a COMPLETE prior
+    # stage; stashed by _derive_next_stage_seeds while the prior stage was active), use it as the
+    # editor's starting rows — an editable [INFERRED] overlay over the committed fixture, NOT a fixture
+    # rewrite. Absent overlay -> the fixture's own teams (the unchanged path). The overlay NEVER flips
+    # seeds_confirmed_{stage_id}, so the per-stage [INFERRED] banner persists until the user reconciles.
+    _derived_overlay = (st.session_state.get(KEY_DERIVED_SEEDS, {}) or {}).get(stage_id)
+    if _derived_overlay:
+        rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in _derived_overlay]
+        st.caption(
+            "Stage-2 seeds derived from the locked Stage-1 finals — [INFERRED], "
+            "verify vs the official seed list."
+        )
+    else:
+        rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in teams]
     edited = st.data_editor(
         rows,
         num_rows="fixed",  # cannot add/delete the 16 teams
@@ -329,8 +439,45 @@ with controls:
                 )
         st.rerun()
 
+    # --- Live-results fetch (RES-01/02, Phase 6) -----------------------------------------
+    # The ONE path that contacts the results providers — an explicit USER action OUT of the
+    # render path. Mirrors the odds button EXACTLY: it LAZY-imports scripts.fetch_results (which
+    # pulls httpx) INSIDE the click branch only, so a plain rerun never imports the network deps
+    # (T-06-09b — test_no_network_on_rerun_with_results is the guard). The persisted-outcome stash
+    # is load-bearing: a message drawn before st.rerun() is discarded — stash + render next run.
+    st.caption("Live results (optional)")
+    _r_outcome = st.session_state.pop(KEY_RESULTS_OUTCOME, None)
+    if _r_outcome:
+        {"success": st.success, "info": st.info, "error": st.error}.get(_r_outcome[0], st.info)(
+            _r_outcome[1]
+        )
+    if st.button("Fetch latest results", key="fetch_results_btn"):
+        with st.spinner("Fetching finished results…"):
+            try:
+                from scripts.fetch_results import main as _fetch_results_main  # LAZY — click only
 
-def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=None):
+                cache = _fetch_results_main(stage_id=stage_id)  # the ACTIVE stage
+                n_rows = len(cache.get("results", []))
+                if n_rows:
+                    st.session_state[KEY_RESULTS_OUTCOME] = (
+                        "success",
+                        f"Fetched {n_rows} finished result(s) — auto-locking the current stage.",
+                    )
+                else:
+                    # A valid empty fetch (no finished series posted yet) is fail-soft, not an error.
+                    st.session_state[KEY_RESULTS_OUTCOME] = (
+                        "info",
+                        "No finished results yet (none posted for this stage) — manual entry still works.",
+                    )
+            except Exception as exc:  # noqa: BLE001 — the button NEVER crashes the app (fail-soft)
+                st.session_state[KEY_RESULTS_OUTCOME] = (
+                    "error",
+                    f"Results fetch failed (manual entry still works): {exc}",
+                )
+        st.rerun()
+
+
+def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=None, *, all_bo3: bool = False):
     """Cache-MISS path: iterate the FROZEN run_mc_progressive to drive st.progress.
 
     Each Partial(done, total, running_p_adv) advances the bar with a running sim counter
@@ -340,10 +487,14 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
     ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
     ``dict["lo-hi" -> (p, var)]`` of the market-priced matchups; var>0 drives the K-Beta
     epistemic OUTER loop, var all-zero / None is the exact no-op (GATE-01 byte-identical).
+
+    ``all_bo3`` (keyword-only, default False; BO-01): forwarded straight to
+    run_mc_progressive so Stage 3 resolves every match through the Bo3 closed form. False on
+    Stage 1/2/playoffs keeps the frozen rating-only path byte-identical.
     """
     bar = st.progress(0.0, text="Simulating…")
     gen = run_mc_progressive(
-        teams, ratings, S, N, locked, seed=FIXED_SEED, market_blend=market_blend
+        teams, ratings, S, N, locked, seed=FIXED_SEED, market_blend=market_blend, all_bo3=all_bo3
     )
     result = None
     try:
@@ -547,17 +698,22 @@ def _odds_from_cache(base_ratings: dict):
     return ratings, market_blend, cache.get("_meta", {}).get("fetched_at")
 
 
-def _cache_key_for(ratings: dict, locked: dict, fetched_at=None):
-    """The ``(ratings_key, S, int(N), locked_key, fetched_at)`` cache tuple.
+def _cache_key_for(ratings: dict, locked: dict, stage_id: str, fetched_at=None):
+    """The ``(stage_id, ratings_key, S, int(N), locked_key, fetched_at)`` cache tuple.
+
+    ``stage_id`` LEADS the tuple (Phase 6, STG-04) so it scopes the WHOLE key — a stage switch can
+    never serve the prior stage's memoized Result. The element order MUST match ``optimize_cached``'s
+    params after ``_result`` (stage_id, ratings_key, S, N, locked_key, fetched_at) because the ballot
+    panel splats ``optimize_cached(result, *cache_key)``; a reorder here silently corrupts that call.
 
     ``fetched_at`` (the cache's ``_meta.fetched_at``, or None when rating-only) is folded into the
     key so a FRESH fetch that moves only the epistemic ``var`` (not the back-solved ratings) still
     invalidates the memoized Result — no stale epistemic band is served (T-05-STALEBAND).
     """
-    return (freeze_ratings(ratings), S, int(N), freeze_locked(locked), fetched_at)
+    return (stage_id, freeze_ratings(ratings), S, int(N), freeze_locked(locked), fetched_at)
 
 
-def _compute_or_serve(ratings: dict, locked: dict, market_blend=None, fetched_at=None):
+def _compute_or_serve(ratings: dict, locked: dict, stage_id: str, market_blend=None, fetched_at=None):
     """Get-or-compute the MC Result for the run key — returns (result, cache_key).
 
     Single source for BOTH the current Run and the LIVE empty-locked anchor compute. A cache
@@ -566,14 +722,21 @@ def _compute_or_serve(ratings: dict, locked: dict, market_blend=None, fetched_at
     CR-01 single-compute guard stays green even when LIVE mode also computes the empty-locked
     pre_key (a different key from the locked run).
 
-    ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at`` is folded
-    into the cache key so a fresh fetch (moved var) invalidates the memoized Result (T-05-STALEBAND).
+    ``stage_id`` LEADS the cache key (Phase 6, STG-04) so a stage switch never serves the prior
+    stage's Result. ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at``
+    is folded into the cache key so a fresh fetch (moved var) invalidates the memoized Result
+    (T-05-STALEBAND).
+
+    Stage 3 runs all-Bo3 (BO-01): ``all_bo3 = (stage_id == "stage3")`` is a pure function of the
+    already-key-LEADING ``stage_id``, so threading it needs NO cache-key change (a Stage-3 run
+    already keys distinctly from Stage 1/2/playoffs). Stage 1/2/playoffs pass all_bo3=False.
     """
-    cache_key = _cache_key_for(ratings, locked, fetched_at)
+    all_bo3 = (stage_id == "stage3")
+    cache_key = _cache_key_for(ratings, locked, stage_id, fetched_at)
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         return cache[cache_key], cache_key
-    result = _drive_progress(ratings, S, int(N), locked, market_blend)
+    result = _drive_progress(ratings, S, int(N), locked, market_blend, all_bo3=all_bo3)
     cache[cache_key] = result
     # Evict oldest entries so the retained per-sim samples can't grow unbounded across
     # a long session of re-runs (insertion-ordered dict → pop oldest first).
@@ -603,12 +766,19 @@ def _run_or_serve():
     # invalid / empty cache -> (ratings, None, None) unchanged: the rating-only path, no behavior
     # change, the existing 'live odds off' banner stays (DX-01/ODDS-08).
     ratings, market_blend, fetched_at = _odds_from_cache(ratings)
+    # Phase 6 (RES-02): fold the RESULTS cache's _meta.fetched_at into the SAME fetched_at slot as
+    # the odds timestamp, so a fresh results fetch (new _meta.fetched_at) forces a cache MISS and the
+    # conditional re-sim re-fires even when the auto-locked set is unchanged. The pre-fill already
+    # ran in the main block (KEY_LOCKED carries the auto-locked results); here we only thread the ts.
+    fetched_at = _combined_fetched_at(fetched_at)
     # Phase 4 fill point: the engine ``locked`` dict is DERIVED from KEY_LOCKED (the ordered
     # lock list) via the pure projection, then flows through the UNCHANGED freeze_locked ->
     # locked_key -> cache_key path so a non-empty lock changes the key and re-sims (RESIM-01).
     # In PRE_STAGE / first-run the list is empty -> locked == {} (no behavior change).
     locked = locked_dict(st.session_state.get(KEY_LOCKED, []))
-    result, cache_key = _compute_or_serve(ratings, locked, market_blend, fetched_at)
+    result, cache_key = _compute_or_serve(
+        ratings, locked, stage_id, market_blend, fetched_at
+    )
     return result, None, cache_key
 
 
@@ -618,7 +788,7 @@ def _live_anchor(ratings: dict, ids: list[int]):
     Captured ONCE, from the EMPTY-locked pre_key Result, and stored in KEY_LIVE_ANCHOR so it
     NEVER re-optimizes per round (the arrow would be meaningless otherwise). Returns
     ``(anchor_ballot, pre_lock_result)``:
-      pre_key       = (freeze_ratings(ratings), S, int(N), freeze_locked({}))
+      pre_key       = (stage_id, freeze_ratings(ratings), S, int(N), freeze_locked({}), fetched_at)
       pre_lock_result = mc_cache[pre_key] if present else ONE explicit compute on pre_key
                         (memoized — a DISTINCT key from the locked run, so CR-01 stays green)
       anchor        = optimize_cached(pre_lock_result, *pre_key).recommended  (Ballot B)
@@ -631,9 +801,10 @@ def _live_anchor(ratings: dict, ids: list[int]):
     the pre_key matches a real cache entry (no separate rating-only baseline under live odds).
     """
     ratings, market_blend, fetched_at = _odds_from_cache(ratings)
+    fetched_at = _combined_fetched_at(fetched_at)  # fold the results ts too (RES-02 consistency)
     pre_lock_result, pre_key = _compute_or_serve(
-        ratings, {}, market_blend, fetched_at
-    )  # empty-locked = pre_key
+        ratings, {}, stage_id, market_blend, fetched_at
+    )  # empty-locked = pre_key (stage_id LEADS the key — Phase 6, STG-04)
     anchor = st.session_state.get(KEY_LIVE_ANCHOR)
     if anchor is None:
         anchor = optimize_cached(pre_lock_result, *pre_key).recommended
@@ -709,6 +880,353 @@ def _commit_lock(pending: tuple[int, int, int]) -> None:
         st.session_state[KEY_LOCKED] = add_lock(
             locked_results, round_idx, winner_id, loser_id
         )
+        # A manually-committed lock is authoritative ground truth — tag provenance "manual" so a
+        # later conflicting fetch cannot silently overwrite it (RES-03, T-06-11).
+        prov = dict(st.session_state.get(KEY_LOCK_PROVENANCE, {}))
+        prov[frozenset((winner_id, loser_id))] = "manual"
+        st.session_state[KEY_LOCK_PROVENANCE] = prov
+
+
+def _row_to_pending(row) -> tuple[int, int, int] | None:
+    """Project ONE frozen-schema result row to a ``(round_idx, winner_id, loser_id)`` pending lock.
+
+    Recovers the loser from the SORTED ``match`` [lo, hi] tuple: ``ell = lo if winner == hi else hi``.
+    Returns ``None`` (drop) on a malformed row (bad shape / winner not in the pair) — a mis-shaped
+    fetched row must never raise into the UI or fabricate a lock (T-06-10 fail-soft)."""
+    try:
+        lo, hi = row["match"]
+        w = row["winner"]
+    except (KeyError, TypeError, ValueError):
+        return None
+    if w == lo:
+        ell = hi
+    elif w == hi:
+        ell = lo
+    else:
+        return None  # winner not one of the matched pair — drop (never mis-attribute)
+    try:
+        round_idx = int(row["round_idx"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return (round_idx, w, ell)
+
+
+def _prefill_results_into_locked() -> str | None:
+    """Pre-fill the ACTIVE stage's KEY_LOCKED from fetched FINISHED results (RES-02). Returns the
+    results cache's ``_meta.fetched_at`` (or ``None`` when there is no cache) so the run cache key
+    can fold it in — a FRESH fetch then forces a MISS and the conditional re-sim re-fires.
+
+    Every fetched row routes through the SAME guard a manual lock uses — ``legal_pairings_for_round``
+    (prefix guard) -> ``validate_lock`` (the five illegal cases) -> ``add_lock`` — NO bypass, NO
+    engine edit (T-06-10). The active-stage filter compares ``int(_meta.stage)`` to
+    ``_stage_int_for(stage_id)`` through the ONE canonical helper (never a raw ``int == str`` that
+    silently no-ops — T-06-12). A fetched row whose pair already has a MANUAL lock with a DIFFERENT
+    winner is NOT auto-applied: it is stashed as a pending conflict for the explicit confirm control
+    (RES-03, handled in _render_results_conflict) — never a silent overwrite.
+    """
+    results = load_results_cache()
+    if not results:
+        return None
+    fetched_at = results.get("_meta", {}).get("fetched_at")
+    try:
+        active_stage_int = _stage_int_for(stage_id)
+        cache_stage_int = int(results.get("_meta", {}).get("stage"))
+    except (TypeError, ValueError):
+        return fetched_at  # an unknown/garbled stage filters to nothing — fail-soft, still fold ts
+    if cache_stage_int != active_stage_int:
+        return fetched_at  # results are for another stage — do not prefill (canonical int compare)
+
+    # Lock in ROUND ORDER so legal_pairings_for_round's "all prior rounds fully locked" precondition
+    # is satisfied in ONE pass (HI-01). The live bo3.gg feed is reverse-chronological
+    # (sort=-start_date), so an UNSORTED pass hits R5/R4/R3 rows first against a still-empty lock
+    # list, the prefix guard raises, and every R2+ row is dropped until a later rerun. Sorting by
+    # round_idx (here AND at WRITE time in scripts.fetch_results.main) makes the prefix build in
+    # order so all rounds auto-lock in this single pass. round_idx is validated by _row_to_pending
+    # (a malformed row -> None -> dropped before the sort key is read). Stable sort preserves the
+    # within-round provider order.
+    rows = results.get("results") or []
+    pendings = [p for p in (_row_to_pending(row) for row in rows) if p is not None]
+    pendings.sort(key=lambda p: p[0])  # p == (round_idx, winner_id, loser_id)
+    for pending in pendings:
+        round_idx, w, ell = pending
+        locked_results = st.session_state.get(KEY_LOCKED, [])
+        prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
+        pair = frozenset((w, ell))
+
+        # Already locked? Check for a CONFLICT with the existing lock (RES-03) before anything else.
+        existing = next(
+            (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+        )
+        if existing is not None:
+            ex_w = existing[1]
+            if ex_w != w:
+                source = prov.get(pair, "manual")  # missing -> manual (pre-Phase-6 default)
+                if source == "manual":
+                    # Conflicts with a MANUAL lock (user ground truth) — stash a pending conflict
+                    # keyed by pair so MULTIPLE manual conflicts all survive (ME-01); never a silent
+                    # overwrite. The explicit confirm control applies each one.
+                    pendpairs = dict(st.session_state.get(KEY_PENDING_RESULT_CONFLICT, {}))
+                    pendpairs[pair] = pending
+                    st.session_state[KEY_PENDING_RESULT_CONFLICT] = pendpairs
+                else:
+                    # The existing lock is AUTO (a prior fetch) and a FRESH fetch disagrees — the
+                    # provider revised it; auto is NOT user ground truth, so the fresh fetch wins with
+                    # NO confirm (HI-02). Re-apply through the SAME validate path: drop the stale auto
+                    # entry on a COPY, validate, then swap (mirrors _apply_fetched_conflict's ordering).
+                    prospective = [e for e in locked_results if e is not existing]
+                    try:
+                        legal = legal_pairings_for_round(teams, prospective, S, round_idx)
+                    except Exception:  # noqa: BLE001 — incomplete prefix: leave the auto lock as-is
+                        continue
+                    if validate_lock((w, ell), round_idx, prospective, teams, legal) is None:
+                        st.session_state[KEY_LOCKED] = add_lock(prospective, round_idx, w, ell)
+                        new_prov = dict(prov)
+                        new_prov[pair] = "auto"  # the revised fetch is still auto-provenance
+                        st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+            continue  # same pair handled (agreeing, auto-corrected, or manual-conflict-stashed)
+
+        # Not yet locked — run the SAME validate path as a manual lock (no bypass).
+        try:
+            legal = legal_pairings_for_round(teams, locked_results, S, round_idx)
+        except Exception:  # noqa: BLE001 — incomplete prefix: skip this row, never raise (RES-04)
+            continue
+        reason = validate_lock((w, ell), round_idx, locked_results, teams, legal)
+        if reason is not None:
+            continue  # illegal fetched lock — rejected (existing reason), KEY_LOCKED untouched
+        st.session_state[KEY_LOCKED] = add_lock(locked_results, round_idx, w, ell)
+        new_prov = dict(prov)
+        new_prov[pair] = "auto"  # provenance: auto-fetched (RES-03)
+        st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+    return fetched_at
+
+
+# --- Phase 7 inter-stage seeding chain (SEED-03) -----------------------------------------
+# next-stage_of(active) — Stage 1 derives FOR Stage 2. The single-global KEY_LOCKED holds the
+# ACTIVE stage's locks, so the derivation fires while the PRIOR stage is active + complete and
+# stashes the NEXT stage's overlay (mirrors the results pre-fill: compute when the source data is
+# live, hold in session, consume on the stage switch). Only stage1 -> stage2 is wired for v3.
+_NEXT_STAGE = {"stage1": "stage2"}
+
+
+def _invited_for_stage(next_stage_id: str) -> list[InvitedTeam]:
+    """Read the NEXT stage's 8 directly-invited descriptors from its committed fixture (seeds 1-8).
+
+    Per Plan-01 Open-Question-2: the invited 8 live as the first 8 seed rows of the stage fixture
+    (e.g. data/stage2.json), already in global-VRS order — so each invited team's ``vrs_rank`` is its
+    fixture seed (1-8). The qualifier rows (seeds 9-16) are placeholders the derivation fills, so they
+    are NOT read here. Returns ``[]`` on any load failure (fail-soft — no derivation rather than a crash).
+    """
+    try:
+        next_teams, _cfg = load_stage(_path_for_stage(next_stage_id))
+    except (OSError, ValueError):
+        return []
+    invited = [t for t in next_teams if t.seed <= 8]
+    return [InvitedTeam(name=t.name, vrs_rank=t.seed, rating=t.rating) for t in invited]
+
+
+def _derive_next_stage_seeds() -> None:
+    """Auto-derive the NEXT stage's seeds from a COMPLETE active stage -> editable session overlay (SEED-03).
+
+    Mirrors the _prefill_results_into_locked discipline: read the ACTIVE (prior) stage's KEY_LOCKED lock
+    list, gate the derivation behind ``engine.seeding.stage_is_complete`` (which REUSES the
+    LivePrefixIncomplete / full-lock-prefix precondition), and ONLY when the stage is complete derive
+    ``final_standings_from_locked`` -> ``seed_next_stage`` and stash the result in
+    ``st.session_state[KEY_DERIVED_SEEDS][next_stage_id]`` as an EDITABLE [INFERRED] overlay. A
+    partial/incomplete prior stage produces NO seed list (the try/except swallows LivePrefixIncomplete
+    and any derive error -> overlay left absent; the existing fixture-based Stage-2 fallback stays in
+    place, its [INFERRED] banner already loud). This writes ONLY session state — never data/stage2.json
+    (the committed fixture stays the editable baseline; decisions #6) — and NEVER flips
+    seeds_confirmed_{stage_id}, so the per-stage banner persists until the user reconciles.
+    """
+    next_stage_id = _NEXT_STAGE.get(stage_id)
+    if next_stage_id is None:
+        return  # the active stage has no wired successor (e.g. Stage 2 is the last v3 stage)
+
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    if not locked_results:
+        return  # nothing locked yet -> nothing to derive (avoids a no-op replay every rerun)
+
+    try:
+        if not stage_is_complete(teams, locked_results, S):
+            # Partial / incomplete prior stage: emit NO seed list. Clear any stale overlay so a
+            # later UNLOCK retracts a previously-derived overlay (never seed off a now-partial stage).
+            overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+            if overlay.pop(next_stage_id, None) is not None:
+                st.session_state[KEY_DERIVED_SEEDS] = overlay
+            return
+        invited = _invited_for_stage(next_stage_id)
+        if len(invited) != 8:
+            return  # malformed next-stage fixture (not 8 invited) -> no derivation, keep fallback
+        final = final_standings_from_locked(teams, locked_results, S)
+        derived = seed_next_stage(final, invited)
+    except (LivePrefixIncomplete, ValueError, KeyError):
+        # Incomplete prefix or any derive error -> no derivation (SEED-03 partial-stage behavior).
+        return
+
+    overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+    overlay[next_stage_id] = derived  # editable [INFERRED] SESSION overlay; NOT a fixture write
+    st.session_state[KEY_DERIVED_SEEDS] = overlay
+
+
+def _combined_fetched_at(odds_fetched_at):
+    """Fold BOTH the odds and the results cache timestamps into the SINGLE cache-key fetched_at slot.
+
+    A fresh fetch from EITHER source must invalidate the memoized Result. Returns a tuple
+    ``(odds_fetched_at, results_fetched_at)`` (or the lone odds value when there is no results
+    cache) — any change in either element changes the run cache key (RES-02 re-sim re-fire +
+    T-05-STALEBAND), so a new results _meta.fetched_at re-fires the re-sim even with an unchanged
+    locked set. ``_RESULTS_FETCHED_AT`` is set by _prefill_results_into_locked earlier in the run."""
+    results_fetched_at = _RESULTS_FETCHED_AT
+    if results_fetched_at is None:
+        return odds_fetched_at
+    return (odds_fetched_at, results_fetched_at)
+
+
+def _apply_fetched_conflict(pending: tuple[int, int, int]) -> None:
+    """ATOMIC, VALIDATE-FIRST confirm of a fetched result that conflicts with a MANUAL lock (RES-03).
+
+    The ordering is pinned (T-06-11 data integrity): (a) build the prospective lock list AS IF the
+    conflicting manual entry were removed (on a COPY — session_state is not mutated yet); (b) run the
+    EXISTING guard on that prospective-without-the-fetched state — legal_pairings_for_round then
+    validate_lock; (c) ONLY on validate_lock == None commit the swap (remove the manual entry, add the
+    fetched one, tag provenance 'auto', clear the pending); (d) on a reason DO NOT remove the manual
+    entry and DO NOT add the fetched one — KEY_LOCKED stays exactly as it was (manual lock intact) and
+    the reason is surfaced. The manual lock is NEVER removed before a successful validation."""
+    round_idx, w_f, ell_f = pending
+    pair = frozenset((w_f, ell_f))
+    locked_results = list(st.session_state.get(KEY_LOCKED, []))
+
+    # The conflicting MANUAL entry covering the same pair (if any).
+    manual_entry = next(
+        (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+    )
+    # Prospective state WITHOUT the conflicting manual entry and WITHOUT the fetched one yet — the
+    # exact set validate_lock must judge the fetched lock against (mirrors _commit_lock's contract).
+    prospective = [e for e in locked_results if e is not manual_entry]
+
+    try:
+        legal = legal_pairings_for_round(teams, prospective, S, round_idx)
+    except Exception as exc:  # noqa: BLE001 — incomplete prefix: surface, mutate nothing (RES-04)
+        st.error(str(exc))
+        return
+    reason = validate_lock((w_f, ell_f), round_idx, prospective, teams, legal)
+    if reason is not None:
+        # Engine-illegal fetched lock — DO NOT remove the manual entry, DO NOT add the fetched one.
+        # KEY_LOCKED stays exactly as it was; surface the reason. (validate before remove — T-06-11.)
+        st.error(reason)
+        return
+    # Legal — commit the swap atomically: manual entry dropped, fetched one added, provenance 'auto'.
+    st.session_state[KEY_LOCKED] = add_lock(prospective, round_idx, w_f, ell_f)
+    new_prov = dict(st.session_state.get(KEY_LOCK_PROVENANCE, {}))
+    if manual_entry is not None:
+        new_prov.pop(frozenset((manual_entry[1], manual_entry[2])), None)
+    new_prov[pair] = "auto"
+    st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+    # Clear ONLY this pair's pending conflict from the per-pair store (ME-01) so OTHER pending
+    # conflicts in the same fetch survive for their own confirm; drop the store entirely once empty.
+    pendpairs = dict(st.session_state.get(KEY_PENDING_RESULT_CONFLICT, {}))
+    pendpairs.pop(pair, None)
+    if pendpairs:
+        st.session_state[KEY_PENDING_RESULT_CONFLICT] = pendpairs
+    else:
+        st.session_state.pop(KEY_PENDING_RESULT_CONFLICT, None)
+
+
+def _render_results_conflict(name_of: dict[int, str]) -> None:
+    """Render the LOUD conflict notice + explicit confirm control for EACH stashed pending conflict.
+
+    A fetched result that disagrees with a MANUAL lock for the same pair is NEVER silently applied
+    (RES-03). The pending store is a per-pair dict (ME-01), so MULTIPLE conflicts in one fetch each
+    get their OWN notice + confirm control — none is silently lost. Each notice shows the diff
+    loudly (team names HTML-escaped at the boundary — T-06-13); each 'Apply fetched result' button
+    routes through the atomic validate-first swap and clears only that pair. The manual lock stays
+    intact until the user confirms (and stays intact if the fetched lock is engine-illegal). Renders
+    nothing when there is no pending conflict. Each confirm button is keyed per-pair
+    (``apply_fetched_result_btn_{a}_{b}`` on the SORTED pair ids) so concurrent conflicts have
+    stable, distinct widget keys."""
+    pendpairs = st.session_state.get(KEY_PENDING_RESULT_CONFLICT)
+    if not pendpairs:
+        return
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    # Deterministic order (by sorted pair ids) so the rendered notices/keys are stable across reruns.
+    for pair in sorted(pendpairs, key=lambda fp: sorted(fp)):
+        pending = pendpairs[pair]
+        round_idx, w_f, ell_f = pending
+        a_id, b_id = sorted(pair)
+        manual_entry = next(
+            (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
+        )
+        w_name = html.escape(str(name_of.get(w_f, w_f)))
+        ell_name = html.escape(str(name_of.get(ell_f, ell_f)))
+        if manual_entry is not None:
+            m_w = html.escape(str(name_of.get(manual_entry[1], manual_entry[1])))
+            m_ell = html.escape(str(name_of.get(manual_entry[2], manual_entry[2])))
+            st.warning(
+                f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+                f"{ell_name}, but you manually locked {m_w} beat {m_ell}. Confirm to overwrite your "
+                f"manual lock with the fetched result — your manual lock is kept until you confirm."
+            )
+        else:
+            st.warning(
+                f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+                f"{ell_name}. Confirm to apply it."
+            )
+        if st.button("Apply fetched result", key=f"apply_fetched_result_btn_{a_id}_{b_id}"):
+            _apply_fetched_conflict(pending)
+
+
+def _render_results_provenance(name_of: dict[int, str]) -> None:
+    """Surface fetched-results staleness + per-lock provenance (auto vs manual) (RES-03).
+
+    Staleness: read the results cache's _meta.fetched_at and render its relative age via the EXISTING
+    ui.render.fmt_age/is_stale (a stale cache shows an st.warning prompting a re-fetch — the same
+    discipline the odds panel uses). Provenance: list each locked pair tagged 'auto' (fetched) or
+    'manual' (user-entered) so the user can see which results came from the fetch. Names HTML-escaped
+    (T-06-13). Renders nothing when there is no results cache and no locks."""
+    from datetime import datetime, timezone
+
+    results = load_results_cache()
+    # Gate the freshness/staleness line on the SAME canonical stage match the prefill uses (ME-02):
+    # _prefill_results_into_locked refuses to apply a cache whose _meta.stage differs from the active
+    # stage, but this banner read the cache independently and asserted "Fetched results: …" on a
+    # stage that had NO applied results (e.g. a stage2 cache while viewing stage1). int(_meta.stage)
+    # vs _stage_int_for(stage_id) is the ONE canonical comparison (both ints — T-06-12); on a
+    # garbled/foreign stage the freshness line is suppressed (the locks are still correct, so the
+    # per-lock provenance list below renders unconditionally).
+    if results:
+        try:
+            same_stage = int(results.get("_meta", {}).get("stage")) == _stage_int_for(stage_id)
+        except (TypeError, ValueError):
+            same_stage = False
+        if same_stage:
+            fetched_at = results.get("_meta", {}).get("fetched_at")
+            now = datetime.now(timezone.utc)
+            age = fmt_age(fetched_at, now)
+            if is_stale(fetched_at, now):
+                st.warning(
+                    f"Fetched results may be stale (fetched {age}) — click "
+                    f"“Fetch latest results” to refresh."
+                )
+            else:
+                st.caption(f"Fetched results: {age}.")
+
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
+    if not locked_results:
+        return
+    lines = []
+    for (round_idx, w, ell) in locked_results:
+        source = prov.get(frozenset((w, ell)), "manual")  # missing -> manual (pre-Phase-6 default)
+        w_name = html.escape(str(name_of.get(w, w)))
+        ell_name = html.escape(str(name_of.get(ell, ell)))
+        badge = "auto (fetched)" if source == "auto" else "manual"
+        lines.append(f"R{round_idx + 1}: {w_name} beat {ell_name} — <em>{badge}</em>")
+    st.markdown(
+        "<div style='font-size:0.85rem;color:#9aa4b2'>Locked results · "
+        + " &nbsp;|&nbsp; ".join(lines)
+        + "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def _render_lock_controls(name_of: dict[int, str]) -> None:
@@ -891,6 +1409,18 @@ def _render_odds_drilldown(blended) -> None:
 
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
 with main:
+    # Phase 6 (RES-02): pre-fill the active stage's KEY_LOCKED from fetched FINISHED results BEFORE
+    # anything consumes KEY_LOCKED (the run flow + the LIVE lock controls). Every fetched lock routes
+    # through the existing validate path (no bypass, no engine edit); a conflict with a manual lock is
+    # stashed for explicit confirm, never silently applied. The returned _meta.fetched_at is folded
+    # into the run cache key (via _combined_fetched_at) so a fresh fetch re-fires the conditional re-sim.
+    _RESULTS_FETCHED_AT = _prefill_results_into_locked()
+    # Phase 7 (SEED-03): if the ACTIVE stage is a fully-locked, complete prior stage, auto-derive the
+    # NEXT stage's seeds into an editable [INFERRED] session overlay (KEY_DERIVED_SEEDS) — consumed by
+    # the Stage-2 ratings editor on the stage switch. Gated behind stage_is_complete (reusing the
+    # LivePrefixIncomplete precondition); a partial prior stage produces NO seed list. Session-only —
+    # never a data/stage2.json rewrite, never flips the per-stage [INFERRED] banner.
+    _derive_next_stage_seeds()
     result, error_msg, cache_key = _run_or_serve()
     # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
     # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->
@@ -929,6 +1459,12 @@ with main:
         ids = [t.id for t in teams]
 
         st.subheader("Lock results")
+        # RES-03: a fetched result that conflicts with a manual lock surfaces a LOUD notice + an
+        # explicit confirm here (rendered BEFORE the lock controls so the conflict is unmissable);
+        # the atomic validate-first swap keeps the manual lock intact on an engine-illegal fetched
+        # lock. Then the provenance/staleness line surfaces auto-vs-manual + fetched_at freshness.
+        _render_results_conflict(name_of)
+        _render_results_provenance(name_of)
         _render_lock_controls(name_of)
 
         st.subheader("Your picks — status")

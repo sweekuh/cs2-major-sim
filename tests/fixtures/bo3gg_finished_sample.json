@@ -1,0 +1,61 @@
+{
+  "_comment": "[PLACEHOLDER SHAPE — VERIFY AT EVENT TIME] Recorded bo3.gg /api/v1/matches FINISHED-series response for the no-network parse test (RES-01/05), shaped per 06-RESEARCH lines 321-323 (each match: status, winner_team_id, two `teams` each id/name/slug/acronym, a `tournament` include). Handcrafted to the documented shape; the REAL Cologne field names/slugs are reconciled at the event-time gstack /browse verify. Rows exercise: (1) a clean FINISHED row both slugs in team_aliases.json; (2) a FINISHED row whose slug is ABSENT from team_aliases.json but resolves via odds/_match.resolve_id name-substring fallback; (3) a non-finished (upcoming) row excluded by the FINISHED-only filter; (4) a FINISHED row with an UNRESOLVABLE team (drop-on-unresolved, never mis-joined); (5) a garbled FINISHED row missing `teams` (dropped, never raises).",
+  "matches": [
+    {
+      "id": 900001,
+      "status": "finished",
+      "winner_team_id": 5001,
+      "best_of": 1,
+      "round": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "teams": [
+        { "id": 5001, "name": "GamerLegion", "slug": "gamerlegion", "acronym": "GL" },
+        { "id": 5009, "name": "NRG Esports", "slug": "nrg", "acronym": "NRG" }
+      ]
+    },
+    {
+      "id": 900002,
+      "status": "finished",
+      "winner_team_id": 5007,
+      "best_of": 1,
+      "round": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "teams": [
+        { "id": 5007, "name": "MIBR", "slug": "mibr-team-2026", "acronym": "MIBR" },
+        { "id": 5008, "name": "SINNERS", "slug": "sinners", "acronym": "SIN" }
+      ]
+    },
+    {
+      "id": 900003,
+      "status": "upcoming",
+      "winner_team_id": null,
+      "best_of": 1,
+      "round": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "teams": [
+        { "id": 5005, "name": "BIG", "slug": "big", "acronym": "BIG" },
+        { "id": 5006, "name": "M80", "slug": "m80", "acronym": "M80" }
+      ]
+    },
+    {
+      "id": 900004,
+      "status": "finished",
+      "winner_team_id": 5099,
+      "best_of": 1,
+      "round": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" },
+      "teams": [
+        { "id": 5099, "name": "Totally Unknown Org", "slug": "unknown-org", "acronym": "UNK" },
+        { "id": 5001, "name": "GamerLegion", "slug": "gamerlegion", "acronym": "GL" }
+      ]
+    },
+    {
+      "id": 900005,
+      "status": "finished",
+      "winner_team_id": 5004,
+      "best_of": 1,
+      "round": 1,
+      "tournament": { "id": 7001, "name": "IEM Cologne Major 2026", "slug": "iem-cologne-major-2026" }
+    }
+  ]
+}

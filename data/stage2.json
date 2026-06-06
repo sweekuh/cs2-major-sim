@@ -1,0 +1,27 @@
+{
+  "_comment": "[INVITED-8 VERIFIED 2026-06-06 / QUALIFIERS AUTO-DERIVE] Cologne 2026 Stage-2 (16-team Swiss, top 8 advance). SEEDS 1-8 = the 8 directly-invited teams, now VERIFIED-by-source against Liquipedia (IEM Cologne Major 2026 / Stage_2) + Wikipedia + HLTV (cross-confirmed names; seed order DERIVED by sorting the published Valve VRS global ranks per the merge rule, NOT lifted from a numbered seed column — Spirit #3, Legacy #7, Astralis #12, FUT #13, G2 #14, paiN #18, 9z #20, Monte #24). CRITICAL: these are the STAGE-2 invites, NOT the Stage-3 invites (Vitality/NaVi/Falcons/MongolZ/PARIVISION/Aurora/FURIA/MOUZ enter only at Stage 3 — do not confuse the tiers). seeds_confirmed stays FALSE until the user eyeballs the live Liquipedia/HLTV Stage-2 bracket (the HLTV Valve-ranking page 403'd automated fetch; the rank order is reliable but not yet hand-verified). SEEDS 9-16 = the 8 Stage-1 QUALIFIERS, slotted by final Stage-1 Buchholz (Difficulty = Sigma(opp.wins - opp.losses)) via the Phase-7 inter-stage seeding chain when a COMPLETE Stage-1 is locked in-app (engine.seeding.seed_next_stage). The known qualifiers (Stage 1 finished 2026-06-05): B8 & BetBoom (3-0); GamerLegion, MIBR, M80 (3-1); TYLOO, FlyQuest, BIG (3-2) — their seed-9..16 ORDER comes from the locked-Stage-1 auto-derive, so the rows below stay placeholder slots until Stage 1 is locked. Ratings are the rating-only fallback PRIOR (0 < r < 1000, editable; market-calibrated once Stage-2 odds load). TODO: add team_aliases.json entries for the new invited names (Spirit/Legacy/Astralis/FUT/G2/paiN/9z/Monte) for the odds+results provider slug join. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). Mirrors data/stage1.json provenance style. (STG-02, SEED-01)",
+  "stage": {
+    "size": 16,
+    "advance_at_wins": 3,
+    "eliminate_at_losses": 3
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "Spirit", "rating": 90 },
+    { "seed": 2, "name": "Legacy", "rating": 84 },
+    { "seed": 3, "name": "Astralis", "rating": 80 },
+    { "seed": 4, "name": "FUT Esports", "rating": 76 },
+    { "seed": 5, "name": "G2", "rating": 72 },
+    { "seed": 6, "name": "paiN", "rating": 68 },
+    { "seed": 7, "name": "9z", "rating": 64 },
+    { "seed": 8, "name": "Monte", "rating": 60 },
+    { "seed": 9, "name": "Stage-1 Qualifier (seed 9)", "rating": 58 },
+    { "seed": 10, "name": "Stage-1 Qualifier (seed 10)", "rating": 56 },
+    { "seed": 11, "name": "Stage-1 Qualifier (seed 11)", "rating": 54 },
+    { "seed": 12, "name": "Stage-1 Qualifier (seed 12)", "rating": 52 },
+    { "seed": 13, "name": "Stage-1 Qualifier (seed 13)", "rating": 50 },
+    { "seed": 14, "name": "Stage-1 Qualifier (seed 14)", "rating": 48 },
+    { "seed": 15, "name": "Stage-1 Qualifier (seed 15)", "rating": 46 },
+    { "seed": 16, "name": "Stage-1 Qualifier (seed 16)", "rating": 44 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "[INFERRED] Phase-6 playoff fixture (8-team single-elim bracket). The real 8 teams seed from the final Stage-3 Buchholz in Phase 9 — these placeholder names/ratings are NOT the real bracket, and the playoff is NOT simulated this phase (Phase 9 adds the single-elim sim + Bo5 GF). seeds_confirmed=false so the per-stage [INFERRED]-seed banner shows. size=8; no Swiss advance_at_wins/eliminate_at_losses fields (a bracket has no Swiss thresholds).",
+  "stage": {
+    "size": 8
+  },
+  "seeds_confirmed": false,
+  "teams": [
+    { "seed": 1, "name": "Playoff Seed 1", "rating": 80 },
+    { "seed": 2, "name": "Playoff Seed 2", "rating": 74 },
+    { "seed": 3, "name": "Playoff Seed 3", "rating": 70 },
+    { "seed": 4, "name": "Playoff Seed 4", "rating": 66 },
+    { "seed": 5, "name": "Playoff Seed 5", "rating": 62 },
+    { "seed": 6, "name": "Playoff Seed 6", "rating": 58 },
+    { "seed": 7, "name": "Playoff Seed 7", "rating": 54 },
+    { "seed": 8, "name": "Playoff Seed 8", "rating": 50 }
+  ]
+}
