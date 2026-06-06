@@ -185,8 +185,22 @@ def load_stage(path: str | Path) -> tuple[list[Team], dict]:
     raw = json.loads(Path(path).read_text(encoding="utf-8"))
     stage = raw.get("stage") or {}
     size = int(stage.get("size", STAGE_SIZE))
+    # Mirror the frozen load_teams's friendly field-presence guards (LO-03) so the twin loaders
+    # fail IDENTICALLY (a clean ValueError, never a bare KeyError/TypeError) on a malformed fixture.
+    teams_json = raw.get("teams")
+    if not isinstance(teams_json, list):
+        raise ValueError(f"stage fixture {path} must contain a 'teams' list")
     rows: dict[int, tuple[str, float]] = {}
-    for entry in raw["teams"]:
+    for entry in teams_json:
+        if not isinstance(entry, dict):
+            raise ValueError(
+                f"each team entry must be a dict, got {type(entry).__name__!r}"
+            )
+        for field_name in ("seed", "name", "rating"):
+            if field_name not in entry:
+                raise ValueError(
+                    f"team entry missing required field {field_name!r}: {entry!r}"
+                )
         seed = entry["seed"]
         if seed in rows:
             raise ValueError(f"duplicate seed {seed} in {path}")

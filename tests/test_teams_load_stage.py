@@ -96,6 +96,38 @@ def test_load_stage_bad_rating_raises(tmp_path):
         load_stage(oor)
 
 
+def test_load_stage_malformed_fixture_raises_valueerror(tmp_path):
+    """LO-03 (06-REVIEW): a malformed fixture raises a clean ``ValueError`` (the SAME error
+    contract as the frozen ``load_teams``), never a bare ``KeyError``/``TypeError``. Mirrors
+    load_teams's friendly ``raw.get('teams')`` + per-field presence guards so the twin loaders
+    fail identically.
+
+    Three malformed shapes: (a) NO ``teams`` key, (b) a non-list ``teams``, (c) a team entry
+    missing a required field (``rating``). Each must raise ValueError, not a raw subscript error.
+    """
+    # (a) Missing the 'teams' key entirely (the old `raw["teams"]` raised a bare KeyError).
+    no_teams = _write(tmp_path / "no_teams.json", {"stage": {"size": 16}})
+    with pytest.raises(ValueError):
+        load_stage(no_teams)
+
+    # (b) 'teams' present but not a list -> ValueError (not a TypeError from iterating a dict).
+    bad_teams = _write(
+        tmp_path / "bad_teams.json", {"stage": {"size": 16}, "teams": {"not": "a list"}}
+    )
+    with pytest.raises(ValueError):
+        load_stage(bad_teams)
+
+    # (c) A team entry missing the required 'rating' field (the old `entry["rating"]` raised
+    # a bare KeyError) -> ValueError naming the missing field, like load_teams.
+    missing_field_rows = _seeds(16)
+    del missing_field_rows[0]["rating"]
+    missing_field = _write(
+        tmp_path / "missing_field.json", _fixture(16, missing_field_rows)
+    )
+    with pytest.raises(ValueError, match="rating"):
+        load_stage(missing_field)
+
+
 def test_load_teams_unchanged():
     """FREEZE REGRESSION: after importing the new siblings, load_teams() still returns the
     byte-identical 16-team Stage-1 list — proving the frozen GATE-01 path was not perturbed.
