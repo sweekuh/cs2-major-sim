@@ -899,16 +899,37 @@ def _prefill_results_into_locked() -> str | None:
         prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
         pair = frozenset((w, ell))
 
-        # Already locked? Check for a CONFLICT with a manual lock (RES-03) before anything else.
+        # Already locked? Check for a CONFLICT with the existing lock (RES-03) before anything else.
         existing = next(
             (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
         )
         if existing is not None:
             ex_w = existing[1]
-            if ex_w != w and prov.get(pair, "manual") == "manual":
-                # Conflicts with a MANUAL lock — stash a pending conflict, never silently overwrite.
-                st.session_state[KEY_PENDING_RESULT_CONFLICT] = pending
-            continue  # same pair already locked (agreeing, or auto, or conflict-stashed) — skip
+            if ex_w != w:
+                source = prov.get(pair, "manual")  # missing -> manual (pre-Phase-6 default)
+                if source == "manual":
+                    # Conflicts with a MANUAL lock (user ground truth) — stash a pending conflict
+                    # keyed by pair so MULTIPLE manual conflicts all survive (ME-01); never a silent
+                    # overwrite. The explicit confirm control applies each one.
+                    pendpairs = dict(st.session_state.get(KEY_PENDING_RESULT_CONFLICT, {}))
+                    pendpairs[pair] = pending
+                    st.session_state[KEY_PENDING_RESULT_CONFLICT] = pendpairs
+                else:
+                    # The existing lock is AUTO (a prior fetch) and a FRESH fetch disagrees — the
+                    # provider revised it; auto is NOT user ground truth, so the fresh fetch wins with
+                    # NO confirm (HI-02). Re-apply through the SAME validate path: drop the stale auto
+                    # entry on a COPY, validate, then swap (mirrors _apply_fetched_conflict's ordering).
+                    prospective = [e for e in locked_results if e is not existing]
+                    try:
+                        legal = legal_pairings_for_round(teams, prospective, S, round_idx)
+                    except Exception:  # noqa: BLE001 — incomplete prefix: leave the auto lock as-is
+                        continue
+                    if validate_lock((w, ell), round_idx, prospective, teams, legal) is None:
+                        st.session_state[KEY_LOCKED] = add_lock(prospective, round_idx, w, ell)
+                        new_prov = dict(prov)
+                        new_prov[pair] = "auto"  # the revised fetch is still auto-provenance
+                        st.session_state[KEY_LOCK_PROVENANCE] = new_prov
+            continue  # same pair handled (agreeing, auto-corrected, or manual-conflict-stashed)
 
         # Not yet locked — run the SAME validate path as a manual lock (no bypass).
         try:
@@ -979,43 +1000,57 @@ def _apply_fetched_conflict(pending: tuple[int, int, int]) -> None:
         new_prov.pop(frozenset((manual_entry[1], manual_entry[2])), None)
     new_prov[pair] = "auto"
     st.session_state[KEY_LOCK_PROVENANCE] = new_prov
-    st.session_state.pop(KEY_PENDING_RESULT_CONFLICT, None)
+    # Clear ONLY this pair's pending conflict from the per-pair store (ME-01) so OTHER pending
+    # conflicts in the same fetch survive for their own confirm; drop the store entirely once empty.
+    pendpairs = dict(st.session_state.get(KEY_PENDING_RESULT_CONFLICT, {}))
+    pendpairs.pop(pair, None)
+    if pendpairs:
+        st.session_state[KEY_PENDING_RESULT_CONFLICT] = pendpairs
+    else:
+        st.session_state.pop(KEY_PENDING_RESULT_CONFLICT, None)
 
 
 def _render_results_conflict(name_of: dict[int, str]) -> None:
-    """Render the LOUD conflict notice + explicit confirm control for a stashed pending conflict.
+    """Render the LOUD conflict notice + explicit confirm control for EACH stashed pending conflict.
 
     A fetched result that disagrees with a MANUAL lock for the same pair is NEVER silently applied
-    (RES-03). Show the diff loudly (team names HTML-escaped at the boundary — T-06-13) plus an
-    explicit 'Apply fetched result' button that routes through the atomic validate-first swap. The
-    manual lock stays intact until the user confirms (and stays intact if the fetched lock is
-    engine-illegal). Renders nothing when there is no pending conflict."""
-    pending = st.session_state.get(KEY_PENDING_RESULT_CONFLICT)
-    if not pending:
+    (RES-03). The pending store is a per-pair dict (ME-01), so MULTIPLE conflicts in one fetch each
+    get their OWN notice + confirm control — none is silently lost. Each notice shows the diff
+    loudly (team names HTML-escaped at the boundary — T-06-13); each 'Apply fetched result' button
+    routes through the atomic validate-first swap and clears only that pair. The manual lock stays
+    intact until the user confirms (and stays intact if the fetched lock is engine-illegal). Renders
+    nothing when there is no pending conflict. Each confirm button is keyed per-pair
+    (``apply_fetched_result_btn_{a}_{b}`` on the SORTED pair ids) so concurrent conflicts have
+    stable, distinct widget keys."""
+    pendpairs = st.session_state.get(KEY_PENDING_RESULT_CONFLICT)
+    if not pendpairs:
         return
-    round_idx, w_f, ell_f = pending
     locked_results = st.session_state.get(KEY_LOCKED, [])
-    pair = frozenset((w_f, ell_f))
-    manual_entry = next(
-        (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
-    )
-    w_name = html.escape(str(name_of.get(w_f, w_f)))
-    ell_name = html.escape(str(name_of.get(ell_f, ell_f)))
-    if manual_entry is not None:
-        m_w = html.escape(str(name_of.get(manual_entry[1], manual_entry[1])))
-        m_ell = html.escape(str(name_of.get(manual_entry[2], manual_entry[2])))
-        st.warning(
-            f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
-            f"{ell_name}, but you manually locked {m_w} beat {m_ell}. Confirm to overwrite your "
-            f"manual lock with the fetched result — your manual lock is kept until you confirm."
+    # Deterministic order (by sorted pair ids) so the rendered notices/keys are stable across reruns.
+    for pair in sorted(pendpairs, key=lambda fp: sorted(fp)):
+        pending = pendpairs[pair]
+        round_idx, w_f, ell_f = pending
+        a_id, b_id = sorted(pair)
+        manual_entry = next(
+            (e for e in locked_results if frozenset((e[1], e[2])) == pair), None
         )
-    else:
-        st.warning(
-            f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
-            f"{ell_name}. Confirm to apply it."
-        )
-    if st.button("Apply fetched result", key="apply_fetched_result_btn"):
-        _apply_fetched_conflict(pending)
+        w_name = html.escape(str(name_of.get(w_f, w_f)))
+        ell_name = html.escape(str(name_of.get(ell_f, ell_f)))
+        if manual_entry is not None:
+            m_w = html.escape(str(name_of.get(manual_entry[1], manual_entry[1])))
+            m_ell = html.escape(str(name_of.get(manual_entry[2], manual_entry[2])))
+            st.warning(
+                f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+                f"{ell_name}, but you manually locked {m_w} beat {m_ell}. Confirm to overwrite your "
+                f"manual lock with the fetched result — your manual lock is kept until you confirm."
+            )
+        else:
+            st.warning(
+                f"Results conflict (Round {round_idx + 1}): the fetched result says {w_name} beat "
+                f"{ell_name}. Confirm to apply it."
+            )
+        if st.button("Apply fetched result", key=f"apply_fetched_result_btn_{a_id}_{b_id}"):
+            _apply_fetched_conflict(pending)
 
 
 def _render_results_provenance(name_of: dict[int, str]) -> None:

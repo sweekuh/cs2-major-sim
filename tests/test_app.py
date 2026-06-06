@@ -1276,13 +1276,15 @@ def test_fetch_conflict_requires_confirm(monkeypatch):
     assert not at.exception
 
     # The conflict was stashed (NOT silently applied); the manual lock is intact; a loud notice shows.
-    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == (0, 9, 1)
+    # The pending store is a per-pair dict (ME-01) keyed by the lock pair -> the pending lock tuple.
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 9)): (0, 9, 1)}
     assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "manual lock must survive until confirm"
     assert (0, 9, 1) not in list(at.session_state[KEY_LOCKED]), "fetched winner not applied pre-confirm"
     assert any("conflict" in w.value.lower() for w in at.warning), "a loud conflict warning must render"
 
     # Explicit confirm (a LEGAL swap — same R1 pair, opposite winner): KEY_LOCKED now holds 9 beat 1.
-    at.button(key="apply_fetched_result_btn").click().run()
+    # The confirm button is keyed per-pair (ME-01) on the SORTED pair ids -> {1,9} == _1_9.
+    at.button(key="apply_fetched_result_btn_1_9").click().run()
     assert not at.exception
     locked = list(at.session_state[KEY_LOCKED])
     assert (0, 9, 1) in locked, "after confirm the fetched winner is applied"
@@ -1310,12 +1312,13 @@ def test_conflict_confirm_validates_before_remove(monkeypatch):
     at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 5)): "manual"}
     at.button(key="run_btn").click().run()
     assert not at.exception
-    # The conflict is stashed (same pair, opposite winner, manual provenance).
-    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == (0, 5, 1)
+    # The conflict is stashed (same pair, opposite winner, manual provenance) — per-pair dict (ME-01).
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 5)): (0, 5, 1)}
 
     locked_before = list(at.session_state[KEY_LOCKED])
     # Confirm — but the fetched lock is engine-illegal (non-pairing) -> rejected, manual preserved.
-    at.button(key="apply_fetched_result_btn").click().run()
+    # The confirm button is keyed per-pair (ME-01) on the SORTED pair ids -> {1,5} == _1_5.
+    at.button(key="apply_fetched_result_btn_1_5").click().run()
     assert not at.exception
     assert list(at.session_state[KEY_LOCKED]) == locked_before, (
         "an engine-illegal fetched lock must NOT remove the manual lock (validate before remove)"
@@ -1423,3 +1426,128 @@ def test_reverse_round_results_prefill_in_one_pass(monkeypatch):
         "(HI-01: the unsorted single pass drops every R2+ row)"
     )
 
+
+def test_auto_lock_self_corrects_on_revised_fetch(monkeypatch):
+    """HI-02 (06-REVIEW): an AUTO-locked pair whose later fetch returns the OPPOSITE winner must
+    self-correct (no confirm) — a fresh fetch is the provider's revised ground truth, and auto is
+    not user ground truth. A MANUAL lock in the same situation still routes to the confirm gate.
+
+    Pre-fix: the conflict gate only fires for "manual" provenance; an "auto" lock disagreeing with
+    a fresh fetch falls through to `continue` — the stale auto-lock persists and the corrected
+    winner is dropped, with no path anywhere to update it. The fix re-applies the fetched result
+    through the SAME legal_pairings_for_round -> validate_lock -> add_lock path for auto locks.
+    """
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # First fetch: 1 beat 9 (auto-locked by the pre-fill).
+    _patch_results(monkeypatch, _results_cache([_finished_row(1, 9, winner=1, round_idx=0)], stage=1))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "first fetch auto-locks 1 beat 9"
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((1, 9))) == "auto"
+
+    # A REVISED fetch for the SAME pair with the OPPOSITE winner (9 beat 1) + a new fetched_at.
+    _patch_results(
+        monkeypatch,
+        _results_cache(
+            [_finished_row(1, 9, winner=9, round_idx=0)],
+            stage=1,
+            fetched_at="2026-06-04T12:00:00+00:00",
+        ),
+    )
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    locked = list(at.session_state[KEY_LOCKED])
+    # The auto-lock self-corrected to the revised winner — NO confirm gate for an auto value.
+    assert (0, 9, 1) in locked, "a revised fetch must self-correct the stale AUTO lock (HI-02)"
+    assert (0, 1, 9) not in locked, "the stale auto winner must be dropped on the revised fetch"
+    # Provenance stays auto; NO pending conflict was stashed (auto self-corrects without a human).
+    assert _ss_get(at, KEY_LOCK_PROVENANCE, {}).get(frozenset((9, 1))) == "auto"
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) is None, (
+        "an auto self-correction must NOT route through the manual confirm gate"
+    )
+
+
+def test_manual_lock_still_routes_to_confirm_on_revised_fetch(monkeypatch):
+    """HI-02 (the unchanged half): a MANUAL lock whose fetch returns the opposite winner still
+    stashes a pending conflict and keeps the manual lock until the user confirms — the auto
+    self-correction must NOT leak into the manual path."""
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Fetched result: 9 beat 1 (opposite the manual lock the user holds: 1 beat 9).
+    _patch_results(monkeypatch, _results_cache([_finished_row(1, 9, winner=9, round_idx=0)], stage=1))
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Establish the MANUAL lock 1 beat 9 and re-run.
+    at.session_state[KEY_LOCKED] = [(0, 1, 9)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {frozenset((1, 9)): "manual"}
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # The MANUAL conflict is stashed (NOT silently overwritten); the manual lock survives. The
+    # pending store is a per-pair dict (ME-01) keyed by the lock pair -> the pending lock tuple.
+    assert _ss_get(at, KEY_PENDING_RESULT_CONFLICT) == {frozenset((1, 9)): (0, 9, 1)}
+    assert (0, 1, 9) in list(at.session_state[KEY_LOCKED]), "manual lock survives until confirm"
+    assert (0, 9, 1) not in list(at.session_state[KEY_LOCKED]), "fetched winner not auto-applied over a manual lock"
+    assert any("conflict" in w.value.lower() for w in at.warning), "a loud conflict warning must render for a manual conflict"
+
+
+def test_two_manual_conflicts_both_surface(monkeypatch):
+    """ME-01 (06-REVIEW): TWO manual-lock conflicts in one fetch must BOTH surface — neither is
+    silently lost.
+
+    Pre-fix KEY_PENDING_RESULT_CONFLICT is a scalar overwritten on every conflicting pair, so only
+    the last-iterated conflict survives; the earlier one vanishes with no notice. The fix makes the
+    pending store keyed by pair and renders one confirm control per pending conflict.
+    """
+    from ui.state import KEY_LOCK_PROVENANCE, KEY_LOCKED, KEY_PENDING_RESULT_CONFLICT
+
+    # Two fetched R1 results, each the OPPOSITE of a manual lock the user holds:
+    #   fetched 9 beat 1   vs manual 1 beat 9
+    #   fetched 10 beat 2  vs manual 2 beat 10
+    rows = [
+        _finished_row(1, 9, winner=9, round_idx=0),
+        _finished_row(2, 10, winner=10, round_idx=0),
+    ]
+    _patch_results(monkeypatch, _results_cache(rows, stage=1))
+
+    at = _go_live_small(_apptest().run())
+    assert not at.exception
+    # Two MANUAL locks (opposite winners to the fetched rows).
+    at.session_state[KEY_LOCKED] = [(0, 1, 9), (0, 2, 10)]
+    at.session_state[KEY_LOCK_PROVENANCE] = {
+        frozenset((1, 9)): "manual",
+        frozenset((2, 10)): "manual",
+    }
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    # BOTH conflicts surfaced — neither manual lock was silently overwritten, both stay intact.
+    locked = list(at.session_state[KEY_LOCKED])
+    assert (0, 1, 9) in locked and (0, 2, 10) in locked, "both manual locks survive until confirm"
+    assert (0, 9, 1) not in locked and (0, 10, 2) not in locked, "neither fetched winner auto-applied"
+
+    # The pending-conflict store holds BOTH pending conflicts (keyed by pair), not just one.
+    pending = _ss_get(at, KEY_PENDING_RESULT_CONFLICT)
+    assert pending, "a pending-conflict store must exist"
+
+    def _pending_pairs(store):
+        """Pairs covered by the pending-conflict store, tolerant of shape.
+
+        Post-fix the store is a dict (pair -> pending) or list of pendings; pre-fix it is a single
+        scalar (round_idx, w, ell) tuple — handled so the test reaches its real assertion (only ONE
+        pair present) rather than crashing on the scalar's int subscript."""
+        entries = store.values() if isinstance(store, dict) else (
+            store if isinstance(store, (list, tuple)) and store and isinstance(store[0], (list, tuple))
+            else [store]
+        )
+        return {frozenset((p[1], p[2])) for p in entries}
+
+    pending_pairs = _pending_pairs(pending)
+    assert frozenset((1, 9)) in pending_pairs, "the FIRST manual conflict must not be lost (ME-01)"
+    assert frozenset((2, 10)) in pending_pairs, "the SECOND manual conflict must surface (ME-01)"
+
+    # Both conflict notices render LOUDLY (one confirm control per conflict).
+    warn_text = " ".join(w.value.lower() for w in at.warning)
+    assert warn_text.count("conflict") >= 2, "BOTH conflicts must render a loud notice, not just one"
