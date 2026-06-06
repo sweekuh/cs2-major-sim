@@ -22,7 +22,12 @@ import pathlib
 import numpy as np
 
 from engine.probs import difficulty
-from engine.seeding import InvitedTeam, seed_next_stage
+from engine.seeding import (
+    InvitedTeam,
+    final_standings_from_locked,
+    seed_next_stage,
+    stage_is_complete,
+)
 from engine.swiss import simulate_stage
 from engine.teams import ADVANCE_AT_WINS, Team
 
@@ -56,6 +61,31 @@ def _build_finished_stage1_replay() -> dict[int, Team]:
 
     rng = np.random.default_rng(0)  # throwaway: fully-locked stage is deterministic
     return simulate_stage(teams, None, 40.0, rng, locked, pairings_out=[])
+
+
+def _stage1_locks_through_round(last_round_idx: int) -> tuple[list[Team], list[tuple[int, int, int]]]:
+    """Stage-1 teams + a lock list (round_idx, winner_id, loser_id) up to ``last_round_idx``.
+
+    Mirrors the fixture->locked idiom of test_backtest_budapest_2025.py, but emits the ORDERED
+    ``list[(round_idx, w, ell)]`` shape ``engine.live.legal_pairings_for_round`` /
+    ``engine.seeding.stage_is_complete`` consume (round_idx is 0-based: R1 == 0, matching the
+    live-mode convention). ``last_round_idx`` is inclusive — pass 2 for rounds 0..2 locked
+    (rounds 3-4 unlocked -> a PARTIAL prefix); pass a large value (e.g. 99) for the FULL stage.
+    """
+    fx = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    seeding = {int(s): name for s, name in fx["seeding"].items()}
+    name_to_seed = {name: s for s, name in seeding.items()}
+    teams = [Team(id=s, name=name, seed=s, rating=50.0) for s, name in seeding.items()]
+
+    locks: list[tuple[int, int, int]] = []
+    for rnd in fx["rounds"]:
+        round_idx = int(rnd["round"]) - 1  # fixture rounds are 1-based; live convention is 0-based
+        if round_idx > last_round_idx:
+            continue
+        for m in rnd["matches"]:
+            w, ell = name_to_seed[m["winner"]], name_to_seed[m["loser"]]
+            locks.append((round_idx, w, ell))
+    return teams, locks
 
 
 def _fixed_invited_8() -> list[InvitedTeam]:
@@ -255,5 +285,56 @@ def test_seeding_is_pure():
     src = open(s.__file__, encoding="utf-8").read()
     for forbidden in ("import streamlit", "import httpx", "import requests"):
         assert forbidden not in src
-    assert "default_rng" not in src
-    assert "np.random" not in src
+    # seed_next_stage itself stays RNG-free; the numpy import is CONFINED to the
+    # final_standings_from_locked replay helper (a fully-locked replay never samples, so it
+    # does NOT affect output). The purity claim is therefore scoped to seed_next_stage's own
+    # source region — assert no RNG call leaks INTO the derivation path (before the helper).
+    derive_src = src.split("def final_standings_from_locked", 1)[0]
+    assert "default_rng" not in derive_src
+    assert "np.random" not in derive_src
+
+
+# ===========================================================================
+# SEED-03 — completeness gate (complete -> seeds / partial -> none) + RNG-invariant replay.
+# ===========================================================================
+def test_partial_stage_yields_no_seeds():
+    """SEED-03: a partially-locked Stage 1 (rounds 0..2 locked, rounds 3-4 unlocked -> not every
+    team terminated) produces NO Stage-2 seed list. stage_is_complete must reuse the
+    LivePrefixIncomplete / full-lock-prefix precondition and return False, so the app/helper
+    NEVER seeds off sampled (unlocked) winners (T-07-09 / Anti-Pattern 6)."""
+    teams, partial_locks = _stage1_locks_through_round(2)  # rounds 3-4 unlocked
+    assert stage_is_complete(teams, partial_locks, S=40.0) is False
+
+
+def test_complete_stage_is_complete():
+    """SEED-03: the FULL Budapest lock list (every round locked, every team terminated at 3W/3L)
+    -> stage_is_complete is True (the prefix is fully locked AND no active team remains), so the
+    chain is cleared to derive."""
+    teams, full_locks = _stage1_locks_through_round(99)  # all rounds
+    assert stage_is_complete(teams, full_locks, S=40.0) is True
+
+
+def test_full_lock_replay_is_rng_invariant():
+    """T-07-10: the full-lock replay never samples (the locked branch in _play is deterministic),
+    so deriving the standings TWICE yields identical {id: (wins, losses)} AND seed_next_stage on
+    the two derivations yields BYTE-IDENTICAL Stage-2 seeds. A fully-locked prefix is RNG-invariant
+    by construction — the standings (and therefore the derived seeds) do not depend on the throwaway
+    rng the helper uses internally (07-RESEARCH.md / engine.live.derive_bracket)."""
+    teams, full_locks = _stage1_locks_through_round(99)
+    invited = _fixed_invited_8()
+
+    final_a = final_standings_from_locked(teams, full_locks, S=40.0)
+    final_b = final_standings_from_locked(teams, full_locks, S=40.0)
+
+    # Standings are identical across two independent derivations.
+    records_a = {tid: (t.wins, t.losses) for tid, t in final_a.items()}
+    records_b = {tid: (t.wins, t.losses) for tid, t in final_b.items()}
+    assert records_a == records_b
+
+    # And the derived Stage-2 seeds are byte-identical across the two derivations.
+    seeds_a = seed_next_stage(final_a, invited)
+    seeds_b = seed_next_stage(final_b, invited)
+    assert [(t.seed, t.name, t.rating) for t in seeds_a] == [
+        (t.seed, t.name, t.rating) for t in seeds_b
+    ]
+    assert [t.seed for t in seeds_a] == list(range(1, 17))  # exactly seeds 1..16
