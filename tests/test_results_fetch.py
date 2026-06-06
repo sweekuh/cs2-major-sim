@@ -28,7 +28,13 @@ from pathlib import Path
 import pytest
 
 from engine.teams import load_stage
-from scripts.fetch_results import _parse_bo3gg, _parse_pandascore, _load_aliases, main
+from scripts.fetch_results import (
+    _parse_bo3gg,
+    _parse_pandascore,
+    _load_aliases,
+    _stage_number,
+    main,
+)
 
 _FIXTURES = Path(__file__).resolve().parent / "fixtures"
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -145,6 +151,31 @@ def test_main_writes_versioned_cache(tmp_path):
     # The two resolvable FINISHED bo3.gg rows are present.
     matches = {tuple(r["match"]) for r in on_disk["results"]}
     assert (1, 9) in matches and (7, 8) in matches
+
+
+def test_stage_number_maps_known_and_raises_on_unknown():
+    """LO-02 (06-REVIEW): the fetcher's ``_stage_number`` must mirror app's ``_stage_int_for`` —
+    the four real stages map 1..4, and an UNKNOWN stage_id raises ``ValueError`` (a single
+    fail-loud contract on BOTH sides). The old ``.get(stage_id, 1)`` silently defaulted a typo'd
+    stage_id to 1, which would write ``_meta.stage = 1`` and prefill Stage 1 with another stage's
+    results via the v2-cron path (a fabricated-lock vector)."""
+    # The four real stages agree with app._stage_int_for exactly.
+    assert _stage_number("stage1") == 1
+    assert _stage_number("stage2") == 2
+    assert _stage_number("stage3") == 3
+    assert _stage_number("playoffs") == 4
+
+    # An unknown stage_id fails loud (mirrors app._stage_int_for), never a silent default to 1.
+    with pytest.raises(ValueError, match="unknown stage_id"):
+        _stage_number("bogus")
+
+    # The two sides agree on every real stage AND on the unknown-case contract (both raise).
+    import app
+
+    for sid in ("stage1", "stage2", "stage3", "playoffs"):
+        assert _stage_number(sid) == app._stage_int_for(sid)
+    with pytest.raises(ValueError):
+        app._stage_int_for("bogus")
 
 
 def test_httpx_is_lazy_not_top_level():

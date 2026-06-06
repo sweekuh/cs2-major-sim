@@ -86,9 +86,20 @@ def _path_for_stage(stage_id: str) -> Path:
 
 
 def _stage_number(stage_id: str) -> int:
-    """The 1-based stage number written into ``_meta.stage`` (playoffs -> 4)."""
+    """The 1-based stage number written into ``_meta.stage`` (playoffs -> 4).
+
+    Raises ``ValueError`` on an UNKNOWN stage_id (LO-02) — mirrors ``app._stage_int_for`` so the
+    fetcher-written ``_meta.stage`` and the app's read-side filter share ONE fail-loud contract.
+    The old ``.get(stage_id, 1)`` silently defaulted a typo'd stage_id to 1, which via the v2-cron
+    path (``python -m scripts.fetch_results``) would write ``_meta.stage = 1`` and prefill Stage 1
+    with another stage's results (a fabricated-lock vector). A typo must fail loud, never mis-write.
+    """
     order = {"stage1": 1, "stage2": 2, "stage3": 3, "playoffs": 4}
-    return order.get(stage_id, 1)
+    if stage_id not in order:
+        raise ValueError(
+            f"unknown stage_id {stage_id!r}; expected one of {sorted(order)}"
+        )
+    return order[stage_id]
 
 
 def _load_aliases(path: str | Path = _DEFAULT_ALIASES) -> dict[str, str]:
