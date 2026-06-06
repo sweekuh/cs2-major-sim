@@ -1671,3 +1671,82 @@ def test_partial_stage1_yields_no_stage2_overlay():
     assert "stage2" not in overlay, (
         "a partial / incomplete Stage 1 must produce NO Stage-2 seed overlay (SEED-03 / Anti-Pattern 6)"
     )
+
+
+def _spy_run_mc_progressive(monkeypatch):
+    """Patch engine.montecarlo.run_mc_progressive with a recorder that captures the ``all_bo3``
+    keyword it is called with and DELEGATES to the real generator so the run completes.
+
+    app.py does ``from engine.montecarlo import run_mc_progressive`` at import time (AppTest
+    triggers that on .run()), so we patch the source module BEFORE the AppTest run — the exact
+    spy pattern test_single_run_computes_mc_exactly_once uses. Returns the ``calls`` record.
+    """
+    import engine.montecarlo as mc
+
+    calls = {"all_bo3": [], "n": 0}
+    real = mc.run_mc_progressive
+
+    def _recording(*args, **kwargs):
+        calls["n"] += 1
+        calls["all_bo3"].append(kwargs.get("all_bo3", "ABSENT"))
+        yield from real(*args, **kwargs)
+
+    monkeypatch.setattr(mc, "run_mc_progressive", _recording)
+    return calls
+
+
+def test_stage3_runs_all_bo3(monkeypatch):
+    """STG-03 / T-08-06 (the wire): with STAGE 3 selected, the cache-miss compute path passes
+    ``all_bo3=True`` into run_mc_progressive — every Stage-3 match resolves through the Bo3
+    closed form.
+
+    Mirrors the test_single_run_computes_mc_exactly_once spy + the test_inferred_banner stage
+    switch (at.session_state[KEY_STAGE] = "stage3"). We assert the recorder saw all_bo3=True on
+    the run it drove. (data/stage3.json is the [INFERRED] all-Bo3 fixture finalized in Task 1.)
+    """
+    from ui.state import KEY_STAGE
+
+    calls = _spy_run_mc_progressive(monkeypatch)
+
+    # Switch to Stage 3 the same way the INFERRED-banner test switches to Stage 2: run once on the
+    # default stage, inject the selector's session value, then re-run (robust to the widget type).
+    at = _apptest()
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    # Only the Stage-3 Run should be observed below; clear any draws from the Stage-1 default run.
+    calls["all_bo3"].clear()
+    calls["n"] = 0
+
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    assert calls["n"] >= 1, "Stage 3 Run must drive run_mc_progressive at least once (cache miss)"
+    assert all(v is True for v in calls["all_bo3"]), (
+        f"Stage 3 must thread all_bo3=True into run_mc_progressive; recorded {calls['all_bo3']!r}"
+    )
+
+
+def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
+    """STG-03 companion / T-08-06: a NON-stage3 (Stage 1 default) Run passes all_bo3=False —
+    Stage 1/2/playoffs are unaffected, proving the wire is ``stage_id == 'stage3'`` EXACTLY.
+
+    The assertion is EXPLICIT (``is False``), not merely "not True"/absent, so it FAILS if the
+    flag ever leaked True off Stage 3 (plan-check defense-in-depth note 1). _drive_progress
+    defaults all_bo3=False, but _compute_or_serve always passes the computed bool, so the spy
+    sees a real ``False`` keyword on a Stage-1 run.
+    """
+    calls = _spy_run_mc_progressive(monkeypatch)
+
+    at = _apptest()  # Stage 1 is the default active stage (no KEY_STAGE override).
+    at.run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+
+    assert calls["n"] >= 1, "the Stage-1 Run must drive run_mc_progressive at least once"
+    assert all(v is False for v in calls["all_bo3"]), (
+        f"a non-stage3 Run must pass all_bo3=False (Stage 1/2/playoffs unaffected); "
+        f"recorded {calls['all_bo3']!r}"
+    )

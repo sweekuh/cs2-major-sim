@@ -312,7 +312,7 @@ else:
 # holds a stage_id (consumed by _path_for_stage); format_func renders the friendly label. Default
 # (first option) is "stage1" — the zero-config first-run stage (DX-01). Writing KEY_STAGE re-keys the
 # whole MC/optimizer cache so a stage switch can never serve the prior stage's numbers (STG-04).
-_STAGE_LABELS = {"stage1": "Stage 1", "stage2": "Stage 2"}
+_STAGE_LABELS = {"stage1": "Stage 1", "stage2": "Stage 2", "stage3": "Stage 3"}
 stage_id = st.selectbox(
     "Stage",
     options=list(_STAGE_LABELS.keys()),
@@ -453,7 +453,7 @@ with controls:
         st.rerun()
 
 
-def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=None):
+def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=None, *, all_bo3: bool = False):
     """Cache-MISS path: iterate the FROZEN run_mc_progressive to drive st.progress.
 
     Each Partial(done, total, running_p_adv) advances the bar with a running sim counter
@@ -463,10 +463,14 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
     ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
     ``dict["lo-hi" -> (p, var)]`` of the market-priced matchups; var>0 drives the K-Beta
     epistemic OUTER loop, var all-zero / None is the exact no-op (GATE-01 byte-identical).
+
+    ``all_bo3`` (keyword-only, default False; BO-01): forwarded straight to
+    run_mc_progressive so Stage 3 resolves every match through the Bo3 closed form. False on
+    Stage 1/2/playoffs keeps the frozen rating-only path byte-identical.
     """
     bar = st.progress(0.0, text="Simulating…")
     gen = run_mc_progressive(
-        teams, ratings, S, N, locked, seed=FIXED_SEED, market_blend=market_blend
+        teams, ratings, S, N, locked, seed=FIXED_SEED, market_blend=market_blend, all_bo3=all_bo3
     )
     result = None
     try:
@@ -698,12 +702,17 @@ def _compute_or_serve(ratings: dict, locked: dict, stage_id: str, market_blend=N
     stage's Result. ``market_blend`` (the odds seam) feeds the epistemic OUTER loop; ``fetched_at``
     is folded into the cache key so a fresh fetch (moved var) invalidates the memoized Result
     (T-05-STALEBAND).
+
+    Stage 3 runs all-Bo3 (BO-01): ``all_bo3 = (stage_id == "stage3")`` is a pure function of the
+    already-key-LEADING ``stage_id``, so threading it needs NO cache-key change (a Stage-3 run
+    already keys distinctly from Stage 1/2/playoffs). Stage 1/2/playoffs pass all_bo3=False.
     """
+    all_bo3 = (stage_id == "stage3")
     cache_key = _cache_key_for(ratings, locked, stage_id, fetched_at)
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         return cache[cache_key], cache_key
-    result = _drive_progress(ratings, S, int(N), locked, market_blend)
+    result = _drive_progress(ratings, S, int(N), locked, market_blend, all_bo3=all_bo3)
     cache[cache_key] = result
     # Evict oldest entries so the retained per-sim samples can't grow unbounded across
     # a long session of re-runs (insertion-ordered dict → pop oldest first).
