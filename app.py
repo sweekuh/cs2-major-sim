@@ -27,6 +27,7 @@ import streamlit as st
 
 from engine.backsolve import fit_ratings, invert_series
 from engine.live import (
+    LivePrefixIncomplete,
     classify_pick,
     derive_bracket,
     legal_pairings_for_round,
@@ -35,6 +36,12 @@ from engine.live import (
 )
 from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
+from engine.seeding import (
+    InvitedTeam,
+    final_standings_from_locked,
+    seed_next_stage,
+    stage_is_complete,
+)
 from engine.teams import load_stage
 from ui.cache import _path_for_stage, freeze_locked, freeze_ratings, optimize_cached
 from ui.odds_loader import load_odds_cache  # json-only read seam (NO httpx/dotenv — DX-01)
@@ -60,6 +67,7 @@ from ui.state import (
     BAD_RATING_MSG,
     DEFAULT_MODE,
     FIXED_SEED,
+    KEY_DERIVED_SEEDS,
     KEY_LIVE_ANCHOR,
     KEY_LOCK_PROVENANCE,
     KEY_LOCKED,
@@ -323,7 +331,20 @@ controls, main = st.columns([1, 3], gap="medium")
 # --- Controls column ---------------------------------------------------------------------
 with controls:
     st.subheader("Ratings")
-    rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in teams]
+    # SEED-03: when this stage has a derived-seed SESSION overlay (auto-derived from a COMPLETE prior
+    # stage; stashed by _derive_next_stage_seeds while the prior stage was active), use it as the
+    # editor's starting rows — an editable [INFERRED] overlay over the committed fixture, NOT a fixture
+    # rewrite. Absent overlay -> the fixture's own teams (the unchanged path). The overlay NEVER flips
+    # seeds_confirmed_{stage_id}, so the per-stage [INFERRED] banner persists until the user reconciles.
+    _derived_overlay = (st.session_state.get(KEY_DERIVED_SEEDS, {}) or {}).get(stage_id)
+    if _derived_overlay:
+        rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in _derived_overlay]
+        st.caption(
+            "Stage-2 seeds derived from the locked Stage-1 finals — [INFERRED], "
+            "verify vs the official seed list."
+        )
+    else:
+        rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in teams]
     edited = st.data_editor(
         rows,
         num_rows="fixed",  # cannot add/delete the 16 teams
@@ -946,6 +967,74 @@ def _prefill_results_into_locked() -> str | None:
     return fetched_at
 
 
+# --- Phase 7 inter-stage seeding chain (SEED-03) -----------------------------------------
+# next-stage_of(active) — Stage 1 derives FOR Stage 2. The single-global KEY_LOCKED holds the
+# ACTIVE stage's locks, so the derivation fires while the PRIOR stage is active + complete and
+# stashes the NEXT stage's overlay (mirrors the results pre-fill: compute when the source data is
+# live, hold in session, consume on the stage switch). Only stage1 -> stage2 is wired for v3.
+_NEXT_STAGE = {"stage1": "stage2"}
+
+
+def _invited_for_stage(next_stage_id: str) -> list[InvitedTeam]:
+    """Read the NEXT stage's 8 directly-invited descriptors from its committed fixture (seeds 1-8).
+
+    Per Plan-01 Open-Question-2: the invited 8 live as the first 8 seed rows of the stage fixture
+    (e.g. data/stage2.json), already in global-VRS order — so each invited team's ``vrs_rank`` is its
+    fixture seed (1-8). The qualifier rows (seeds 9-16) are placeholders the derivation fills, so they
+    are NOT read here. Returns ``[]`` on any load failure (fail-soft — no derivation rather than a crash).
+    """
+    try:
+        next_teams, _cfg = load_stage(_path_for_stage(next_stage_id))
+    except (OSError, ValueError):
+        return []
+    invited = [t for t in next_teams if t.seed <= 8]
+    return [InvitedTeam(name=t.name, vrs_rank=t.seed, rating=t.rating) for t in invited]
+
+
+def _derive_next_stage_seeds() -> None:
+    """Auto-derive the NEXT stage's seeds from a COMPLETE active stage -> editable session overlay (SEED-03).
+
+    Mirrors the _prefill_results_into_locked discipline: read the ACTIVE (prior) stage's KEY_LOCKED lock
+    list, gate the derivation behind ``engine.seeding.stage_is_complete`` (which REUSES the
+    LivePrefixIncomplete / full-lock-prefix precondition), and ONLY when the stage is complete derive
+    ``final_standings_from_locked`` -> ``seed_next_stage`` and stash the result in
+    ``st.session_state[KEY_DERIVED_SEEDS][next_stage_id]`` as an EDITABLE [INFERRED] overlay. A
+    partial/incomplete prior stage produces NO seed list (the try/except swallows LivePrefixIncomplete
+    and any derive error -> overlay left absent; the existing fixture-based Stage-2 fallback stays in
+    place, its [INFERRED] banner already loud). This writes ONLY session state — never data/stage2.json
+    (the committed fixture stays the editable baseline; decisions #6) — and NEVER flips
+    seeds_confirmed_{stage_id}, so the per-stage banner persists until the user reconciles.
+    """
+    next_stage_id = _NEXT_STAGE.get(stage_id)
+    if next_stage_id is None:
+        return  # the active stage has no wired successor (e.g. Stage 2 is the last v3 stage)
+
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    if not locked_results:
+        return  # nothing locked yet -> nothing to derive (avoids a no-op replay every rerun)
+
+    try:
+        if not stage_is_complete(teams, locked_results, S):
+            # Partial / incomplete prior stage: emit NO seed list. Clear any stale overlay so a
+            # later UNLOCK retracts a previously-derived overlay (never seed off a now-partial stage).
+            overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+            if overlay.pop(next_stage_id, None) is not None:
+                st.session_state[KEY_DERIVED_SEEDS] = overlay
+            return
+        invited = _invited_for_stage(next_stage_id)
+        if len(invited) != 8:
+            return  # malformed next-stage fixture (not 8 invited) -> no derivation, keep fallback
+        final = final_standings_from_locked(teams, locked_results, S)
+        derived = seed_next_stage(final, invited)
+    except (LivePrefixIncomplete, ValueError, KeyError):
+        # Incomplete prefix or any derive error -> no derivation (SEED-03 partial-stage behavior).
+        return
+
+    overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+    overlay[next_stage_id] = derived  # editable [INFERRED] SESSION overlay; NOT a fixture write
+    st.session_state[KEY_DERIVED_SEEDS] = overlay
+
+
 def _combined_fetched_at(odds_fetched_at):
     """Fold BOTH the odds and the results cache timestamps into the SINGLE cache-key fetched_at slot.
 
@@ -1293,6 +1382,12 @@ with main:
     # stashed for explicit confirm, never silently applied. The returned _meta.fetched_at is folded
     # into the run cache key (via _combined_fetched_at) so a fresh fetch re-fires the conditional re-sim.
     _RESULTS_FETCHED_AT = _prefill_results_into_locked()
+    # Phase 7 (SEED-03): if the ACTIVE stage is a fully-locked, complete prior stage, auto-derive the
+    # NEXT stage's seeds into an editable [INFERRED] session overlay (KEY_DERIVED_SEEDS) — consumed by
+    # the Stage-2 ratings editor on the stage switch. Gated behind stage_is_complete (reusing the
+    # LivePrefixIncomplete precondition); a partial prior stage produces NO seed list. Session-only —
+    # never a data/stage2.json rewrite, never flips the per-stage [INFERRED] banner.
+    _derive_next_stage_seeds()
     result, error_msg, cache_key = _run_or_serve()
     # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
     # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->

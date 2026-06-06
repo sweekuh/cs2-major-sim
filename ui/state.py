@@ -85,6 +85,18 @@ KEY_LIVE_ANCHOR = "live_anchor_ballot"
 # committed to KEY_LOCKED (D3/RESIM-03) — an illegal pending lock surfaces st.error and is dropped.
 KEY_PENDING_LOCK = "pending_lock"
 
+# --- Phase 7 inter-stage seeding chain (SEED-03) -----------------------------------------
+# KEY_DERIVED_SEEDS holds the per-stage derived-seed SESSION OVERLAY: the Stage N+1 seeds
+# auto-derived from a COMPLETE, fully-locked Stage N (via engine.seeding.stage_is_complete +
+# seed_next_stage). It is keyed by the DERIVED (next) stage_id ->  list[Team] so a stage switch
+# reads its own overlay. This is an editable [INFERRED] overlay the Stage-2 seed/ratings editor
+# reads as its starting rows — NOT a write to data/stage2.json (the committed fixture stays the
+# editable baseline; mirrors the Phase-6 results pre-fill which holds fetched data in session).
+# The overlay carries seeds_confirmed=false semantics: it NEVER flips seeds_confirmed_{stage_id},
+# so the per-stage [INFERRED] banner (STG-05) persists until the user reconciles vs the official
+# Stage-2 seed list. A partial/incomplete prior stage produces NO overlay (no seed list at all).
+KEY_DERIVED_SEEDS = "derived_seeds_overlay"
+
 # UI-05 canonical inline error copy (UI-SPEC Copywriting Contract — do not drift).
 BAD_RATING_MSG = "Ratings must be numbers. Fix the highlighted cell, then Run."
 

@@ -1588,3 +1588,86 @@ def test_provenance_banner_is_stage_scoped(monkeypatch):
     assert "results may be stale" not in text, (
         "no stale-results warning for a cache that belongs to a different stage (ME-02)"
     )
+
+
+# --- Plan 07-03: SEED-03 derived-seed overlay + persistent [INFERRED] banner -------------
+
+
+def _budapest_locks(through_round_idx: int) -> list[tuple[int, int, int]]:
+    """Stage-1 lock list (round_idx, winner_id, loser_id) from the verified Budapest fixture.
+
+    The fixture's seeds (1-16) are the engine team ids; the engine is name-independent, so this
+    by-seed lock list replays cleanly on the active Cologne Stage-1 fixture (same 16-seed structure)
+    to a deterministic 8-advancer finish. ``through_round_idx`` is inclusive (0-based: R1 == 0) — pass
+    a large value for the FULL stage, or 2 for rounds 0..2 only (a PARTIAL prefix)."""
+    fx = json.loads(
+        (Path(__file__).resolve().parent / "fixtures" / "budapest_2025_stage1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    name_to_seed = {name: int(s) for s, name in fx["seeding"].items()}
+    locks: list[tuple[int, int, int]] = []
+    for rnd in fx["rounds"]:
+        ridx = int(rnd["round"]) - 1
+        if ridx > through_round_idx:
+            continue
+        for m in rnd["matches"]:
+            locks.append((ridx, name_to_seed[m["winner"]], name_to_seed[m["loser"]]))
+    return locks
+
+
+def test_complete_stage1_derives_editable_stage2_overlay():
+    """SEED-03 (app wiring): a COMPLETE, fully-locked Stage 1 auto-derives the Stage-2 seeds into an
+    editable [INFERRED] session overlay (KEY_DERIVED_SEEDS['stage2']); switching to Stage 2 surfaces
+    the derive caption AND the per-stage [INFERRED] banner STILL shows (the overlay never flips
+    seeds_confirmed_stage2). Proves: complete -> 16-seed overlay; overlay is session-only (no fixture
+    write asserted by the Task-2 source guard); banner persists (false precision is never laundered)."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    # Stage 1 active (default) + the FULL Budapest lock list injected -> the run-block derivation fires.
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(99)  # every round locked -> complete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage2" in overlay, (
+        "a complete, fully-locked Stage 1 must derive a Stage-2 seed overlay (SEED-03)"
+    )
+    derived = overlay["stage2"]
+    assert [t.seed for t in derived] == list(range(1, 17)), "derived overlay is exactly seeds 1..16"
+
+    # Switch to Stage 2: the editor consumes the overlay (derive caption shows) AND the per-stage
+    # [INFERRED] banner STILL shows — the overlay carries seeds_confirmed=false semantics (T-07-11).
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    text = _all_text(at).lower()
+    assert "derived from the locked stage-1 finals" in text, (
+        "the Stage-2 editor must caption the derived [INFERRED] overlay"
+    )
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "the per-stage [INFERRED] banner MUST persist on the derived Stage-2 view (never auto-confirmed)"
+    )
+    assert _ss_get(at, "seeds_confirmed_stage2") is not True, (
+        "the derivation must NOT flip seeds_confirmed_stage2 — derived seeds stay [INFERRED]"
+    )
+
+
+def test_partial_stage1_yields_no_stage2_overlay():
+    """SEED-03 (app wiring): a PARTIAL Stage 1 (rounds 0..2 locked, rounds 3-4 unlocked -> not every
+    team terminated) produces NO Stage-2 overlay — the app never seeds off sampled winners (T-07-09).
+    KEY_DERIVED_SEEDS must NOT carry a 'stage2' entry."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(2)  # rounds 3-4 unlocked -> incomplete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage2" not in overlay, (
+        "a partial / incomplete Stage 1 must produce NO Stage-2 seed overlay (SEED-03 / Anti-Pattern 6)"
+    )
