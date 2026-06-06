@@ -1551,3 +1551,40 @@ def test_two_manual_conflicts_both_surface(monkeypatch):
     # Both conflict notices render LOUDLY (one confirm control per conflict).
     warn_text = " ".join(w.value.lower() for w in at.warning)
     assert warn_text.count("conflict") >= 2, "BOTH conflicts must render a loud notice, not just one"
+
+
+def test_provenance_banner_is_stage_scoped(monkeypatch):
+    """ME-02 (06-REVIEW): the fetched-results freshness/staleness banner must be STAGE-SCOPED — a
+    stage2 results cache while viewing stage1 must NOT claim stage1 has fetched results.
+
+    The pre-fill correctly refuses to apply a results cache whose _meta.stage differs from the
+    active stage, but _render_results_provenance read the cache independently and rendered the
+    freshness line WITHOUT any stage check. The fix gates the freshness block on the same canonical
+    int(_meta.stage) == _stage_int_for(stage_id) match the prefill uses.
+    """
+    from ui.state import KEY_LOCKED
+
+    # A STAGE 2 results cache (stale fetched_at so the banner WOULD show if unscoped), while the
+    # active stage stays the default stage1.
+    row = _finished_row(1, 9, winner=1, round_idx=0)
+    _patch_results(
+        monkeypatch,
+        _results_cache([row], stage=2, fetched_at="2020-01-01T00:00:00+00:00"),
+    )
+
+    at = _go_live_small(_apptest().run())  # default stage is stage1
+    assert not at.exception
+
+    # The stage-2 rows did NOT prefill the stage-1 locks (the prefill filter already enforces this).
+    assert (0, 1, 9) not in list(_ss_get(at, KEY_LOCKED, [])), (
+        "a stage-2 results cache must not prefill stage-1 locks"
+    )
+    # AND the provenance/freshness banner must NOT claim stage1 has fetched results.
+    text = _all_text(at).lower()
+    assert "fetched results" not in text, (
+        "the freshness banner must be stage-scoped — no 'Fetched results' on stage1 when the "
+        "cache is stage2 (ME-02)"
+    )
+    assert "results may be stale" not in text, (
+        "no stale-results warning for a cache that belongs to a different stage (ME-02)"
+    )

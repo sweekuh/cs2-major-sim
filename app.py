@@ -1064,17 +1064,29 @@ def _render_results_provenance(name_of: dict[int, str]) -> None:
     from datetime import datetime, timezone
 
     results = load_results_cache()
+    # Gate the freshness/staleness line on the SAME canonical stage match the prefill uses (ME-02):
+    # _prefill_results_into_locked refuses to apply a cache whose _meta.stage differs from the active
+    # stage, but this banner read the cache independently and asserted "Fetched results: …" on a
+    # stage that had NO applied results (e.g. a stage2 cache while viewing stage1). int(_meta.stage)
+    # vs _stage_int_for(stage_id) is the ONE canonical comparison (both ints — T-06-12); on a
+    # garbled/foreign stage the freshness line is suppressed (the locks are still correct, so the
+    # per-lock provenance list below renders unconditionally).
     if results:
-        fetched_at = results.get("_meta", {}).get("fetched_at")
-        now = datetime.now(timezone.utc)
-        age = fmt_age(fetched_at, now)
-        if is_stale(fetched_at, now):
-            st.warning(
-                f"Fetched results may be stale (fetched {age}) — click "
-                f"“Fetch latest results” to refresh."
-            )
-        else:
-            st.caption(f"Fetched results: {age}.")
+        try:
+            same_stage = int(results.get("_meta", {}).get("stage")) == _stage_int_for(stage_id)
+        except (TypeError, ValueError):
+            same_stage = False
+        if same_stage:
+            fetched_at = results.get("_meta", {}).get("fetched_at")
+            now = datetime.now(timezone.utc)
+            age = fmt_age(fetched_at, now)
+            if is_stale(fetched_at, now):
+                st.warning(
+                    f"Fetched results may be stale (fetched {age}) — click "
+                    f"“Fetch latest results” to refresh."
+                )
+            else:
+                st.caption(f"Fetched results: {age}.")
 
     locked_results = st.session_state.get(KEY_LOCKED, [])
     prov = st.session_state.get(KEY_LOCK_PROVENANCE, {})
