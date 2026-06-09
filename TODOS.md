@@ -7,9 +7,11 @@ context to pick up cold in 3 months.
 
 ## 1. Decouple odds fetch from the Streamlit app (cron-fed cache)
 
-- **Status (2026-06-02):** Seam DONE — live fetch is implemented (the "Fetch odds now" button and
-  `python -m scripts.fetch_odds` both hit OddsPapi + Kalshi and write `data/odds_cache.json`, which
-  the app only reads). What's left is the v2 *cron trigger* so it auto-fetches per round.
+- **Status (2026-06-09):** Seam DONE and now STAGE-AWARE — the "Fetch odds now" button passes the
+  active stage, and both `python -m scripts.fetch_odds --stage stageN` and
+  `python -m scripts.fetch_results --stage stageN` join that stage's teams + stamp `_meta.stage`
+  (the app refuses a cross-stage cache). The cron line is now per-stage; what's left is the v2
+  *cron trigger* itself so it auto-fetches per round.
 - **What:** Move the per-round odds fetch out of the Streamlit process. A small
   standalone job (cron on the Ubuntu host) calls the providers and writes a
   `data/odds_cache.json` (or sqlite); the app only ever *reads* that cache.
@@ -67,6 +69,21 @@ context to pick up cold in 3 months.
 - **Context:** Cap N in the UI (already 100k default) and document the limit (done in README) as
   the cheap mitigation; do the streaming refactor only if a high-N use case appears.
 
+## 5. Real-data Stage-2 → Stage-3 seeding backtest (once the rounds are locked)
+
+- **What:** The Stage-2→3 analog of `tests/test_stage2_seeding.py`: freeze the authoritative
+  round-by-round Stage-2 results as a fixture, replay through
+  `final_standings_from_locked -> seed_next_stage`, assert the derived Stage-3 seed order against
+  the official bracket.
+- **Why:** The deterministic chain gate (`tests/test_stage3_seeding.py`) proves the structure;
+  only real data proves the within-bucket Buchholz order (the part that bit us hardest in seeding).
+- **Context (2026-06-09):** the full per-round Stage-2 match list wasn't automatable (Liquipedia /
+  HLTV / bo3.gg all 403 automated fetch; news snippets give finals records only). Lock the rounds
+  in-app (or hand-build the fixture from Liquipedia) and tighten
+  `test_stage3_seeding.EXPECTED_ADVANCERS` from a set to an exact seed order at the same time —
+  that is a data reconciliation, not a code change.
+- **Depends on:** the locked Stage-2 results. Blocked only on data entry.
+
 ---
 
 ## Completed
@@ -82,3 +99,8 @@ context to pick up cold in 3 months.
 - **Two P0 probability fixes — DONE.** Odds-fed normalization (`n=len(sample)`, was ~12× inflated)
   and advance-pick scoring (3-1/3-2, was `wins>=3`, dropped P(≥5) ~90%→~59%). Both with regression
   tests that fail on revert. See `docs/LESSONS.md`.
+- **Stage-3 pipeline — DONE (2026-06-09).** The `stage2 -> stage3` derive wired through the SAME
+  validated chain (one `_NEXT_STAGE` entry — no second seeding path), the per-stage [INFERRED]
+  banner, the real verified Stage-3 field committed, and the cross-stage odds cache mis-join
+  closed on both seams (`load_stage(stage_id)` + `_meta.stage` + read-side refusal). All with
+  revert-proof regression tests, per the LESSONS rule.

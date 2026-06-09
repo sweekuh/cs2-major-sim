@@ -23,11 +23,17 @@ Invariants (CLAUDE.md / 05-RESEARCH D7 / threat register):
   - Per-provider ``try/except`` fail-soft: a provider failure logs + continues; a provider with no
     market yields ``[]`` -> a valid EMPTY ``blended`` map, NOT an error (ODDS-05, A7).
   - The FROZEN cache schema (design once so the cron is zero app change):
-        {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint"},
+        {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint", "stage"},
          "blended": {"lo-hi": {"p", "var", "n_sources", "bo3",
                                "sources": [{"book", "p"}]}}}
     ``sources`` (D3) is ADDITIVE within v1 — per-source prices for the drill-down; an older
     sources-unaware reader ignores it (so a new cache still loads in an old app — no version bump).
+    ``stage`` (v3 multi-stage) is likewise ADDITIVE within v1: the 1-based stage int (playoffs -> 4)
+    the quotes were joined against, mirroring results_cache.json's ``_meta.stage``. The app refuses
+    to feed a cache whose stage differs from the ACTIVE stage — blended keys are ENGINE-ID strings,
+    and Stage-1 id 5 is a DIFFERENT TEAM from Stage-3 id 5, so a cross-stage feed would price the
+    sim with another stage's teams (the same mis-join class as the n=N inflation: latent until live
+    odds turn on, plausible-looking output). A legacy cache without ``stage`` reads as stage 1.
     Keys are sorted ``"loid-hiid"`` engine-id strings (``match_key``); ``p`` = P(lower-id wins the
     SERIES); ``var`` is stored RAW (clamped downstream by ``beta_moment_fit``, never here).
   - ``_meta.fetched_at`` is an ISO-8601 UTC timestamp set at WRITE time — the app folds it into the
@@ -44,7 +50,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from engine.teams import load_teams
+from engine.teams import load_stage
 from odds.base import pool
 from odds.kalshi import KalshiProvider
 from odds.oddspapi import OddsPapiProvider
@@ -55,6 +61,41 @@ log = logging.getLogger("scripts.fetch_odds")
 DEFAULT_OUT = "data/odds_cache.json"
 CACHE_VERSION = 1
 DEFAULT_TOURNAMENT = "cologne"  # substring matched against provider tournament/rules text
+
+# Repo-root-relative per-stage fixture paths — the STRUCTURAL TWIN of scripts.fetch_results'
+# copies (kept local for the same reason: scripts/ never imports ui.cache, which pulls streamlit).
+# The old module loaded the frozen always-Stage-1 ``load_teams``, so a Stage-2/3 fetch joined
+# provider markets against STAGE-1 names/ids — the dropped-row/mis-join failure the results
+# fetcher already guards against (RES-05). Per-stage loading closes the same hole here.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+_STAGE_FIXTURES = {
+    "stage1": "data/stage1.json",
+    "stage2": "data/stage2.json",
+    "stage3": "data/stage3.json",
+    "playoffs": "data/playoffs.json",
+}
+
+
+def _path_for_stage(stage_id: str) -> Path:
+    """Map a stage_id -> its repo-root fixture Path; ValueError on a typo (fail loud, never
+    silently load the wrong stage). Mirrors scripts.fetch_results._path_for_stage."""
+    rel = _STAGE_FIXTURES.get(stage_id)
+    if rel is None:
+        raise ValueError(
+            f"unknown stage_id {stage_id!r}; expected one of {sorted(_STAGE_FIXTURES)}"
+        )
+    return _REPO_ROOT / rel
+
+
+def _stage_number(stage_id: str) -> int:
+    """The 1-based stage number written into ``_meta.stage`` (playoffs -> 4) — the SAME fail-loud
+    contract as scripts.fetch_results._stage_number / app._stage_int_for, so the writer and the
+    app's read-side stage filter can never disagree on what an int means."""
+    order = {"stage1": 1, "stage2": 2, "stage3": 3, "playoffs": 4}
+    if stage_id not in order:
+        raise ValueError(f"unknown stage_id {stage_id!r}; expected one of {sorted(order)}")
+    return order[stage_id]
+
 
 # The recorded-fixture provider set (button-recorded / tests parse explicit fixtures via main(
 # fixtures=...)). The LIVE path is handled by `_live_quotes` (OddsPapi + Kalshi only).
@@ -117,14 +158,18 @@ def _live_quotes(teams, *, tournament: str = DEFAULT_TOURNAMENT) -> tuple[list, 
     return quotes, present
 
 
-def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None,
-         tournament: str = DEFAULT_TOURNAMENT) -> dict:
+def main(out_path: str | Path = DEFAULT_OUT, *, stage_id: str = "stage1",
+         fixtures: dict | None = None, tournament: str = DEFAULT_TOURNAMENT) -> dict:
     """Fetch (or parse recorded) provider odds, pool per match, write the frozen cache, return it.
 
     ``fixtures`` (optional) maps a provider ``name`` -> that provider's recorded fixture (dict or
     path) for the OFFLINE/recorded path the tests exercise. When omitted, the LIVE path
     (``_live_quotes``) contacts OddsPapi + Kalshi. Either way the run is fully fail-soft: no
     market / no key -> a valid EMPTY ``blended`` map, never an error.
+
+    Loads the ACTIVE stage's teams via ``load_stage(_path_for_stage(stage_id))`` (NOT the frozen
+    always-Stage-1 ``load_teams``) so the provider-name join resolves against the stage actually
+    being priced, and stamps ``_meta.stage`` so the app can refuse a cross-stage cache.
 
     Per-match log-opinion ``pool()``, then the FROZEN schema is written with an ISO-8601 UTC
     ``_meta.fetched_at``. Returns the cache dict.
@@ -134,7 +179,7 @@ def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None,
     # the OddsPapi key is NEVER emitted to logs/stdout (T-05-SECRET).
     for _n in ("httpx", "httpcore"):
         logging.getLogger(_n).setLevel(logging.WARNING)
-    teams = load_teams()
+    teams, _cfg = load_stage(_path_for_stage(stage_id))
 
     if fixtures is not None:
         # Recorded path (tests / recorded button fixtures): parse each provider's fixture.
@@ -178,6 +223,10 @@ def main(out_path: str | Path = DEFAULT_OUT, *, fixtures: dict | None = None,
             "version": CACHE_VERSION,
             "providers_present": providers_present,
             "round_hint": 1,  # the imminent Swiss round these blended series price (R1 at stage open)
+            # The stage these ENGINE-ID-keyed quotes belong to (ADDITIVE within v1, mirrors
+            # results_cache.json). The app's read side refuses a stage mismatch — id 5 is a
+            # different team each stage, so a cross-stage feed would price the wrong teams.
+            "stage": _stage_number(stage_id),
         },
         "blended": blended,
     }
@@ -208,5 +257,14 @@ def load_dotenv_safe() -> None:
 
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO)
-    main()
+    _ap = argparse.ArgumentParser(description="Fetch live odds into data/odds_cache.json")
+    _ap.add_argument(
+        "--stage", default="stage1", choices=sorted(_STAGE_FIXTURES),
+        help="stage whose teams the markets are joined against (stamps _meta.stage)",
+    )
+    _ap.add_argument("--out", default=DEFAULT_OUT, help="cache path to write")
+    _ns = _ap.parse_args()
+    main(_ns.out, stage_id=_ns.stage)

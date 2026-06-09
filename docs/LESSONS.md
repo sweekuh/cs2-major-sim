@@ -143,3 +143,27 @@ arbitrarily high N.
 The thing I'm proudest of isn't a feature. It's that the two numbers I'd have posted publicly
 (P(advance) and P(≥5)) were both wrong in ways that looked right, and the project's structure
 caught both before they shipped.
+
+## Postscript — the lessons, applied (Stage 3, 2026-06-09)
+
+The Stage-3 build was the first test of whether the rules above survive contact with new work.
+Scorecard:
+
+- **The Bug-1 class showed up again, and the lesson caught it before it shipped.** The odds
+  fetcher still joined teams with the frozen Stage-1 loader, and the odds cache carried no stage
+  tag — so a cache fetched on one stage would silently price another stage's run (blended keys
+  are engine-ids; the same id is a *different team* each stage). Exactly Bug 1's shape: invisible
+  in rating-only mode, latent until live odds turn on, plausible-looking output. Because the
+  results cache had already grown a `_meta.stage` filter, the asymmetry was findable by reading
+  the seam, not by getting burned at the event. Fixed on both sides, with tests that fail on
+  revert.
+- **One derivation path, not two.** The stage2→stage3 seed derive is a single `_NEXT_STAGE`
+  entry into the exact chain the real Cologne Stage-1→2 data validated — no parallel "stage 3
+  seeding" code to drift out of sync (the single-source rule, applied to code paths).
+- **Probe first, again.** The Stage-3 field was verified against live sources before it was
+  committed; the three R1 pairings that could be confirmed corroborate the VRS seed order. What
+  could *not* be verified (within-bucket advancer order, the full Stage-2 round list) is marked
+  [INFERRED] in the fixture and deferred as an explicit reconciliation TODO — never silently
+  guessed into a test expectation.
+- **Every new wire got a revert-proof test** (`_NEXT_STAGE`, the per-stage banner, the
+  cross-stage refusal, the fetcher's stage stamp): apply the wrong rule, the test goes red.

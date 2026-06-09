@@ -1,5 +1,5 @@
 {
-  "_comment": "[INFERRED] Cologne 2026 Stage-3 (all-Bo3 Swiss) fixture — 16-team Swiss, top 8 advance, EVERY match Bo3 (BO-01, consumed by the engine all_bo3 flag this phase; STG-03). The REAL Stage-3 seeds DERIVE from the Stage-2 FINAL via the Phase-7 inter-stage seeding chain (engine/seeding.py): the 8 Stage-2 ADVANCERS + the 8 VRS-INVITED Stage-3 teams, merged and ranked by final Stage-2 Buchholz (Difficulty = Sigma(opp.wins - opp.losses)) with the documented tiebreak chain (losses asc -> -difficulty -> prior initial seed). The MERGE/seeding chain is owned by Phase 7 — this static file is the hand-editable FALLBACK only; do NOT build a new seeding path off it. The SPECIFIC Cologne Stage-3 invited 8 + the Stage-2 advancers are event-time data not yet posted, so seeds 1-8 (invited) and seeds 9-16 (Stage-2 advancers) below are [INFERRED] placeholders. Ratings are the rating-only fallback prior (0 < r < 1000, editable via the in-app ratings editor; when live odds load, the app back-solves market-calibrated ratings). seeds_confirmed=false keeps the per-stage [INFERRED] banner loud (STG-05). RECONCILE every seed/name/rating against the OFFICIAL Cologne Stage-3 seed list when it posts, and flip seeds_confirmed to true then. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). Mirrors data/stage2.json provenance style. (STG-03, BO-01)",
+  "_comment": "[INVITED-8 + ADVANCER-8 VERIFIED-BY-SOURCE 2026-06-09 / ORDER PARTIALLY INFERRED] Cologne 2026 Stage-3 (16-team all-Bo3 Swiss, top 8 advance to playoffs; stage.all_bo3 consumed by the engine, BO-01/STG-03). SEEDS 1-8 = the 8 directly-invited teams, names VERIFIED via cross-confirmed event coverage (escharts + pley.gg Stage-3 Pick'Em guide + skin.club + ESL Pro Tour; Liquipedia/HLTV/Wikipedia 403'd automated fetch — eyeball there before confirming): Vitality, Natus Vincere, Falcons, The MongolZ, PARIVISION, Aurora, FURIA, MOUZ. Their seed ORDER below is the reported VRS listing, CORROBORATED by the three known R1 pairings under the seed-i-vs-i+8 rule (Vitality-FUT => 1v9, NaVi-Spirit => 2v10, PARIVISION-9z => 5v13) — but NOT yet hand-confirmed. SEEDS 9-16 = the 8 REAL Stage-2 advancers (Stage 2 finished 2026-06-09): Spirit & FUT (3-0); BetBoom, G2, 9z (3-1); Monte, Legacy, B8 (3-2, qualified last per Hotspawn). Their within-loss-bucket ORDER is [INFERRED] from the rulebook merge (losses asc -> final Stage-2 Buchholz desc -> prior seed) + the same R1 corroboration (FUT=9, Spirit=10, 9z=13); slots 11/12 and 14/15/16 within their buckets are the best [INFERRED] reading. The AUTHORITATIVE path remains the Phase-7 auto-derive (engine/seeding.py seed_next_stage) from YOUR locked Stage-2 finals — this static file is the hand-editable FALLBACK only; do NOT build a second seeding path off it. seeds_confirmed=false keeps the per-stage [INFERRED] banner loud (STG-05): RECONCILE every seed/name against the official Liquipedia Stage-3 bracket, then flip it. Ratings are the rating-only fallback prior (0 < r < 1000, editable; market-calibrated once Stage-3 odds load — fetch with --stage stage3 so _meta.stage matches). R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). Mirrors data/stage2.json provenance style. (STG-03, STG-06, BO-01)",
   "stage": {
     "size": 16,
     "advance_at_wins": 3,
@@ -8,21 +8,21 @@
   },
   "seeds_confirmed": false,
   "teams": [
-    { "seed": 1, "name": "[INFERRED] Invited Seed 1 (VRS #1)", "rating": 82 },
-    { "seed": 2, "name": "[INFERRED] Invited Seed 2 (VRS #2)", "rating": 78 },
-    { "seed": 3, "name": "[INFERRED] Invited Seed 3 (VRS #3)", "rating": 74 },
-    { "seed": 4, "name": "[INFERRED] Invited Seed 4 (VRS #4)", "rating": 71 },
-    { "seed": 5, "name": "[INFERRED] Invited Seed 5 (VRS #5)", "rating": 67 },
-    { "seed": 6, "name": "[INFERRED] Invited Seed 6 (VRS #6)", "rating": 64 },
-    { "seed": 7, "name": "[INFERRED] Invited Seed 7 (VRS #7)", "rating": 61 },
-    { "seed": 8, "name": "[INFERRED] Invited Seed 8 (VRS #8)", "rating": 58 },
-    { "seed": 9, "name": "[INFERRED] Stage-2 Advancer (seed 9)", "rating": 56 },
-    { "seed": 10, "name": "[INFERRED] Stage-2 Advancer (seed 10)", "rating": 54 },
-    { "seed": 11, "name": "[INFERRED] Stage-2 Advancer (seed 11)", "rating": 52 },
-    { "seed": 12, "name": "[INFERRED] Stage-2 Advancer (seed 12)", "rating": 50 },
-    { "seed": 13, "name": "[INFERRED] Stage-2 Advancer (seed 13)", "rating": 48 },
-    { "seed": 14, "name": "[INFERRED] Stage-2 Advancer (seed 14)", "rating": 46 },
-    { "seed": 15, "name": "[INFERRED] Stage-2 Advancer (seed 15)", "rating": 44 },
-    { "seed": 16, "name": "[INFERRED] Stage-2 Advancer (seed 16)", "rating": 42 }
+    { "seed": 1, "name": "Vitality", "rating": 96 },
+    { "seed": 2, "name": "Natus Vincere", "rating": 88 },
+    { "seed": 3, "name": "Falcons", "rating": 84 },
+    { "seed": 4, "name": "The MongolZ", "rating": 80 },
+    { "seed": 5, "name": "PARIVISION", "rating": 74 },
+    { "seed": 6, "name": "Aurora", "rating": 72 },
+    { "seed": 7, "name": "FURIA", "rating": 70 },
+    { "seed": 8, "name": "MOUZ", "rating": 78 },
+    { "seed": 9, "name": "FUT Esports", "rating": 76 },
+    { "seed": 10, "name": "Spirit", "rating": 90 },
+    { "seed": 11, "name": "BetBoom", "rating": 72 },
+    { "seed": 12, "name": "G2", "rating": 72 },
+    { "seed": 13, "name": "9z", "rating": 64 },
+    { "seed": 14, "name": "Monte", "rating": 60 },
+    { "seed": 15, "name": "Legacy", "rating": 84 },
+    { "seed": 16, "name": "B8", "rating": 78 }
   ]
 }

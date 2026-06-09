@@ -10,12 +10,17 @@ fail-soft ``None`` (the app then runs rating-only + the existing "live odds off"
 NEVER raises into the UI.
 
 Schema (the FROZEN contract written by ``scripts/fetch_odds.py``):
-    {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint"},
+    {"_meta": {"fetched_at", "version": 1, "providers_present", "round_hint", "stage"?},
      "blended": {"lo-hi": {"p", "var", "n_sources", "bo3", "sources"?: [{"book", "p"}]}}}
 ``p`` = P(lower-id team wins the SERIES); ``var`` is RAW (clamped downstream by ``beta_moment_fit``).
 ``sources`` (D3, optional) is per-source prices for the drill-down — ADDITIVE within v1, so this
 loader is UNCHANGED: an entry without ``sources`` is the pre-D3 shape and still loads (the app reads
 ``sources`` defensively). No version bump (a bump would make this loader reject newer caches).
+``stage`` (v3 multi-stage, optional) is likewise ADDITIVE within v1: the 1-based stage int the
+quotes were joined against. THIS loader stays stage-agnostic (it returns the dict intact); the
+app's ``_odds_cache_for_active_stage`` is the one place that compares it to the active stage and
+treats a mismatch as no-cache (rating-only) — blended keys are engine-id strings, and the same id
+is a DIFFERENT TEAM each stage. A legacy cache without ``stage`` reads as stage 1.
 """
 
 from __future__ import annotations

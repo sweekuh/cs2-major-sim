@@ -1729,6 +1729,199 @@ def test_stage3_runs_all_bo3(monkeypatch):
     )
 
 
+def test_complete_stage2_derives_editable_stage3_overlay():
+    """STG-06 (the stage2 -> stage3 wire): a COMPLETE, fully-locked Stage 2 auto-derives the
+    Stage-3 seeds into an editable [INFERRED] session overlay (KEY_DERIVED_SEEDS['stage3']) via
+    the SAME chain the real Cologne Stage-1 -> Stage-2 derive validated; switching to Stage 3
+    surfaces the per-stage derive caption AND the [INFERRED] banner STILL shows.
+
+    Revert check (LESSONS: a regression test must fail when the wrong rule is applied): remove
+    the '"stage2": "stage3"' entry from app._NEXT_STAGE and this fails at the overlay assert.
+
+    The Budapest lock list replays cleanly on ANY 16-seed Swiss fixture (the engine is
+    name-independent and a fully-locked replay never samples — all-Bo3 is irrelevant to locks),
+    so it serves as the deterministic complete-Stage-2 source exactly as it does for Stage 1.
+    """
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage2"  # Stage 2 active (the PRIOR stage of the derive)
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(99)  # every round locked -> complete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage3" in overlay, (
+        "a complete, fully-locked Stage 2 must derive a Stage-3 seed overlay (STG-06 wire)"
+    )
+    derived = overlay["stage3"]
+    assert [t.seed for t in derived] == list(range(1, 17)), "derived overlay is exactly seeds 1..16"
+    # Seeds 1-8 of the overlay are the Stage-3 fixture's invited teams in fixture (VRS) order —
+    # the derive reads them from data/stage3.json, never from the prior stage's standings.
+    from engine.teams import load_stage
+
+    s3_fixture, _ = load_stage("data/stage3.json")
+    assert [t.name for t in derived if t.seed <= 8] == [
+        t.name for t in s3_fixture if t.seed <= 8
+    ], "overlay seeds 1-8 must be the Stage-3 invited teams by fixture VRS order"
+
+    # Switch to Stage 3: the editor consumes the overlay (per-stage derive caption) AND the
+    # [INFERRED] banner persists — derived seeds are never laundered into confirmed ones.
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    text = _all_text(at).lower()
+    assert "derived from the locked stage-2 finals" in text, (
+        "the Stage-3 editor must caption the derived [INFERRED] overlay with its Stage-2 provenance"
+    )
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "the per-stage [INFERRED] banner MUST persist on the derived Stage-3 view (never auto-confirmed)"
+    )
+    assert _ss_get(at, "seeds_confirmed_stage3") is not True, (
+        "the derivation must NOT flip seeds_confirmed_stage3 — derived seeds stay [INFERRED]"
+    )
+
+
+def test_partial_stage2_yields_no_stage3_overlay():
+    """STG-06 companion: a PARTIAL Stage 2 (rounds 0..2 locked only) produces NO Stage-3 overlay —
+    the app never seeds a next stage off sampled winners, on ANY stage of the chain (the same
+    Anti-Pattern-6 guard the stage1 -> stage2 wire carries)."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(2)  # rounds 3-4 unlocked -> incomplete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage3" not in overlay, (
+        "a partial / incomplete Stage 2 must produce NO Stage-3 seed overlay (STG-06 / Anti-Pattern 6)"
+    )
+
+
+def test_stage3_banner_states_two_trust_levels():
+    """STG-05/06: the Stage-3 [INFERRED] banner explains BOTH halves of the field's provenance
+    (1-8 invited by VRS vs 9-16 Stage-2 advancers) and calls out all-Bo3 — the per-stage honesty
+    note the Stage-2 banner established (Finding B), mirrored one stage later."""
+    from ui.state import KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+
+    text = _all_text(at).lower()
+    assert "stage-3 seeds: 1-8" in text, "the Stage-3 banner must lead with the invited half"
+    assert "stage-2 advancers" in text, "…and name the advancer half's provenance"
+    assert "every stage-3 match is bo3" in text, "…and call out the all-Bo3 format"
+
+
+# --- STG-06: cross-stage odds-cache refusal (the engine-id mis-join guard) ----------------
+
+
+def _stage_stamped_odds_cache(tmp_path, stage: int | None):
+    """A minimal valid odds cache (one blended R1 market) stamped with ``_meta.stage``.
+
+    ``stage=None`` omits the key — the legacy pre-multi-stage shape (reads as stage 1).
+    ``var`` is 0.0 so an accepting run stays on the cheap K=1 path (AppTest latency budget).
+    """
+    cache = {
+        "_meta": {
+            "fetched_at": "2026-06-09T12:00:00+00:00",
+            "version": 1,
+            "providers_present": ["kalshi"],
+            "round_hint": 1,
+        },
+        "blended": {"1-9": {"p": 0.7, "var": 0.0, "n_sources": 1, "bo3": True}},
+    }
+    if stage is not None:
+        cache["_meta"]["stage"] = stage
+    p = tmp_path / "odds_cache.json"
+    p.write_text(json.dumps(cache), encoding="utf-8")
+    return p
+
+
+def _patch_odds_cache_path(monkeypatch, cache_file):
+    """Point the real loader at the test cache (the test_live_odds_status_panel_renders pattern).
+
+    The pristine loader is captured at call time FROM THE FUNCTION'S DEFAULTS, not from the module
+    attr — a second patch within one test would otherwise wrap the first patch's lambda (which
+    ignores its args) and silently keep serving the first cache file.
+    """
+    import ui.odds_loader as loader
+
+    real_load = getattr(_patch_odds_cache_path, "_real", None)
+    if real_load is None:
+        real_load = _patch_odds_cache_path._real = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: real_load(cache_file))
+
+
+def test_cross_stage_odds_cache_is_refused(monkeypatch, tmp_path):
+    """STG-06 (the read-side gate): an odds cache stamped for ANOTHER stage is treated as absent —
+    the header reads 'odds off', never a 'live' badge — because blended keys are ENGINE-ID strings
+    and the same id names a DIFFERENT TEAM on each stage. Feeding a Stage-1 cache into a Stage-3
+    run would back-solve ratings from the wrong teams' prices: the exact LESSONS-Bug-1 class
+    (latent until live odds turn on, plausible-looking output, invisible in rating-only tests).
+
+    Revert check: remove the stage comparison from app._odds_cache_for_active_stage and this
+    fails — Stage 3 would show the Stage-1 cache as live.
+    """
+    from ui.state import KEY_STAGE
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(tmp_path, stage=1))
+
+    at = _apptest().run()
+    assert not at.exception
+    assert "market(s)" in _all_text(at), "sanity: the stage-1 cache IS live on Stage 1"
+
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    text = _all_text(at)
+    assert "market(s)" not in text, (
+        "a stage-1-stamped odds cache must NOT read as live on Stage 3 (engine-id mis-join guard)"
+    )
+    assert "odds off" in text.lower(), "the honest rating-only banner shows instead"
+
+
+def test_matching_stage_odds_cache_is_accepted(monkeypatch, tmp_path):
+    """STG-06 companion: a cache stamped for the ACTIVE stage feeds normally (the gate filters on
+    mismatch only — Stage-3 odds on Stage 3 are live), and a LEGACY cache without ``_meta.stage``
+    reads as stage 1 (it was written by the pre-multi-stage fetcher, which always joined Stage-1
+    teams) — so it feeds Stage 1 but is refused on Stage 3."""
+    from ui.state import KEY_STAGE
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+
+    # Stage-3-stamped cache on Stage 3 -> live.
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(tmp_path, stage=3))
+    at = _apptest().run()
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    assert "market(s)" in _all_text(at), "a stage-3 cache IS live on Stage 3"
+
+    # Legacy (no stage key) cache -> stage 1 semantics: live on Stage 1, refused on Stage 3.
+    legacy_dir = tmp_path / "legacy"
+    legacy_dir.mkdir()
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(legacy_dir, stage=None))
+    at2 = _apptest().run()
+    assert "market(s)" in _all_text(at2), "a legacy no-stage cache reads as stage 1 (back-compat)"
+    at2.session_state[KEY_STAGE] = "stage3"
+    at2.run()
+    assert not at2.exception
+    assert "market(s)" not in _all_text(at2), "…and is refused on Stage 3"
+
+
 def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
     """STG-03 companion / T-08-06: a NON-stage3 (Stage 1 default) Run passes all_bo3=False —
     Stage 1/2/playoffs are unaffected, proving the wire is ``stage_id == 'stage3'`` EXACTLY.

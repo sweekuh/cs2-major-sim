@@ -279,3 +279,29 @@ def test_fetch_odds_main_writes_per_source_prices(teams, tmp_path):
     loaded = load_odds_cache(out)
     assert loaded is not None
     assert loaded["blended"][match_key(_EXPECTED_MATCH)]["sources"] == sources
+
+
+def test_fetch_odds_main_stamps_meta_stage(tmp_path):
+    """STG-06: fetch_odds.main stamps the 1-based ``_meta.stage`` int it joined teams against,
+    mirroring results_cache.json — the read side (app._odds_cache_for_active_stage) refuses a
+    mismatch, because blended keys are ENGINE-ID strings and the same id is a different team on
+    each stage. Default stays stage1 (back-compat: every pre-v3 call site is unchanged); version
+    stays 1 (``stage`` is ADDITIVE — an older stage-unaware loader still accepts the cache).
+
+    Revert check: drop the ``stage`` stamp (or the load_stage(stage_id) join) from main() and
+    this fails — the guard against re-introducing the always-Stage-1 ``load_teams()`` join.
+    """
+    from scripts.fetch_odds import main
+    from ui.odds_loader import load_odds_cache
+
+    out = tmp_path / "odds_cache.json"
+    cache = main(out, stage_id="stage3", fixtures={})  # no providers — meta-only run, no network
+    assert cache["_meta"]["stage"] == 3
+    assert cache["_meta"]["version"] == 1, "stage is additive within v1, not a version bump"
+    loaded = load_odds_cache(out)
+    assert loaded is not None and loaded["_meta"]["stage"] == 3, "loader returns stage intact"
+
+    assert main(tmp_path / "o1.json", fixtures={})["_meta"]["stage"] == 1, "default is stage1"
+
+    with pytest.raises(ValueError):
+        main(tmp_path / "o2.json", stage_id="stage9", fixtures={})  # typo fails loud, never stage-1

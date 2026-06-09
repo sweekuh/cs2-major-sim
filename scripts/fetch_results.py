@@ -422,5 +422,14 @@ def load_dotenv_safe() -> None:
 
 
 if __name__ == "__main__":
+    import argparse
+
     logging.basicConfig(level=logging.INFO)
-    main()
+    _ap = argparse.ArgumentParser(description="Fetch finished results into data/results_cache.json")
+    _ap.add_argument(
+        "--stage", default="stage1", choices=sorted(_STAGE_FIXTURES),
+        help="stage whose teams the results are joined against (stamps _meta.stage)",
+    )
+    _ap.add_argument("--out", default=DEFAULT_OUT, help="cache path to write")
+    _ns = _ap.parse_args()
+    main(_ns.out, stage_id=_ns.stage)
