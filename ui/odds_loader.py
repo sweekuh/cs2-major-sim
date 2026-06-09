@@ -21,6 +21,15 @@ quotes were joined against. THIS loader stays stage-agnostic (it returns the dic
 app's ``_odds_cache_for_active_stage`` is the one place that compares it to the active stage and
 treats a mismatch as no-cache (rating-only) — blended keys are engine-id strings, and the same id
 is a DIFFERENT TEAM each stage. A legacy cache without ``stage`` reads as stage 1.
+``qualify`` (QFIT, optional) is ADDITIVE within v1: ``{"<team_id>": p}`` (engine-id string keys,
+mirroring ``blended``'s id convention) — the operator-supplied qualify-market probs that
+``scripts/fit_qualify.py`` calibrates against. The app never reads it; this loader passes it
+through intact.
+``fitted_ratings`` (QFIT, optional) is ADDITIVE within v1: ``{"<team_id>": rating}`` written by
+``scripts/fit_qualify.py`` (with provenance in ``_meta.qualify_fit``). The app's
+``_odds_from_cache`` uses a WELL-FORMED block as the run's ratings (the market's rounds-2-5 view,
+which the R1 back-solve can't see) and falls back to the back-solve on any defect; an older,
+qualify-unaware app simply ignores both keys — so no version bump (same precedent as ``sources``).
 """
 
 from __future__ import annotations

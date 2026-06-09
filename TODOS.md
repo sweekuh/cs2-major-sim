@@ -84,6 +84,18 @@ context to pick up cold in 3 months.
   that is a data reconciliation, not a code change.
 - **Depends on:** the locked Stage-2 results. Blocked only on data entry.
 
+## 6. Feed the qualify-market calibration from a live source
+
+- **What:** `scripts/fit_qualify.py` calibrates ratings to the market's QUALIFY probabilities (the
+  rounds-2-5 view an R1 back-solve can't see), but the `"qualify"` block in `data/odds_cache.json`
+  is operator-supplied today. Wire a fetcher for it: Polymarket runs per-event qualify markets
+  (e.g. "Qualify to Stage 3"), and Kalshi may list equivalents.
+- **Why:** the fit is only as good as its targets; hand-typed qualify probs are the weakest link.
+- **Context:** Polymarket was dropped as a per-match provider (novelty futures, ODDS notes) but its
+  EVENT markets (winner / qualify) are real and liquid — a separate, narrower parser than the
+  match-quotes path. Respect the additive-within-v1 schema (`qualify` key) the loader documents.
+- **Depends on:** nothing structural; blocked on provider access from the runtime host.
+
 ---
 
 ## Completed
@@ -99,6 +111,16 @@ context to pick up cold in 3 months.
 - **Two P0 probability fixes — DONE.** Odds-fed normalization (`n=len(sample)`, was ~12× inflated)
   and advance-pick scoring (3-1/3-2, was `wins>=3`, dropped P(≥5) ~90%→~59%). Both with regression
   tests that fail on revert. See `docs/LESSONS.md`.
+- **Qualify-market calibration (QFIT) — DONE (2026-06-09).** `engine/qualifyfit.py` fits ratings
+  so simulated P(qualify) matches market qualify probs (R1 stays market-priced inside the fit, so
+  the two calibrations are orthogonal; deterministic common-random-numbers stepper with gauge
+  anchor + fail-loud target validation). `scripts/fit_qualify.py` runs it offline and writes the
+  additive `fitted_ratings` block; `app._odds_from_cache` prefers a well-formed block over the R1
+  back-solve, fail-soft on any defect. 20 revert-proof tests.
+- **Per-stage calibration scorecard — DONE (2026-06-09).** `scripts/score_stage.py` scores the
+  stage prior against real results (log-loss/Brier/favorite-accuracy + S-sweep, Bo3 inferred by
+  replay, cross-stage guard). Golden-pinned to the real Stage-1 data: n=33, 24/33 favorites,
+  log-loss 0.5785 @ S=40 (the sweep argmin) — run it after every stage.
 - **Stage-3 pipeline — DONE (2026-06-09).** The `stage2 -> stage3` derive wired through the SAME
   validated chain (one `_NEXT_STAGE` entry — no second seeding path), the per-stage [INFERRED]
   banner, the real verified Stage-3 field committed, and the cross-stage odds cache mis-join

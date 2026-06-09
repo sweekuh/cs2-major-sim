@@ -24,8 +24,16 @@ Last updated: 2026-06-09
   advancers (Spirit, FUT 3-0; BetBoom, G2, 9z 3-1; Monte, Legacy, B8 3-2). `seeds_confirmed`
   stays false until eyeballed vs the official bracket (Liquipedia 403s automated fetch).
 - Live odds from OddsPapi (Pinnacle) + Kalshi, back-solved into market-anchored ratings.
+- **Qualify-market calibration (QFIT)**: `scripts/fit_qualify.py` fits ratings offline so the
+  simulated P(qualify) matches the market's qualify prices — the rounds-2-5 view an R1 back-solve
+  structurally can't see (R1 stays market-priced inside the fit, so the two are orthogonal). The
+  app prefers a well-formed `fitted_ratings` cache block, fail-soft to the back-solve.
+- **Per-stage calibration scorecard**: `scripts/score_stage.py` audits the prior against real
+  results after each stage (log-loss/Brier/favorite-accuracy + S-sweep). On the real Stage-1 data:
+  33 matches, 24/33 favorites, log-loss 0.5785 vs 0.6931 coinflip, S=40 the sweep argmin — the
+  shipped spread is measured, not guessed.
 - Conditional re-sim / live mode (lock results, re-sim from here).
-- **191 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
+- **220 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
   Stage-2→Stage-3 chain gate, and revert-proof guards on the new wiring (the `_NEXT_STAGE` entry,
   the Stage-3 banner, the cross-stage odds refusal, the fetcher's `_meta.stage` stamp).
 

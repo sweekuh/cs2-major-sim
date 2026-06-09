@@ -713,6 +713,11 @@ def _odds_from_cache(base_ratings: dict):
     Reads through ``_odds_cache_for_active_stage`` (STG-06): a cache fetched for ANOTHER stage is
     treated as absent, because its engine-id keys name different teams on this stage — feeding it
     would back-solve ratings from the wrong teams' prices (see the helper's docstring).
+
+    QFIT-03: when the cache carries a well-formed ``fitted_ratings`` block (written offline by
+    ``scripts/fit_qualify.py`` from the market's QUALIFY markets), those ratings are used INSTEAD
+    of the R1 back-solve — see the inline comment at the branch for why. Malformed/partial block
+    -> ignored, back-solve path unchanged (fail-soft).
     """
     cache = _odds_cache_for_active_stage()
     if not cache:
@@ -741,10 +746,47 @@ def _odds_from_cache(base_ratings: dict):
     if not targets:
         return base_ratings, None, cache.get("_meta", {}).get("fetched_at")
 
+    # Qualify-market calibration (QFIT-03): a well-formed ``fitted_ratings`` block in the cache
+    # WINS over the R1 back-solve. The fitted ratings encode the market's view of rounds 2-5
+    # (the qualify markets), which a plain R1 back-solve structurally can't see — fit_ratings
+    # only ever observes the eight R1 series prices, and those R1 matches are priced DIRECTLY
+    # from market_blend inside the sim anyway, so the two calibrations are orthogonal. They are
+    # computed OFFLINE by scripts/fit_qualify.py because the fit runs max_iters Monte-Carlo
+    # passes of n_per_iter sims — work that does not belong inside a Streamlit rerun. Fail-soft:
+    # a malformed/partial block is ignored WHOLE (never half-applied — a 3-team fitted dict
+    # merged over back-solved ratings would mix two gauges) and we fall through to fit_ratings.
+    fitted = _fitted_ratings_from(cache)
+    if fitted is not None:
+        return fitted, market_blend, cache.get("_meta", {}).get("fetched_at")
+
     # Gauge anchor: the top seed (id == min seed) holds its rating fixed so the fit is identifiable.
     anchor_id = min(t.id for t in teams)
     ratings = fit_ratings(targets, teams, float(S), anchor_id)
     return ratings, market_blend, cache.get("_meta", {}).get("fetched_at")
+
+
+def _fitted_ratings_from(cache: dict) -> dict[int, float] | None:
+    """Parse the cache's ``fitted_ratings`` block into {team_id: rating}, or None (fail-soft).
+
+    Well-formed = a dict whose int-parsed keys are EXACTLY the active stage's 16 team ids with
+    finite numeric ratings — the same {id: rating} keying fit_ratings returns, so downstream
+    (freeze_ratings/cache key/run_mc) is shape-identical. ANY defect (missing/extra id, a
+    non-numeric or non-finite value, a non-dict) returns None so the caller falls through to
+    the R1 back-solve unchanged — a malformed cache key degrades, never crashes, never
+    half-applies (the repo's ODDS-08 discipline).
+    """
+    raw = cache.get("fitted_ratings")
+    if not isinstance(raw, dict):
+        return None
+    try:
+        fitted = {int(k): float(v) for k, v in raw.items()}
+    except (TypeError, ValueError):
+        return None
+    if set(fitted) != {t.id for t in teams}:
+        return None
+    if any(v != v or v in (float("inf"), float("-inf")) for v in fitted.values()):
+        return None
+    return fitted
 
 
 def _cache_key_for(ratings: dict, locked: dict, stage_id: str, fetched_at=None):

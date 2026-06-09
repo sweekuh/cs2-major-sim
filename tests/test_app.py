@@ -1943,3 +1943,92 @@ def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
         f"a non-stage3 Run must pass all_bo3=False (Stage 1/2/playoffs unaffected); "
         f"recorded {calls['all_bo3']!r}"
     )
+
+
+# --- QFIT-03: qualify-market fitted_ratings feed the run (the app wire) -------------------
+
+
+def _spy_mc_ratings(monkeypatch):
+    """Record the ``ratings`` arg (positional #2) of every run_mc_progressive call, delegating
+    to the real generator — the _spy_run_mc_progressive pattern, aimed at the ratings slot."""
+    import engine.montecarlo as mc
+
+    calls = {"ratings": []}
+    real = mc.run_mc_progressive
+
+    def _recording(*args, **kwargs):
+        calls["ratings"].append(args[1] if len(args) > 1 else kwargs.get("ratings"))
+        yield from real(*args, **kwargs)
+
+    monkeypatch.setattr(mc, "run_mc_progressive", _recording)
+    return calls
+
+
+def _qfit_cache(tmp_path, fitted_ratings):
+    """A stage-1-stamped v1 cache with one blended R1 market (var=0 -> cheap K=1 path) plus a
+    ``fitted_ratings`` block (the scripts/fit_qualify.py output shape: engine-id STRING keys)."""
+    cache = {
+        "_meta": {
+            "fetched_at": "2026-06-09T12:00:00+00:00",
+            "version": 1,
+            "providers_present": ["kalshi"],
+            "round_hint": 1,
+            "stage": 1,
+        },
+        "blended": {"1-9": {"p": 0.7, "var": 0.0, "n_sources": 1, "bo3": False}},
+        "fitted_ratings": fitted_ratings,
+    }
+    p = tmp_path / "odds_cache.json"
+    p.write_text(json.dumps(cache), encoding="utf-8")
+    return p
+
+
+def test_fitted_ratings_in_cache_feed_the_run(monkeypatch, tmp_path):
+    """QFIT-03 (the wire): a stage-stamped cache carrying a well-formed ``fitted_ratings`` block
+    (all 16 engine ids) makes the run use THOSE ratings — the offline qualify-market calibration
+    (scripts/fit_qualify.py) supersedes the R1 back-solve, which structurally can't see the
+    market's rounds-2-5 view.
+
+    REVERT-PROOF: this test FAILS if the app wire is removed — delete the ``fitted_ratings``
+    branch in app._odds_from_cache and the ratings reaching run_mc_progressive become the
+    fit_ratings back-solve output (anchored at the fixture ratings), not the 7x.x values below.
+    """
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    fitted = {str(i): 70.0 + i * 0.5 for i in range(1, 17)}  # values no back-solve would emit
+    _patch_odds_cache_path(monkeypatch, _qfit_cache(tmp_path, fitted))
+    calls = _spy_mc_ratings(monkeypatch)
+
+    at = _run_small(_apptest().run())
+    assert not at.exception
+
+    expected = {i: 70.0 + i * 0.5 for i in range(1, 17)}  # int-keyed, the fit_ratings keying
+    assert calls["ratings"], "the Run must drive run_mc_progressive at least once"
+    assert all(r == expected for r in calls["ratings"]), (
+        f"the ratings reaching the run must be the cache's fitted_ratings; got {calls['ratings'][-1]!r}"
+    )
+
+
+def test_malformed_fitted_ratings_fall_back_to_backsolve(monkeypatch, tmp_path):
+    """QFIT-03 fail-soft: a PARTIAL fitted_ratings block (3 of 16 ids) is ignored WHOLE — the
+    run falls back to the R1 back-solve (the exact fit_ratings output), no exception, never a
+    half-applied mix of fitted and back-solved gauges."""
+    from engine.backsolve import fit_ratings, invert_series
+    from engine.teams import load_teams
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    _patch_odds_cache_path(
+        monkeypatch, _qfit_cache(tmp_path, {"1": 70.0, "2": 71.0, "3": 72.0})
+    )
+    calls = _spy_mc_ratings(monkeypatch)
+
+    at = _run_small(_apptest().run())
+    assert not at.exception, "a malformed fitted_ratings block must degrade, never crash"
+
+    # The expected fallback: the same back-solve the pre-QFIT path runs on this cache
+    # (one Bo1 market 1-9 at p=0.7, anchor = top seed id 1, S = the 40 default).
+    teams = load_teams()
+    expected = fit_ratings({(1, 9): invert_series(0.7, False)}, teams, 40.0, anchor_id=1)
+    assert calls["ratings"], "the Run must drive run_mc_progressive at least once"
+    assert all(r == expected for r in calls["ratings"]), (
+        "a 3-entry fitted_ratings block must be ignored whole and the R1 back-solve used"
+    )

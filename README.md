@@ -150,7 +150,9 @@ engine/             pure compute core (no streamlit/httpx)
 odds/               OddsPapi + Kalshi parsers, de-vig, log-opinion pool (pure numpy)
 scripts/            fetch_odds + fetch_results — the ONLY provider contact; both take --stage
                     and stamp _meta.stage so a cache can never feed the wrong stage's run
-tests/              190+ tests incl. the Budapest backtest gate + real-data seeding gates
+  fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
+  score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
+tests/              210+ tests incl. the Budapest backtest gate + real-data seeding gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state
 ```
