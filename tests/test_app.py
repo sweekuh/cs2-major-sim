@@ -439,15 +439,34 @@ def test_seed_banner_dismissable(monkeypatch):
     assert at.session_state[seeds_key] is True
 
 
-def test_per_stage_seed_banner():
+def _unconfirmed_stage_fixture(tmp_path, monkeypatch, stage_id: str):
+    """Point ui.cache._STAGE_FIXTURES[stage_id] at a tmp copy with seeds_confirmed:false.
+
+    The committed Cologne fixtures now ship seeds_confirmed:true (reconciled 2026-06-09 vs the
+    official brackets), so the unconfirmed UI branch must be driven by a fixture override —
+    _path_for_stage joins relative entries onto the repo root, and pathlib resets the join on an
+    absolute path, so an absolute tmp path slots straight into the same map."""
+    import ui.cache as uic
+
+    src = json.loads((Path(uic._REPO_ROOT) / f"data/{stage_id}.json").read_text(encoding="utf-8"))
+    src["seeds_confirmed"] = False
+    p = tmp_path / f"{stage_id}_unconfirmed.json"
+    p.write_text(json.dumps(src), encoding="utf-8")
+    monkeypatch.setitem(uic._STAGE_FIXTURES, stage_id, str(p))
+    return p
+
+
+def test_per_stage_seed_banner(tmp_path, monkeypatch):
     """STG-05: the [INFERRED]-seed banner is PER-STAGE — each stage reads its OWN fixture's
     seeds_confirmed flag, so confirming one stage cannot dismiss another's banner.
 
-    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2's is false → the
-    loud warning shows. The Stage-2 confirm toggle is keyed 'seeds_confirmed_stage2' (distinct
-    from Stage 1's 'seeds_confirmed_stage1'), proving the per-stage session key. No monkeypatch
-    of read_seeds_confirmed — the per-stage state is driven by the real committed fixtures."""
+    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2 is forced to an
+    UNCONFIRMED tmp copy (the committed stage2.json is confirmed since the 2026-06-09 official
+    reconciliation) → the loud warning shows. The Stage-2 confirm toggle is keyed
+    'seeds_confirmed_stage2' (distinct from Stage 1's), proving the per-stage session key."""
     from ui.state import KEY_STAGE
+
+    _unconfirmed_stage_fixture(tmp_path, monkeypatch, "stage2")
 
     # Stage 1 (default): the shipped fixture confirms the seeds → no INFERRED-seed warning, and
     # no Stage-2 toggle yet (that key only appears once Stage 2 is the active stage).
@@ -458,7 +477,7 @@ def test_per_stage_seed_banner():
     assert "seeds_confirmed_stage2" not in s1_toggle_keys
 
     # Switch to Stage 2 (inject the selector's session value, as the LIVE/isolation tests do —
-    # robust to the selector widget type). Stage 2's fixture is seeds_confirmed=false.
+    # robust to the selector widget type). Stage 2 reads the unconfirmed tmp fixture.
     at.session_state[KEY_STAGE] = "stage2"
     at.run()
     assert not at.exception
@@ -475,6 +494,23 @@ def test_per_stage_seed_banner():
     assert "seeds_confirmed_stage1" not in s2_toggle_keys, (
         "only the active stage's toggle renders — Stage 1's key must not leak into the Stage-2 view"
     )
+
+
+def test_confirmed_stage2_and_stage3_show_no_inferred_banner():
+    """The committed Cologne fixtures are CONFIRMED (reconciled 2026-06-09 vs the official
+    Liquipedia brackets + the VRS invitation snapshot + the engine pairing replay), so the
+    shipped app shows NO [INFERRED]-seed warning on any stage — the validated trust badge path."""
+    from ui.state import KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    for sid in ("stage2", "stage3"):
+        at.session_state[KEY_STAGE] = sid
+        at.run()
+        assert not at.exception
+        assert not any("seeds are inferred" in w.value.lower() for w in at.warning), (
+            f"{sid} ships seeds_confirmed:true — the INFERRED banner must NOT show"
+        )
 
 
 def test_odds_off_banner_failsoft(monkeypatch):
@@ -1806,11 +1842,17 @@ def test_partial_stage2_yields_no_stage3_overlay():
     )
 
 
-def test_stage3_banner_states_two_trust_levels():
+def test_stage3_banner_states_two_trust_levels(tmp_path, monkeypatch):
     """STG-05/06: the Stage-3 [INFERRED] banner explains BOTH halves of the field's provenance
     (1-8 invited by VRS vs 9-16 Stage-2 advancers) and calls out all-Bo3 — the per-stage honesty
-    note the Stage-2 banner established (Finding B), mirrored one stage later."""
+    note the Stage-2 banner established (Finding B), mirrored one stage later.
+
+    Driven via an UNCONFIRMED tmp fixture: the committed stage3.json ships seeds_confirmed:true
+    since the 2026-06-09 official reconciliation, and this caption renders only on the
+    unconfirmed branch (a confirmed stage shows the validated badge instead)."""
     from ui.state import KEY_STAGE
+
+    _unconfirmed_stage_fixture(tmp_path, monkeypatch, "stage3")
 
     at = _apptest().run()
     assert not at.exception

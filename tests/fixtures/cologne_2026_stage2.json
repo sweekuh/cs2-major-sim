@@ -1,0 +1,86 @@
+{
+  "_comment": "IEM Cologne Major 2026 — Stage 2 (Swiss, 16 teams), COMPLETE + seeding RESOLVED 2026-06-09. Rounds + winners read from the OFFICIAL Liquipedia page via api.php ('Intel Extreme Masters/2026/Cologne/Stage 2', action=parse wikitext) and independently cross-checked against the settled Kalshi KXCS2GAME match markets (every winner agrees; Kalshi listed no markets for two R2 matches — FUT-TYLOO and Astralis-9z — which are taken from Liquipedia alone). SEEDING: seeds 1-8 = the invited teams in ascending Valve Global Standings rank from the 2026_05_04 INVITATION snapshot (ValveSoftware/counter-strike_regional_standings: FUT #4, Spirit #5, Astralis #6, G2 #12, Legacy #14, paiN #17, Monte #18, 9z #19), per Liquipedia's stated rule; seeds 9-16 = the Stage-1 qualifiers by Stage-1 Swiss & Buchholz placement (the same order tests/test_stage2_seeding.py derives via the shipped chain). VALIDATION (the Budapest-gate method): a brute force over all 40320 candidate invited orders left this order as the unique one that (a) reproduces all 8 official R1 pairings under seed-i-vs-i+8, (b) makes the engine replay generate the official R2-R5 pairings exactly, (c) makes the shipped Stage-2->3 chain derive the confirmed official Stage-3 seeds 9-16, and (d) is ascending-VRS per the stated rule.",
+  "event": "IEM Cologne Major 2026",
+  "stage": "Stage 2 (Swiss, 16 teams)",
+  "provenance": "Liquipedia api.php wikitext (official) + settled Kalshi KXCS2GAME markets (cross-check) + Valve VRS invitation snapshot 2026_05_04 (invited order), all fetched 2026-06-09",
+  "seeding": {
+    "1": "FUT Esports",
+    "2": "Spirit",
+    "3": "Astralis",
+    "4": "G2",
+    "5": "Legacy",
+    "6": "paiN",
+    "7": "Monte",
+    "8": "9z",
+    "9": "B8",
+    "10": "BetBoom",
+    "11": "GamerLegion",
+    "12": "M80",
+    "13": "MIBR",
+    "14": "TYLOO",
+    "15": "BIG",
+    "16": "FlyQuest"
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "matches": [
+        { "winner": "FUT Esports", "loser": "B8" },
+        { "winner": "Spirit", "loser": "BetBoom" },
+        { "winner": "Astralis", "loser": "GamerLegion" },
+        { "winner": "G2", "loser": "M80" },
+        { "winner": "MIBR", "loser": "Legacy" },
+        { "winner": "TYLOO", "loser": "paiN" },
+        { "winner": "Monte", "loser": "BIG" },
+        { "winner": "9z", "loser": "FlyQuest" }
+      ]
+    },
+    {
+      "round": 2,
+      "matches": [
+        { "winner": "FUT Esports", "loser": "TYLOO" },
+        { "winner": "9z", "loser": "Astralis" },
+        { "winner": "G2", "loser": "Monte" },
+        { "winner": "Spirit", "loser": "MIBR" },
+        { "winner": "BIG", "loser": "paiN" },
+        { "winner": "Legacy", "loser": "FlyQuest" },
+        { "winner": "BetBoom", "loser": "GamerLegion" },
+        { "winner": "M80", "loser": "B8" }
+      ]
+    },
+    {
+      "round": 3,
+      "matches": [
+        { "winner": "Spirit", "loser": "9z" },
+        { "winner": "FUT Esports", "loser": "G2" },
+        { "winner": "Monte", "loser": "Legacy" },
+        { "winner": "TYLOO", "loser": "Astralis" },
+        { "winner": "BIG", "loser": "MIBR" },
+        { "winner": "BetBoom", "loser": "M80" },
+        { "winner": "B8", "loser": "GamerLegion" },
+        { "winner": "paiN", "loser": "FlyQuest" }
+      ]
+    },
+    {
+      "round": 4,
+      "matches": [
+        { "winner": "BetBoom", "loser": "Monte" },
+        { "winner": "9z", "loser": "TYLOO" },
+        { "winner": "G2", "loser": "BIG" },
+        { "winner": "B8", "loser": "MIBR" },
+        { "winner": "paiN", "loser": "Astralis" },
+        { "winner": "Legacy", "loser": "M80" }
+      ]
+    },
+    {
+      "round": 5,
+      "matches": [
+        { "winner": "Monte", "loser": "paiN" },
+        { "winner": "Legacy", "loser": "TYLOO" },
+        { "winner": "B8", "loser": "BIG" }
+      ]
+    }
+  ],
+  "advancers": ["Spirit", "FUT Esports", "BetBoom", "G2", "9z", "Monte", "Legacy", "B8"],
+  "stage3_qualifier_seeding": ["FUT Esports", "Spirit", "G2", "BetBoom", "9z", "Monte", "B8", "Legacy"]
+}

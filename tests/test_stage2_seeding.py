@@ -7,11 +7,13 @@ SHIPPED chain (final_standings_from_locked -> seed_next_stage) and asserts the d
 Stage-2 seed order. It locks in the merge rule + the Buchholz tiebreak on real data so a
 future change to either is caught.
 
-NOTE (event-time): the invited 1-8 are VERIFIED-by-source (Liquipedia/HLTV) but their seed
-ORDER is derived from VRS rank, and the qualifier WITHIN-BUCKET order (9-16) depends on the
-[INFERRED] Buchholz tiebreak — RECONCILE both against the official live Stage-2 bracket. If
-the official bracket differs, update EXPECTED_* below (that is a data/rule reconciliation, not
-a code regression).
+RECONCILED 2026-06-09 against the OFFICIAL bracket: the invited 1-8 order below is the
+ascending Valve Global Standings rank from the 2026_05_04 invitation snapshot (FUT #4,
+Spirit #5, Astralis #6, G2 #12, Legacy #14, paiN #17, Monte #18, 9z #19), confirmed by all
+8 official R1 pairings AND the engine replay reproducing the official R2-R5 pairings (the
+full-pairing gate lives in tests/test_backtest_stage2.py). The earlier inferred order
+(Spirit/Legacy/Astralis/FUT/...) reproduced R1 only — rounds 2-5 falsified it. The
+qualifier 9-16 order was already correct (the rulebook Stage-1-placement merge).
 """
 from __future__ import annotations
 
@@ -39,10 +41,11 @@ EXPECTED_RECORDS = {
     "SINNERS": (0, 3), "Gaimin Gladiators": (0, 3),
 }
 
-# Expected derived Stage-2 seed order (seeds 1-16). Invited 1-8 by VRS rank (from data/stage2.json);
-# qualifiers 9-16 by the rulebook merge (losses asc -> -Buchholz -> prior Stage-1 seed).
+# Expected derived Stage-2 seed order (seeds 1-16). Invited 1-8 = the CONFIRMED official order
+# (ascending VRS in the 2026_05_04 invitation snapshot, from data/stage2.json); qualifiers 9-16
+# by the rulebook merge (losses asc -> -Buchholz -> prior Stage-1 seed) — confirmed official.
 EXPECTED_SEED_ORDER = [
-    "Spirit", "Legacy", "Astralis", "FUT Esports", "G2", "paiN", "9z", "Monte",
+    "FUT Esports", "Spirit", "Astralis", "G2", "Legacy", "paiN", "Monte", "9z",
     "B8", "BetBoom", "GamerLegion", "M80", "MIBR", "TYLOO", "BIG", "FlyQuest",
 ]
 

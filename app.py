@@ -1130,8 +1130,17 @@ def _derive_next_stage_seeds() -> None:
     partial/incomplete prior stage produces NO seed list (the try/except swallows LivePrefixIncomplete
     and any derive error -> overlay left absent; the existing fixture-based next-stage fallback stays
     in place, its [INFERRED] banner already loud). This writes ONLY session state — never the stage
-    fixture JSON (the committed fixture stays the editable baseline; decisions #6) — and NEVER flips
-    seeds_confirmed_{stage_id}, so the per-stage banner persists until the user reconciles.
+    fixture JSON (the committed fixture stays the editable baseline; decisions #6) — and never flips
+    seeds_confirmed_{stage_id} to TRUE.
+
+    Trust drop on divergence (the laundering guard, load-bearing once committed fixtures ship
+    seeds_confirmed:true): confirmation is a property of a SPECIFIC seed list, so when a NEWLY
+    derived overlay's (seed, name) list differs from the next stage's committed fixture, the next
+    stage's session flag is reset to False — a derived list renders under the loud [INFERRED]
+    banner, never under the fixture's confirmed badge. A derived list that EQUALS the fixture
+    (the real Cologne case: the chain reproduces the confirmed official bracket —
+    tests/test_backtest_stage2.py) keeps the fixture's trust state. The reset fires only when the
+    overlay CHANGES, so a user who hand-confirms a derived list is not re-falsified every rerun.
 
     Stage-agnostic by construction (STG-06): the chain is data-driven off _NEXT_STAGE + the next
     stage's fixture (its seeds 1-8 ARE the invited list), so stage2 -> stage3 reuses the exact
@@ -1163,8 +1172,21 @@ def _derive_next_stage_seeds() -> None:
         return
 
     overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+    prev = overlay.get(next_stage_id)
     overlay[next_stage_id] = derived  # editable [INFERRED] SESSION overlay; NOT a fixture write
     st.session_state[KEY_DERIVED_SEEDS] = overlay
+
+    # Trust drop on divergence (see docstring): a NEW/CHANGED overlay that differs from the next
+    # stage's committed fixture invalidates that stage's confirmation — never silently launders a
+    # derived list under a confirmed badge. Identity is (seed, name); ratings don't affect trust.
+    derived_key = [(t.seed, t.name) for t in derived]
+    if prev is None or [(t.seed, t.name) for t in prev] != derived_key:
+        try:
+            next_teams, _next_cfg = load_stage(_path_for_stage(next_stage_id))
+        except (OSError, ValueError):
+            return  # unreadable fixture: the banner init path already fails safe to False
+        if derived_key != [(t.seed, t.name) for t in sorted(next_teams, key=lambda t: t.seed)]:
+            st.session_state[f"seeds_confirmed_{next_stage_id}"] = False
 
 
 def _combined_fetched_at(odds_fetched_at):
