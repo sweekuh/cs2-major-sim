@@ -279,3 +279,69 @@ def test_fetch_odds_main_writes_per_source_prices(teams, tmp_path):
     loaded = load_odds_cache(out)
     assert loaded is not None
     assert loaded["blended"][match_key(_EXPECTED_MATCH)]["sources"] == sources
+
+
+def test_fetch_odds_main_stamps_meta_stage(tmp_path):
+    """STG-06: fetch_odds.main stamps the 1-based ``_meta.stage`` int it joined teams against,
+    mirroring results_cache.json — the read side (app._odds_cache_for_active_stage) refuses a
+    mismatch, because blended keys are ENGINE-ID strings and the same id is a different team on
+    each stage. Default stays stage1 (back-compat: every pre-v3 call site is unchanged); version
+    stays 1 (``stage`` is ADDITIVE — an older stage-unaware loader still accepts the cache).
+
+    Revert check: drop the ``stage`` stamp (or the load_stage(stage_id) join) from main() and
+    this fails — the guard against re-introducing the always-Stage-1 ``load_teams()`` join.
+    """
+    from scripts.fetch_odds import main
+    from ui.odds_loader import load_odds_cache
+
+    out = tmp_path / "odds_cache.json"
+    cache = main(out, stage_id="stage3", fixtures={})  # no providers — meta-only run, no network
+    assert cache["_meta"]["stage"] == 3
+    assert cache["_meta"]["version"] == 1, "stage is additive within v1, not a version bump"
+    loaded = load_odds_cache(out)
+    assert loaded is not None and loaded["_meta"]["stage"] == 3, "loader returns stage intact"
+
+    assert main(tmp_path / "o1.json", fixtures={})["_meta"]["stage"] == 1, "default is stage1"
+
+    with pytest.raises(ValueError):
+        main(tmp_path / "o2.json", stage_id="stage9", fixtures={})  # typo fails loud, never stage-1
+
+
+def test_fetch_odds_main_stamps_bo3_on_all_bo3_stage(tmp_path):
+    """BO-01 at the fetch seam: on an all-Bo3 stage (stage3 declares ``all_bo3: true``) every
+    blended entry is stamped ``bo3: true`` regardless of the provider's per-market flag — Kalshi
+    carries none and defaults False, which is correct ONLY for the Bo1 opening rounds of Stage
+    1/2. Left False, app._odds_from_cache's ``invert_series(p, bo3=False)`` would take the SERIES
+    price as a MAP prob and re-inflate it through p²(3−2p) in the all-Bo3 sim — silently
+    overrating every favorite (Pitfall 9's shape, latent until a Stage-3 fetch goes live).
+
+    Revert check: drop the all_bo3 override in main() and the stage3 assert fails.
+    """
+    from scripts.fetch_odds import main
+
+    # Inline Kalshi market (real KXCS2GAME shape) naming two REAL stage-3 fixture teams, so the
+    # per-stage join resolves on the recorded path with no network.
+    kalshi_fixture = {
+        "markets": [
+            {
+                "event_ticker": "KXCS2GAME-26JUN110830VITSPI",
+                "ticker": "KXCS2GAME-26JUN110830VITSPI-VIT",
+                "title": "Will Vitality win the Vitality vs. Spirit CS2 match?",
+                "rules_primary": "If Vitality wins the IEM Cologne Major 2026: Vitality vs. "
+                                 "Spirit CS2 match, then the market resolves to Yes.",
+                "yes_sub_title": "Vitality",
+                "yes_bid_dollars": "0.7800",
+                "yes_ask_dollars": "0.8000",
+                "status": "active",
+            }
+        ]
+    }
+    cache = main(tmp_path / "o3.json", stage_id="stage3", fixtures={"kalshi": kalshi_fixture})
+    assert len(cache["blended"]) == 1
+    (entry,) = cache["blended"].values()
+    assert entry["bo3"] is True, "all-Bo3 stage must stamp bo3=True over the provider default"
+
+    # Control: a Bo1 stage (stage1 declares no all_bo3) keeps the provider's flag untouched.
+    cache1 = main(tmp_path / "o4.json", fixtures={"kalshi": _load("kalshi_sample.json")})
+    assert all(e["bo3"] is False for e in cache1["blended"].values()), \
+        "Bo1-stage entries must NOT be blanket-stamped bo3=True"

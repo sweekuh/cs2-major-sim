@@ -19,11 +19,27 @@ the one below.
   back-solved into market-anchored ratings; two-tone CI bands show source disagreement. Fails soft
   to rating-only, never gates the first run.
 
-## Next — v3 (Full Major)
+## Shipped — v3 (Full Major Swiss chain)
 
-- Stages 2 and 3 Swiss via the same validated engine.
+- **Stages 2 and 3 via the same validated engine** — per-stage fixtures + selector, Stage 3
+  all-Bo3 (`stage.all_bo3` threaded engine-deep, byte-identical off), and the inter-stage seeding
+  chain (`stage1 → stage2 → stage3`): a fully-locked complete stage auto-derives the next stage's
+  seeds (invited 1-8 by VRS from the next fixture, advancers 9-16 by final Buchholz) as an
+  editable [INFERRED] overlay — one derivation path, validated on the real Cologne Stage-1 → 2
+  data and reused unchanged for 2 → 3.
+- **Stage-scoped data pipeline** — both fetchers (`fetch_odds` / `fetch_results`) take
+  `--stage`, join the active stage's teams, and stamp `_meta.stage`; the app refuses a
+  cross-stage cache (engine-id keys name different teams per stage — the LESSONS-Bug-1 class,
+  closed on both cache seams).
+- **The real Cologne Stage-3 field committed** — invited 8 verified by source in VRS order,
+  the 8 real Stage-2 advancers, `seeds_confirmed=false` until reconciled vs the official bracket.
+
+## Next — v4 (Playoffs)
+
 - A **playoff Pick'Em optimizer** — a 7-pick round-weighted ballot (2 Quarterfinal + 1 Semifinal +
   1 Grand Final), which is a different scoring model from the Swiss 2/6/2 and is not yet built.
+- Playoff bracket seeding from the Stage-3 finish (a bracket, not a Swiss — deliberately NOT
+  another `_NEXT_STAGE` entry).
 
 ## Deferred
 

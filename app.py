@@ -171,6 +171,34 @@ def _stage_int_for(stage_id: str) -> int:
     return n
 
 
+def _odds_cache_for_active_stage() -> dict | None:
+    """``load_odds_cache()`` gated to the ACTIVE stage — the ONE odds read every consumer uses.
+
+    The blended map is keyed by ENGINE-ID strings ("lo-hi"), and the same id is a DIFFERENT TEAM
+    on each stage (Stage-1 id 5 = G2's Stage-2 id 5 = a Stage-3 advancer...). Feeding a prior
+    stage's cache into another stage's run would therefore back-solve ratings and epistemic bands
+    from the WRONG teams' prices — the exact class of bug as the n=N inflation (LESSONS Bug 1):
+    invisible in rating-only mode, latent until live odds turn on, plausible-looking output. The
+    results cache already carries this guard (``_prefill_results_into_locked`` vs ``_meta.stage``);
+    this mirrors it on the odds side.
+
+    A cache whose ``_meta.stage`` differs from the active stage reads as None (rating-only path,
+    honest 'odds off' banner — never silently mis-priced). A legacy cache WITHOUT ``_meta.stage``
+    was written by the pre-multi-stage fetcher, which always joined Stage-1 teams -> stage 1.
+    Malformed stage metadata fails CLOSED (None), mirroring the loader's fail-soft discipline.
+    """
+    cache = load_odds_cache()
+    if not cache:
+        return None
+    try:
+        cache_stage = int(cache.get("_meta", {}).get("stage", 1))  # legacy no-stage cache == stage 1
+        if cache_stage != _stage_int_for(stage_id):
+            return None
+    except (TypeError, ValueError):
+        return None  # garbled stage metadata -> fail closed to rating-only, never mis-priced
+    return cache
+
+
 def _fmt_fetched(iso) -> str:
     """ISO-8601 UTC timestamp -> 'Jun 02, 04:49 UTC' (empty string on missing/malformed)."""
     if not iso:
@@ -240,6 +268,16 @@ def _render_header_strip() -> None:
                 "your locked Stage-1 finals (Buchholz). Reconcile BOTH vs the official Stage-2 "
                 "bracket before flipping 'seeds confirmed'."
             )
+        elif stage_id == "stage3":
+            # Stage-3 mirror of Finding B: the same two trust levels, one stage later. All-Bo3
+            # is also called out here — it changes every per-match probability vs Stage 1/2.
+            st.caption(
+                "Stage-3 seeds: 1-8 are the directly-invited teams (names verified vs the "
+                "posted Stage-3 field, order by VRS rank) — NOT yet hand-confirmed; 9-16 are the "
+                "Stage-2 advancers (within-bucket order derives from your locked Stage-2 finals "
+                "via Buchholz). Every Stage-3 match is Bo3. Reconcile BOTH vs the official "
+                "Stage-3 bracket before flipping 'seeds confirmed'."
+            )
         with st.expander("Reconcile seeds vs the official list", expanded=False):
             st.caption(
                 "Eyeball each seed→team against the official Cologne 2026 seed list, then "
@@ -262,9 +300,11 @@ def _render_header_strip() -> None:
     # 3. Live-odds status panel (D1) — reads the LOADED cache, NOT the env key (honest live/off).
     #    The sim feeds on data/odds_cache.json; Polymarket + Kalshi are KEYLESS, so a keyless fetch
     #    feeds the sim while the OLD banner ("off, no ODDSPAPI_KEY") lied. This reads the same cache
-    #    the run uses (JSON-only loader — no httpx/dotenv import, DX-01 zero-config preserved). Every
-    #    interpolated value is our own metadata / a fixed allowlist / a fixed badge — no user free-text.
-    cache = load_odds_cache()
+    #    the run uses (JSON-only loader — no httpx/dotenv import, DX-01 zero-config preserved), via
+    #    the SAME stage gate, so the badge can never read "live" off a cache the run would refuse
+    #    (cross-stage honesty). Every interpolated value is our own metadata / a fixed allowlist /
+    #    a fixed badge — no user free-text.
+    cache = _odds_cache_for_active_stage()
     blended = (cache or {}).get("blended") or {}
     if blended:
         meta = (cache or {}).get("_meta") or {}
@@ -363,8 +403,11 @@ with controls:
     _derived_overlay = (st.session_state.get(KEY_DERIVED_SEEDS, {}) or {}).get(stage_id)
     if _derived_overlay:
         rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in _derived_overlay]
+        # Per-stage wording via the canonical int map (STG-06): Stage 2 reads "locked Stage-1
+        # finals", Stage 3 "locked Stage-2 finals" — same chain, same [INFERRED] honesty.
+        _n = _stage_int_for(stage_id)
         st.caption(
-            "Stage-2 seeds derived from the locked Stage-1 finals — [INFERRED], "
+            f"Stage-{_n} seeds derived from the locked Stage-{_n - 1} finals — [INFERRED], "
             "verify vs the official seed list."
         )
     else:
@@ -417,7 +460,9 @@ with controls:
             try:
                 from scripts.fetch_odds import main as _fetch_odds_main  # LAZY — click branch only
 
-                cache = _fetch_odds_main()
+                # The ACTIVE stage (STG-06): the fetcher joins THIS stage's teams and stamps
+                # _meta.stage so the read side can refuse a cross-stage cache (mirrors results).
+                cache = _fetch_odds_main(stage_id=stage_id)
                 n_blended = len(cache.get("blended", {}))
                 if n_blended:
                     books = provider_labels(cache.get("_meta", {}).get("providers_present", []))
@@ -664,8 +709,17 @@ def _odds_from_cache(base_ratings: dict):
     ``fetched_at`` (``_meta.fetched_at``) is returned so the run cache key can fold it in: a fresh
     fetch that moves only ``var`` (not the back-solved ratings) still invalidates the memoized
     Result — no stale epistemic band (T-05-STALEBAND).
+
+    Reads through ``_odds_cache_for_active_stage`` (STG-06): a cache fetched for ANOTHER stage is
+    treated as absent, because its engine-id keys name different teams on this stage — feeding it
+    would back-solve ratings from the wrong teams' prices (see the helper's docstring).
+
+    QFIT-03: when the cache carries a well-formed ``fitted_ratings`` block (written offline by
+    ``scripts/fit_qualify.py`` from the market's QUALIFY markets), those ratings are used INSTEAD
+    of the R1 back-solve — see the inline comment at the branch for why. Malformed/partial block
+    -> ignored, back-solve path unchanged (fail-soft).
     """
-    cache = load_odds_cache()
+    cache = _odds_cache_for_active_stage()
     if not cache:
         return base_ratings, None, None
     blended = cache.get("blended") or {}
@@ -692,10 +746,47 @@ def _odds_from_cache(base_ratings: dict):
     if not targets:
         return base_ratings, None, cache.get("_meta", {}).get("fetched_at")
 
+    # Qualify-market calibration (QFIT-03): a well-formed ``fitted_ratings`` block in the cache
+    # WINS over the R1 back-solve. The fitted ratings encode the market's view of rounds 2-5
+    # (the qualify markets), which a plain R1 back-solve structurally can't see — fit_ratings
+    # only ever observes the eight R1 series prices, and those R1 matches are priced DIRECTLY
+    # from market_blend inside the sim anyway, so the two calibrations are orthogonal. They are
+    # computed OFFLINE by scripts/fit_qualify.py because the fit runs max_iters Monte-Carlo
+    # passes of n_per_iter sims — work that does not belong inside a Streamlit rerun. Fail-soft:
+    # a malformed/partial block is ignored WHOLE (never half-applied — a 3-team fitted dict
+    # merged over back-solved ratings would mix two gauges) and we fall through to fit_ratings.
+    fitted = _fitted_ratings_from(cache)
+    if fitted is not None:
+        return fitted, market_blend, cache.get("_meta", {}).get("fetched_at")
+
     # Gauge anchor: the top seed (id == min seed) holds its rating fixed so the fit is identifiable.
     anchor_id = min(t.id for t in teams)
     ratings = fit_ratings(targets, teams, float(S), anchor_id)
     return ratings, market_blend, cache.get("_meta", {}).get("fetched_at")
+
+
+def _fitted_ratings_from(cache: dict) -> dict[int, float] | None:
+    """Parse the cache's ``fitted_ratings`` block into {team_id: rating}, or None (fail-soft).
+
+    Well-formed = a dict whose int-parsed keys are EXACTLY the active stage's 16 team ids with
+    finite numeric ratings — the same {id: rating} keying fit_ratings returns, so downstream
+    (freeze_ratings/cache key/run_mc) is shape-identical. ANY defect (missing/extra id, a
+    non-numeric or non-finite value, a non-dict) returns None so the caller falls through to
+    the R1 back-solve unchanged — a malformed cache key degrades, never crashes, never
+    half-applies (the repo's ODDS-08 discipline).
+    """
+    raw = cache.get("fitted_ratings")
+    if not isinstance(raw, dict):
+        return None
+    try:
+        fitted = {int(k): float(v) for k, v in raw.items()}
+    except (TypeError, ValueError):
+        return None
+    if set(fitted) != {t.id for t in teams}:
+        return None
+    if any(v != v or v in (float("inf"), float("-inf")) for v in fitted.values()):
+        return None
+    return fitted
 
 
 def _cache_key_for(ratings: dict, locked: dict, stage_id: str, fetched_at=None):
@@ -1001,11 +1092,15 @@ def _prefill_results_into_locked() -> str | None:
 
 
 # --- Phase 7 inter-stage seeding chain (SEED-03) -----------------------------------------
-# next-stage_of(active) — Stage 1 derives FOR Stage 2. The single-global KEY_LOCKED holds the
-# ACTIVE stage's locks, so the derivation fires while the PRIOR stage is active + complete and
-# stashes the NEXT stage's overlay (mirrors the results pre-fill: compute when the source data is
-# live, hold in session, consume on the stage switch). Only stage1 -> stage2 is wired for v3.
-_NEXT_STAGE = {"stage1": "stage2"}
+# next-stage_of(active) — Stage 1 derives FOR Stage 2; Stage 2 derives FOR Stage 3 (STG-06: the
+# SAME seed_next_stage merge — invited 1-8 by VRS from the next stage's fixture, advancers 9-16 by
+# final Buchholz — verified against the real Cologne Stage-1->2 derive, now reused unchanged for
+# 2->3 per the rulebook). The single-global KEY_LOCKED holds the ACTIVE stage's locks, so the
+# derivation fires while the PRIOR stage is active + complete and stashes the NEXT stage's overlay
+# (mirrors the results pre-fill: compute when the source data is live, hold in session, consume on
+# the stage switch). Stage 3 has no wired successor: playoffs are a BRACKET, not a 16-team Swiss —
+# seeding them is a different (Phase-8) shape, NOT another _NEXT_STAGE entry.
+_NEXT_STAGE = {"stage1": "stage2", "stage2": "stage3"}
 
 
 def _invited_for_stage(next_stage_id: str) -> list[InvitedTeam]:
@@ -1033,14 +1128,27 @@ def _derive_next_stage_seeds() -> None:
     ``final_standings_from_locked`` -> ``seed_next_stage`` and stash the result in
     ``st.session_state[KEY_DERIVED_SEEDS][next_stage_id]`` as an EDITABLE [INFERRED] overlay. A
     partial/incomplete prior stage produces NO seed list (the try/except swallows LivePrefixIncomplete
-    and any derive error -> overlay left absent; the existing fixture-based Stage-2 fallback stays in
-    place, its [INFERRED] banner already loud). This writes ONLY session state — never data/stage2.json
-    (the committed fixture stays the editable baseline; decisions #6) — and NEVER flips
-    seeds_confirmed_{stage_id}, so the per-stage banner persists until the user reconciles.
+    and any derive error -> overlay left absent; the existing fixture-based next-stage fallback stays
+    in place, its [INFERRED] banner already loud). This writes ONLY session state — never the stage
+    fixture JSON (the committed fixture stays the editable baseline; decisions #6) — and never flips
+    seeds_confirmed_{stage_id} to TRUE.
+
+    Trust drop on divergence (the laundering guard, load-bearing once committed fixtures ship
+    seeds_confirmed:true): confirmation is a property of a SPECIFIC seed list, so when a NEWLY
+    derived overlay's (seed, name) list differs from the next stage's committed fixture, the next
+    stage's session flag is reset to False — a derived list renders under the loud [INFERRED]
+    banner, never under the fixture's confirmed badge. A derived list that EQUALS the fixture
+    (the real Cologne case: the chain reproduces the confirmed official bracket —
+    tests/test_backtest_stage2.py) keeps the fixture's trust state. The reset fires only when the
+    overlay CHANGES, so a user who hand-confirms a derived list is not re-falsified every rerun.
+
+    Stage-agnostic by construction (STG-06): the chain is data-driven off _NEXT_STAGE + the next
+    stage's fixture (its seeds 1-8 ARE the invited list), so stage2 -> stage3 reuses the exact
+    code path the real Cologne Stage-1 -> Stage-2 derive validated. No second derivation path.
     """
     next_stage_id = _NEXT_STAGE.get(stage_id)
     if next_stage_id is None:
-        return  # the active stage has no wired successor (e.g. Stage 2 is the last v3 stage)
+        return  # no wired successor (Stage 3 ends the Swiss chain; playoffs are a bracket, not Swiss)
 
     locked_results = st.session_state.get(KEY_LOCKED, [])
     if not locked_results:
@@ -1064,8 +1172,21 @@ def _derive_next_stage_seeds() -> None:
         return
 
     overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+    prev = overlay.get(next_stage_id)
     overlay[next_stage_id] = derived  # editable [INFERRED] SESSION overlay; NOT a fixture write
     st.session_state[KEY_DERIVED_SEEDS] = overlay
+
+    # Trust drop on divergence (see docstring): a NEW/CHANGED overlay that differs from the next
+    # stage's committed fixture invalidates that stage's confirmation — never silently launders a
+    # derived list under a confirmed badge. Identity is (seed, name); ratings don't affect trust.
+    derived_key = [(t.seed, t.name) for t in derived]
+    if prev is None or [(t.seed, t.name) for t in prev] != derived_key:
+        try:
+            next_teams, _next_cfg = load_stage(_path_for_stage(next_stage_id))
+        except (OSError, ValueError):
+            return  # unreadable fixture: the banner init path already fails safe to False
+        if derived_key != [(t.seed, t.name) for t in sorted(next_teams, key=lambda t: t.seed)]:
+            st.session_state[f"seeds_confirmed_{next_stage_id}"] = False
 
 
 def _combined_fetched_at(odds_fetched_at):
@@ -1425,7 +1546,7 @@ with main:
     # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
     # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->
     # priced empty -> two_tone False -> single-tone bars (the Phase-2 render, unchanged).
-    odds_blended = (load_odds_cache() or {}).get("blended") or {}
+    odds_blended = (_odds_cache_for_active_stage() or {}).get("blended") or {}
     two_tone = bool(priced_ids(odds_blended))
     if result is not None:
         st.caption(f"{int(N) // 1000}k sims · seed {FIXED_SEED}")
@@ -1511,8 +1632,9 @@ with main:
 def _render_footer() -> None:
     """One-line provenance so a screenshot is self-explanatory and honest: data sources +
     freshness, the market-anchored-R1 / modeled-later-rounds split, reproducible sim params, and
-    the engine-validation basis. Reads the JSON cache only (no httpx import)."""
-    cache = load_odds_cache()
+    the engine-validation basis. Reads the JSON cache only (no httpx import), through the stage
+    gate so the footer never claims odds the run refused (cross-stage honesty)."""
+    cache = _odds_cache_for_active_stage()
     meta = (cache or {}).get("_meta", {})
     blended = (cache or {}).get("blended") or {}
     st.divider()

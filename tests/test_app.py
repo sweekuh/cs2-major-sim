@@ -439,15 +439,34 @@ def test_seed_banner_dismissable(monkeypatch):
     assert at.session_state[seeds_key] is True
 
 
-def test_per_stage_seed_banner():
+def _unconfirmed_stage_fixture(tmp_path, monkeypatch, stage_id: str):
+    """Point ui.cache._STAGE_FIXTURES[stage_id] at a tmp copy with seeds_confirmed:false.
+
+    The committed Cologne fixtures now ship seeds_confirmed:true (reconciled 2026-06-09 vs the
+    official brackets), so the unconfirmed UI branch must be driven by a fixture override —
+    _path_for_stage joins relative entries onto the repo root, and pathlib resets the join on an
+    absolute path, so an absolute tmp path slots straight into the same map."""
+    import ui.cache as uic
+
+    src = json.loads((Path(uic._REPO_ROOT) / f"data/{stage_id}.json").read_text(encoding="utf-8"))
+    src["seeds_confirmed"] = False
+    p = tmp_path / f"{stage_id}_unconfirmed.json"
+    p.write_text(json.dumps(src), encoding="utf-8")
+    monkeypatch.setitem(uic._STAGE_FIXTURES, stage_id, str(p))
+    return p
+
+
+def test_per_stage_seed_banner(tmp_path, monkeypatch):
     """STG-05: the [INFERRED]-seed banner is PER-STAGE — each stage reads its OWN fixture's
     seeds_confirmed flag, so confirming one stage cannot dismiss another's banner.
 
-    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2's is false → the
-    loud warning shows. The Stage-2 confirm toggle is keyed 'seeds_confirmed_stage2' (distinct
-    from Stage 1's 'seeds_confirmed_stage1'), proving the per-stage session key. No monkeypatch
-    of read_seeds_confirmed — the per-stage state is driven by the real committed fixtures."""
+    Stage 1's shipped fixture is seeds_confirmed=true → NO banner; Stage 2 is forced to an
+    UNCONFIRMED tmp copy (the committed stage2.json is confirmed since the 2026-06-09 official
+    reconciliation) → the loud warning shows. The Stage-2 confirm toggle is keyed
+    'seeds_confirmed_stage2' (distinct from Stage 1's), proving the per-stage session key."""
     from ui.state import KEY_STAGE
+
+    _unconfirmed_stage_fixture(tmp_path, monkeypatch, "stage2")
 
     # Stage 1 (default): the shipped fixture confirms the seeds → no INFERRED-seed warning, and
     # no Stage-2 toggle yet (that key only appears once Stage 2 is the active stage).
@@ -458,7 +477,7 @@ def test_per_stage_seed_banner():
     assert "seeds_confirmed_stage2" not in s1_toggle_keys
 
     # Switch to Stage 2 (inject the selector's session value, as the LIVE/isolation tests do —
-    # robust to the selector widget type). Stage 2's fixture is seeds_confirmed=false.
+    # robust to the selector widget type). Stage 2 reads the unconfirmed tmp fixture.
     at.session_state[KEY_STAGE] = "stage2"
     at.run()
     assert not at.exception
@@ -475,6 +494,23 @@ def test_per_stage_seed_banner():
     assert "seeds_confirmed_stage1" not in s2_toggle_keys, (
         "only the active stage's toggle renders — Stage 1's key must not leak into the Stage-2 view"
     )
+
+
+def test_confirmed_stage2_and_stage3_show_no_inferred_banner():
+    """The committed Cologne fixtures are CONFIRMED (reconciled 2026-06-09 vs the official
+    Liquipedia brackets + the VRS invitation snapshot + the engine pairing replay), so the
+    shipped app shows NO [INFERRED]-seed warning on any stage — the validated trust badge path."""
+    from ui.state import KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    for sid in ("stage2", "stage3"):
+        at.session_state[KEY_STAGE] = sid
+        at.run()
+        assert not at.exception
+        assert not any("seeds are inferred" in w.value.lower() for w in at.warning), (
+            f"{sid} ships seeds_confirmed:true — the INFERRED banner must NOT show"
+        )
 
 
 def test_odds_off_banner_failsoft(monkeypatch):
@@ -1729,6 +1765,205 @@ def test_stage3_runs_all_bo3(monkeypatch):
     )
 
 
+def test_complete_stage2_derives_editable_stage3_overlay():
+    """STG-06 (the stage2 -> stage3 wire): a COMPLETE, fully-locked Stage 2 auto-derives the
+    Stage-3 seeds into an editable [INFERRED] session overlay (KEY_DERIVED_SEEDS['stage3']) via
+    the SAME chain the real Cologne Stage-1 -> Stage-2 derive validated; switching to Stage 3
+    surfaces the per-stage derive caption AND the [INFERRED] banner STILL shows.
+
+    Revert check (LESSONS: a regression test must fail when the wrong rule is applied): remove
+    the '"stage2": "stage3"' entry from app._NEXT_STAGE and this fails at the overlay assert.
+
+    The Budapest lock list replays cleanly on ANY 16-seed Swiss fixture (the engine is
+    name-independent and a fully-locked replay never samples — all-Bo3 is irrelevant to locks),
+    so it serves as the deterministic complete-Stage-2 source exactly as it does for Stage 1.
+    """
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage2"  # Stage 2 active (the PRIOR stage of the derive)
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(99)  # every round locked -> complete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage3" in overlay, (
+        "a complete, fully-locked Stage 2 must derive a Stage-3 seed overlay (STG-06 wire)"
+    )
+    derived = overlay["stage3"]
+    assert [t.seed for t in derived] == list(range(1, 17)), "derived overlay is exactly seeds 1..16"
+    # Seeds 1-8 of the overlay are the Stage-3 fixture's invited teams in fixture (VRS) order —
+    # the derive reads them from data/stage3.json, never from the prior stage's standings.
+    from engine.teams import load_stage
+
+    s3_fixture, _ = load_stage("data/stage3.json")
+    assert [t.name for t in derived if t.seed <= 8] == [
+        t.name for t in s3_fixture if t.seed <= 8
+    ], "overlay seeds 1-8 must be the Stage-3 invited teams by fixture VRS order"
+
+    # Switch to Stage 3: the editor consumes the overlay (per-stage derive caption) AND the
+    # [INFERRED] banner persists — derived seeds are never laundered into confirmed ones.
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    text = _all_text(at).lower()
+    assert "derived from the locked stage-2 finals" in text, (
+        "the Stage-3 editor must caption the derived [INFERRED] overlay with its Stage-2 provenance"
+    )
+    assert any("seeds are inferred" in w.value.lower() for w in at.warning), (
+        "the per-stage [INFERRED] banner MUST persist on the derived Stage-3 view (never auto-confirmed)"
+    )
+    assert _ss_get(at, "seeds_confirmed_stage3") is not True, (
+        "the derivation must NOT flip seeds_confirmed_stage3 — derived seeds stay [INFERRED]"
+    )
+
+
+def test_partial_stage2_yields_no_stage3_overlay():
+    """STG-06 companion: a PARTIAL Stage 2 (rounds 0..2 locked only) produces NO Stage-3 overlay —
+    the app never seeds a next stage off sampled winners, on ANY stage of the chain (the same
+    Anti-Pattern-6 guard the stage1 -> stage2 wire carries)."""
+    from ui.state import KEY_DERIVED_SEEDS, KEY_LOCKED, KEY_STAGE
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage2"
+    at.run()
+    assert not at.exception
+    at.session_state[KEY_LOCKED] = _budapest_locks(2)  # rounds 3-4 unlocked -> incomplete
+    at.run()
+    assert not at.exception
+
+    overlay = _ss_get(at, KEY_DERIVED_SEEDS, {})
+    assert "stage3" not in overlay, (
+        "a partial / incomplete Stage 2 must produce NO Stage-3 seed overlay (STG-06 / Anti-Pattern 6)"
+    )
+
+
+def test_stage3_banner_states_two_trust_levels(tmp_path, monkeypatch):
+    """STG-05/06: the Stage-3 [INFERRED] banner explains BOTH halves of the field's provenance
+    (1-8 invited by VRS vs 9-16 Stage-2 advancers) and calls out all-Bo3 — the per-stage honesty
+    note the Stage-2 banner established (Finding B), mirrored one stage later.
+
+    Driven via an UNCONFIRMED tmp fixture: the committed stage3.json ships seeds_confirmed:true
+    since the 2026-06-09 official reconciliation, and this caption renders only on the
+    unconfirmed branch (a confirmed stage shows the validated badge instead)."""
+    from ui.state import KEY_STAGE
+
+    _unconfirmed_stage_fixture(tmp_path, monkeypatch, "stage3")
+
+    at = _apptest().run()
+    assert not at.exception
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+
+    text = _all_text(at).lower()
+    assert "stage-3 seeds: 1-8" in text, "the Stage-3 banner must lead with the invited half"
+    assert "stage-2 advancers" in text, "…and name the advancer half's provenance"
+    assert "every stage-3 match is bo3" in text, "…and call out the all-Bo3 format"
+
+
+# --- STG-06: cross-stage odds-cache refusal (the engine-id mis-join guard) ----------------
+
+
+def _stage_stamped_odds_cache(tmp_path, stage: int | None):
+    """A minimal valid odds cache (one blended R1 market) stamped with ``_meta.stage``.
+
+    ``stage=None`` omits the key — the legacy pre-multi-stage shape (reads as stage 1).
+    ``var`` is 0.0 so an accepting run stays on the cheap K=1 path (AppTest latency budget).
+    """
+    cache = {
+        "_meta": {
+            "fetched_at": "2026-06-09T12:00:00+00:00",
+            "version": 1,
+            "providers_present": ["kalshi"],
+            "round_hint": 1,
+        },
+        "blended": {"1-9": {"p": 0.7, "var": 0.0, "n_sources": 1, "bo3": True}},
+    }
+    if stage is not None:
+        cache["_meta"]["stage"] = stage
+    p = tmp_path / "odds_cache.json"
+    p.write_text(json.dumps(cache), encoding="utf-8")
+    return p
+
+
+def _patch_odds_cache_path(monkeypatch, cache_file):
+    """Point the real loader at the test cache (the test_live_odds_status_panel_renders pattern).
+
+    The pristine loader is captured at call time FROM THE FUNCTION'S DEFAULTS, not from the module
+    attr — a second patch within one test would otherwise wrap the first patch's lambda (which
+    ignores its args) and silently keep serving the first cache file.
+    """
+    import ui.odds_loader as loader
+
+    real_load = getattr(_patch_odds_cache_path, "_real", None)
+    if real_load is None:
+        real_load = _patch_odds_cache_path._real = loader.load_odds_cache
+    monkeypatch.setattr(loader, "load_odds_cache", lambda *a, **k: real_load(cache_file))
+
+
+def test_cross_stage_odds_cache_is_refused(monkeypatch, tmp_path):
+    """STG-06 (the read-side gate): an odds cache stamped for ANOTHER stage is treated as absent —
+    the header reads 'odds off', never a 'live' badge — because blended keys are ENGINE-ID strings
+    and the same id names a DIFFERENT TEAM on each stage. Feeding a Stage-1 cache into a Stage-3
+    run would back-solve ratings from the wrong teams' prices: the exact LESSONS-Bug-1 class
+    (latent until live odds turn on, plausible-looking output, invisible in rating-only tests).
+
+    Revert check: remove the stage comparison from app._odds_cache_for_active_stage and this
+    fails — Stage 3 would show the Stage-1 cache as live.
+    """
+    from ui.state import KEY_STAGE
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(tmp_path, stage=1))
+
+    at = _apptest().run()
+    assert not at.exception
+    assert "market(s)" in _all_text(at), "sanity: the stage-1 cache IS live on Stage 1"
+
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    text = _all_text(at)
+    assert "market(s)" not in text, (
+        "a stage-1-stamped odds cache must NOT read as live on Stage 3 (engine-id mis-join guard)"
+    )
+    assert "odds off" in text.lower(), "the honest rating-only banner shows instead"
+
+
+def test_matching_stage_odds_cache_is_accepted(monkeypatch, tmp_path):
+    """STG-06 companion: a cache stamped for the ACTIVE stage feeds normally (the gate filters on
+    mismatch only — Stage-3 odds on Stage 3 are live), and a LEGACY cache without ``_meta.stage``
+    reads as stage 1 (it was written by the pre-multi-stage fetcher, which always joined Stage-1
+    teams) — so it feeds Stage 1 but is refused on Stage 3."""
+    from ui.state import KEY_STAGE
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+
+    # Stage-3-stamped cache on Stage 3 -> live.
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(tmp_path, stage=3))
+    at = _apptest().run()
+    at.session_state[KEY_STAGE] = "stage3"
+    at.run()
+    assert not at.exception
+    assert "market(s)" in _all_text(at), "a stage-3 cache IS live on Stage 3"
+
+    # Legacy (no stage key) cache -> stage 1 semantics: live on Stage 1, refused on Stage 3.
+    legacy_dir = tmp_path / "legacy"
+    legacy_dir.mkdir()
+    _patch_odds_cache_path(monkeypatch, _stage_stamped_odds_cache(legacy_dir, stage=None))
+    at2 = _apptest().run()
+    assert "market(s)" in _all_text(at2), "a legacy no-stage cache reads as stage 1 (back-compat)"
+    at2.session_state[KEY_STAGE] = "stage3"
+    at2.run()
+    assert not at2.exception
+    assert "market(s)" not in _all_text(at2), "…and is refused on Stage 3"
+
+
 def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
     """STG-03 companion / T-08-06: a NON-stage3 (Stage 1 default) Run passes all_bo3=False —
     Stage 1/2/playoffs are unaffected, proving the wire is ``stage_id == 'stage3'`` EXACTLY.
@@ -1749,4 +1984,93 @@ def test_non_stage3_run_passes_all_bo3_false(monkeypatch):
     assert all(v is False for v in calls["all_bo3"]), (
         f"a non-stage3 Run must pass all_bo3=False (Stage 1/2/playoffs unaffected); "
         f"recorded {calls['all_bo3']!r}"
+    )
+
+
+# --- QFIT-03: qualify-market fitted_ratings feed the run (the app wire) -------------------
+
+
+def _spy_mc_ratings(monkeypatch):
+    """Record the ``ratings`` arg (positional #2) of every run_mc_progressive call, delegating
+    to the real generator — the _spy_run_mc_progressive pattern, aimed at the ratings slot."""
+    import engine.montecarlo as mc
+
+    calls = {"ratings": []}
+    real = mc.run_mc_progressive
+
+    def _recording(*args, **kwargs):
+        calls["ratings"].append(args[1] if len(args) > 1 else kwargs.get("ratings"))
+        yield from real(*args, **kwargs)
+
+    monkeypatch.setattr(mc, "run_mc_progressive", _recording)
+    return calls
+
+
+def _qfit_cache(tmp_path, fitted_ratings):
+    """A stage-1-stamped v1 cache with one blended R1 market (var=0 -> cheap K=1 path) plus a
+    ``fitted_ratings`` block (the scripts/fit_qualify.py output shape: engine-id STRING keys)."""
+    cache = {
+        "_meta": {
+            "fetched_at": "2026-06-09T12:00:00+00:00",
+            "version": 1,
+            "providers_present": ["kalshi"],
+            "round_hint": 1,
+            "stage": 1,
+        },
+        "blended": {"1-9": {"p": 0.7, "var": 0.0, "n_sources": 1, "bo3": False}},
+        "fitted_ratings": fitted_ratings,
+    }
+    p = tmp_path / "odds_cache.json"
+    p.write_text(json.dumps(cache), encoding="utf-8")
+    return p
+
+
+def test_fitted_ratings_in_cache_feed_the_run(monkeypatch, tmp_path):
+    """QFIT-03 (the wire): a stage-stamped cache carrying a well-formed ``fitted_ratings`` block
+    (all 16 engine ids) makes the run use THOSE ratings — the offline qualify-market calibration
+    (scripts/fit_qualify.py) supersedes the R1 back-solve, which structurally can't see the
+    market's rounds-2-5 view.
+
+    REVERT-PROOF: this test FAILS if the app wire is removed — delete the ``fitted_ratings``
+    branch in app._odds_from_cache and the ratings reaching run_mc_progressive become the
+    fit_ratings back-solve output (anchored at the fixture ratings), not the 7x.x values below.
+    """
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    fitted = {str(i): 70.0 + i * 0.5 for i in range(1, 17)}  # values no back-solve would emit
+    _patch_odds_cache_path(monkeypatch, _qfit_cache(tmp_path, fitted))
+    calls = _spy_mc_ratings(monkeypatch)
+
+    at = _run_small(_apptest().run())
+    assert not at.exception
+
+    expected = {i: 70.0 + i * 0.5 for i in range(1, 17)}  # int-keyed, the fit_ratings keying
+    assert calls["ratings"], "the Run must drive run_mc_progressive at least once"
+    assert all(r == expected for r in calls["ratings"]), (
+        f"the ratings reaching the run must be the cache's fitted_ratings; got {calls['ratings'][-1]!r}"
+    )
+
+
+def test_malformed_fitted_ratings_fall_back_to_backsolve(monkeypatch, tmp_path):
+    """QFIT-03 fail-soft: a PARTIAL fitted_ratings block (3 of 16 ids) is ignored WHOLE — the
+    run falls back to the R1 back-solve (the exact fit_ratings output), no exception, never a
+    half-applied mix of fitted and back-solved gauges."""
+    from engine.backsolve import fit_ratings, invert_series
+    from engine.teams import load_teams
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    _patch_odds_cache_path(
+        monkeypatch, _qfit_cache(tmp_path, {"1": 70.0, "2": 71.0, "3": 72.0})
+    )
+    calls = _spy_mc_ratings(monkeypatch)
+
+    at = _run_small(_apptest().run())
+    assert not at.exception, "a malformed fitted_ratings block must degrade, never crash"
+
+    # The expected fallback: the same back-solve the pre-QFIT path runs on this cache
+    # (one Bo1 market 1-9 at p=0.7, anchor = top seed id 1, S = the 40 default).
+    teams = load_teams()
+    expected = fit_ratings({(1, 9): invert_series(0.7, False)}, teams, 40.0, anchor_id=1)
+    assert calls["ratings"], "the Run must drive run_mc_progressive at least once"
+    assert all(r == expected for r in calls["ratings"]), (
+        "a 3-entry fitted_ratings block must be ignored whole and the R1 back-solve used"
     )

@@ -64,13 +64,18 @@ seeds + ratings ──► Swiss engine ──► Monte Carlo ──► optimizer
 - **APIs only, fail-soft:** missing key → it degrades (OddsPapi needs a key; Kalshi is keyless)
   down to rating-only with an honest banner, never a crash. Keys live in a gitignored `.env`,
   never in the app process, and are never logged.
+- **Full Major (v3):** the stage selector runs Stages 1–3 through the same validated engine —
+  Stage 3 is all-Bo3 — and a fully-locked, complete stage auto-derives the next stage's seeds
+  (invited 1-8 by VRS, advancers 9-16 by final Buchholz) as an editable [INFERRED] overlay.
+  Odds/results caches are stage-stamped, and the app refuses a cache fetched for another stage
+  (the same engine id names a different team on each stage).
 
 ## Correctness is the product
 
 - **Backtest gate:** the engine reproduces StarLadder Budapest 2025 Stage 1's actual R1–R5
   pairings exactly (`tests/test_backtest_budapest_2025.py`). If that ever goes red, the pairing
   logic is broken. Seeds for the backtest come from the authoritative Valve VRS snapshot.
-- **128 passing tests**, including regression guards that *distinguish the right rule from the
+- **190+ passing tests**, including regression guards that *distinguish the right rule from the
   wrong one* (a test that still passes when you revert the fix is theater, not a guard).
 - **Cologne seeds confirmed:** the seed order is verified against Liquipedia + the live Kalshi
   bracket + the R1 pairing rule, so the trust badge reads *validated*, not *inferred*.
@@ -80,35 +85,54 @@ inflation and the advance-pick scoring rule above). The full story is in
 **[docs/LESSONS.md](docs/LESSONS.md)** — worth reading if you care about how subtle simulation
 math goes wrong.
 
-## Predictions — call-my-shot (Stage 1, market-anchored)
+## Predictions — call-my-shot (Stage 3, all-Bo3, live market odds)
 
-Snapshot from live OddsPapi (Pinnacle) + Kalshi, back-solved and simulated. R1 is market-anchored;
-later rounds are modeled from the back-solved ratings. These are a model's odds, not a guarantee.
+Snapshot 2026-06-09 evening (2026-06-10 02:07 UTC), ahead of Stage 3 (June 11–15, every match
+Bo3), from **live Kalshi markets**: the eight KXCS2GAME R1 series prices (Bo3-stamped, priced
+directly in-sim) plus the sixteen KXCS2QUALIFIERS playoff-qualify mids — logit-renormalized to
+sum exactly 8, then back-solved into rounds-2-5 ratings by the qualify fit (converged, max err
+0.7%) — over 200k sims. Single-provider, so no epistemic spread band; OddsPapi posted no Cologne
+Stage-3 markets at fetch time. This supersedes the earlier websearch-ensemble snapshot (which
+warned: "re-fetch real odds before trusting the mid-table order" — the market indeed reordered
+the mid-table: FUT Esports 57.5%→38.7%, FURIA 53.0%→65.9%, Falcons 77.4%→89.8%). These are a
+model's odds, not a guarantee.
 
 | Team | P(advance) | P(3-0) | P(0-3) |
 |---|---:|---:|---:|
-| GamerLegion | 99.4% | 59.1% | 0.1% |
-| NRG | 92.8% | 20.8% | 0.9% |
-| BetBoom | 82.8% | 26.7% | 1.5% |
-| B8 | 78.3% | 22.9% | 2.3% |
-| MIBR | 75.5% | 17.4% | 2.5% |
-| TYLOO | 60.2% | 9.9% | 6.4% |
-| M80 | 54.1% | 8.8% | 6.6% |
-| HEROIC | 53.4% | 11.4% | 5.6% |
-| BIG | 51.0% | 8.4% | 7.0% |
-| Liquid | 36.6% | 4.0% | 13.9% |
-| Lynn Vision | 32.5% | 3.0% | 16.4% |
-| Gaimin Gladiators | 25.0% | 2.3% | 21.5% |
-| Sharks | 23.6% | 2.4% | 19.3% |
-| SINNERS | 16.7% | 1.7% | 19.9% |
-| THUNDER dOWNUNDER | 10.9% | 0.7% | 39.7% |
-| FlyQuest | 7.1% | 0.5% | 36.5% |
+| Vitality | 94.7% | 51.5% | 0.4% |
+| Falcons | 89.8% | 36.2% | 0.8% |
+| Spirit | 82.4% | 20.9% | 2.3% |
+| Natus Vincere | 81.3% | 21.9% | 2.3% |
+| FURIA | 65.9% | 15.4% | 3.4% |
+| Aurora | 59.3% | 13.2% | 4.4% |
+| MOUZ | 54.8% | 9.1% | 6.4% |
+| PARIVISION | 43.0% | 7.2% | 8.8% |
+| The MongolZ | 42.0% | 6.7% | 9.0% |
+| G2 | 41.8% | 4.4% | 13.9% |
+| FUT Esports | 38.7% | 3.6% | 14.6% |
+| BetBoom | 31.9% | 3.7% | 14.9% |
+| Legacy | 31.2% | 2.7% | 19.9% |
+| 9z | 23.5% | 2.2% | 20.5% |
+| B8 | 10.1% | 0.6% | 40.1% |
+| Monte | 9.8% | 0.6% | 38.3% |
 
-**Recommended ballot** (E[correct] and P(≥5) agree here):
-- **3-0:** GamerLegion, BetBoom
-- **Advance:** NRG, MIBR, B8, TYLOO, M80, BIG
-- **0-3:** THUNDER dOWNUNDER, FlyQuest
-- **True coin odds: P(≥5/10) ≈ 59%**
+**Recommended ballot** (E[correct] and P(≥5) agree exactly, no correlated-pick warning):
+- **3-0:** Vitality, Falcons
+- **Advance:** Spirit, Natus Vincere, FURIA, Aurora, MOUZ, G2
+- **0-3:** B8, Monte
+- **True coin odds: P(≥5/10) ≈ 54%** — the live market is more top-heavy than the websearch
+  ensemble was (its flatter field priced the coin at ~42%), and a sharper favorite hierarchy
+  makes the parlay easier. E[correct] = 4.7, so ≥5 is still slightly better than a coin flip,
+  not a lock.
+
+### Stage-1 scorecard (the previous call, settled)
+
+The Stage-1 ballot above this section in earlier revisions scored **exactly 5/10** — the coin hit
+(≥5 needed) on a predicted P(≥5) of ~59%. Match-level calibration over the 33 real Stage-1
+matches: log-loss 0.579 vs 0.693 coinflip, 73% favorite accuracy, and the shipped spread S=40 was
+the sweep argmin (`python -m scripts.score_stage`). One instructive miss: the B8 *advance* pick
+failed because B8 went **3-0** — an advance pick scores only on 3-1/3-2, the exact rule documented
+above. The model knew (it gave B8 22.9% to 3-0); the parlay just rolled that branch.
 
 ## Live odds setup (optional)
 
@@ -143,8 +167,11 @@ engine/             pure compute core (no streamlit/httpx)
   backsolve.py        market series probs → per-team ratings
   live.py             conditional re-sim + pick status (live/dead/secured)
 odds/               OddsPapi + Kalshi parsers, de-vig, log-opinion pool (pure numpy)
-scripts/fetch_odds  the ONE place that contacts providers + writes the cache
-tests/              128 tests incl. the Budapest backtest gate
+scripts/            fetch_odds + fetch_results — the ONLY provider contact; both take --stage
+                    and stamp _meta.stage so a cache can never feed the wrong stage's run
+  fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
+  score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
+tests/              210+ tests incl. the Budapest backtest gate + real-data seeding gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state
 ```

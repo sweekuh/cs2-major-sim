@@ -1,27 +1,27 @@
 {
-  "_comment": "[INVITED-8 VERIFIED 2026-06-06 / QUALIFIERS AUTO-DERIVE] Cologne 2026 Stage-2 (16-team Swiss, top 8 advance). SEEDS 1-8 = the 8 directly-invited teams, now VERIFIED-by-source against Liquipedia (IEM Cologne Major 2026 / Stage_2) + Wikipedia + HLTV (cross-confirmed names; seed order DERIVED by sorting the published Valve VRS global ranks per the merge rule, NOT lifted from a numbered seed column — Spirit #3, Legacy #7, Astralis #12, FUT #13, G2 #14, paiN #18, 9z #20, Monte #24). CRITICAL: these are the STAGE-2 invites, NOT the Stage-3 invites (Vitality/NaVi/Falcons/MongolZ/PARIVISION/Aurora/FURIA/MOUZ enter only at Stage 3 — do not confuse the tiers). seeds_confirmed stays FALSE until the user eyeballs the live Liquipedia/HLTV Stage-2 bracket (the HLTV Valve-ranking page 403'd automated fetch; the rank order is reliable but not yet hand-verified). SEEDS 9-16 = the 8 Stage-1 QUALIFIERS, slotted by final Stage-1 Buchholz (Difficulty = Sigma(opp.wins - opp.losses)) via the Phase-7 inter-stage seeding chain when a COMPLETE Stage-1 is locked in-app (engine.seeding.seed_next_stage). The known qualifiers (Stage 1 finished 2026-06-05): B8 & BetBoom (3-0); GamerLegion, MIBR, M80 (3-1); TYLOO, FlyQuest, BIG (3-2) — their seed-9..16 ORDER comes from the locked-Stage-1 auto-derive, so the rows below stay placeholder slots until Stage 1 is locked. Ratings are the rating-only fallback PRIOR (0 < r < 1000, editable; market-calibrated once Stage-2 odds load). TODO: add team_aliases.json entries for the new invited names (Spirit/Legacy/Astralis/FUT/G2/paiN/9z/Monte) for the odds+results provider slug join. R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). Mirrors data/stage1.json provenance style. (STG-02, SEED-01)",
+  "_comment": "[SEEDS CONFIRMED 2026-06-09 — four independent legs, see below] Cologne 2026 Stage-2 (16-team Swiss, top 8 advance). FULL seed 1-16 order CONFIRMED: (1) all 8 official R1 pairings (Liquipedia api.php 'Intel Extreme Masters/2026/Cologne/Stage 2' + settled Kalshi KXCS2GAME markets) reproduce under R1 = seed i vs i+8; (2) the ENGINE's Budapest-validated pairing replay (simulate_stage, all results locked) under THIS order generates the official R2-R5 pairings EXACTLY — a brute force over all 8! invited orders shows pairings + the Stage-2->3 chain + VRS leave exactly this one (tests/test_backtest_stage2.py is the frozen gate); (3) invited 1-8 are ascending Valve Global Standings rank in the 2026_05_04 INVITATION snapshot (ValveSoftware/counter-strike_regional_standings: FUT #4, Spirit #5, Astralis #6, G2 #12, Legacy #14, paiN #17, Monte #18, 9z #19) — the SAME snapshot whose order seeds the Stage-3 invites, matching Liquipedia's stated rule ('Invited teams are seeded 1st-8th using their ranking on the Valve Global Standings'); (4) qualifiers 9-16 are the rulebook Stage-1 placement (losses asc -> Buchholz desc -> prior seed: B8 & BetBoom 3-0; GamerLegion, M80, MIBR 3-1; TYLOO, BIG, FlyQuest 3-2), the order the shipped chain derives and tests/test_stage2_seeding.py freezes. NOTE the EARLIER inferred invited order (Spirit/Legacy/Astralis/FUT/... from Nov-2025-era ranks) was WRONG — only R1-compatible relabelings made it look right; rounds 2-5 falsified it. CRITICAL: these are the STAGE-2 invites, NOT the Stage-3 invites (Vitality/NaVi/Falcons/MongolZ/PARIVISION/Aurora/FURIA/MOUZ enter only at Stage 3). Ratings are the rating-only fallback PRIOR (0 < r < 1000, editable; market-calibrated once odds load — fetch with --stage stage2 so _meta.stage matches). R1 = seed i vs seed i+8 (derived in engine.teams, not stored here). (STG-02, SEED-01)",
   "stage": {
     "size": 16,
     "advance_at_wins": 3,
     "eliminate_at_losses": 3
   },
-  "seeds_confirmed": false,
+  "seeds_confirmed": true,
   "teams": [
-    { "seed": 1, "name": "Spirit", "rating": 90 },
-    { "seed": 2, "name": "Legacy", "rating": 84 },
+    { "seed": 1, "name": "FUT Esports", "rating": 76 },
+    { "seed": 2, "name": "Spirit", "rating": 90 },
     { "seed": 3, "name": "Astralis", "rating": 80 },
-    { "seed": 4, "name": "FUT Esports", "rating": 76 },
-    { "seed": 5, "name": "G2", "rating": 72 },
+    { "seed": 4, "name": "G2", "rating": 72 },
+    { "seed": 5, "name": "Legacy", "rating": 84 },
     { "seed": 6, "name": "paiN", "rating": 68 },
-    { "seed": 7, "name": "9z", "rating": 64 },
-    { "seed": 8, "name": "Monte", "rating": 60 },
-    { "seed": 9, "name": "Stage-1 Qualifier (seed 9)", "rating": 58 },
-    { "seed": 10, "name": "Stage-1 Qualifier (seed 10)", "rating": 56 },
-    { "seed": 11, "name": "Stage-1 Qualifier (seed 11)", "rating": 54 },
-    { "seed": 12, "name": "Stage-1 Qualifier (seed 12)", "rating": 52 },
-    { "seed": 13, "name": "Stage-1 Qualifier (seed 13)", "rating": 50 },
-    { "seed": 14, "name": "Stage-1 Qualifier (seed 14)", "rating": 48 },
-    { "seed": 15, "name": "Stage-1 Qualifier (seed 15)", "rating": 46 },
-    { "seed": 16, "name": "Stage-1 Qualifier (seed 16)", "rating": 44 }
+    { "seed": 7, "name": "Monte", "rating": 60 },
+    { "seed": 8, "name": "9z", "rating": 64 },
+    { "seed": 9, "name": "B8", "rating": 78 },
+    { "seed": 10, "name": "BetBoom", "rating": 72 },
+    { "seed": 11, "name": "GamerLegion", "rating": 92 },
+    { "seed": 12, "name": "M80", "rating": 60 },
+    { "seed": 13, "name": "MIBR", "rating": 68 },
+    { "seed": 14, "name": "TYLOO", "rating": 50 },
+    { "seed": 15, "name": "BIG", "rating": 55 },
+    { "seed": 16, "name": "FlyQuest", "rating": 40 }
   ]
 }
