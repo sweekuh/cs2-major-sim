@@ -85,35 +85,50 @@ inflation and the advance-pick scoring rule above). The full story is in
 **[docs/LESSONS.md](docs/LESSONS.md)** — worth reading if you care about how subtle simulation
 math goes wrong.
 
-## Predictions — call-my-shot (Stage 1, market-anchored)
+## Predictions — call-my-shot (Stage 3, all-Bo3, market-ensemble)
 
-Snapshot from live OddsPapi (Pinnacle) + Kalshi, back-solved and simulated. R1 is market-anchored;
-later rounds are modeled from the back-solved ratings. These are a model's odds, not a guarantee.
+Snapshot 2026-06-09, ahead of Stage 3 (June 11–15, every match Bo3). Per-match book APIs were
+unreachable from the build environment, so R1 is priced from a **websearch ensemble** (Polymarket
+futures-implied strengths + analyst-consensus reads, per-match variance = the sources'
+disagreement) back-solved into ratings and run through the epistemic loop (K=12 × 200k sims).
+Softer than a de-vigged Pinnacle anchor — re-fetch real odds before trusting the mid-table order.
+These are a model's odds, not a guarantee.
 
 | Team | P(advance) | P(3-0) | P(0-3) |
 |---|---:|---:|---:|
-| GamerLegion | 99.4% | 59.1% | 0.1% |
-| NRG | 92.8% | 20.8% | 0.9% |
-| BetBoom | 82.8% | 26.7% | 1.5% |
-| B8 | 78.3% | 22.9% | 2.3% |
-| MIBR | 75.5% | 17.4% | 2.5% |
-| TYLOO | 60.2% | 9.9% | 6.4% |
-| M80 | 54.1% | 8.8% | 6.6% |
-| HEROIC | 53.4% | 11.4% | 5.6% |
-| BIG | 51.0% | 8.4% | 7.0% |
-| Liquid | 36.6% | 4.0% | 13.9% |
-| Lynn Vision | 32.5% | 3.0% | 16.4% |
-| Gaimin Gladiators | 25.0% | 2.3% | 21.5% |
-| Sharks | 23.6% | 2.4% | 19.3% |
-| SINNERS | 16.7% | 1.7% | 19.9% |
-| THUNDER dOWNUNDER | 10.9% | 0.7% | 39.7% |
-| FlyQuest | 7.1% | 0.5% | 36.5% |
+| Vitality | 96.9% | 56.5% | 0.3% |
+| Spirit | 77.8% | 22.3% | 3.5% |
+| Falcons | 77.4% | 25.7% | 2.7% |
+| Natus Vincere | 66.9% | 15.4% | 6.0% |
+| FUT Esports | 57.5% | 7.7% | 9.8% |
+| MOUZ | 55.6% | 11.2% | 8.0% |
+| Aurora | 53.8% | 12.3% | 7.4% |
+| FURIA | 53.0% | 11.0% | 8.4% |
+| The MongolZ | 48.5% | 9.3% | 10.1% |
+| BetBoom | 46.9% | 7.8% | 11.2% |
+| PARIVISION | 34.8% | 6.1% | 14.4% |
+| G2 | 34.3% | 4.5% | 19.4% |
+| B8 | 27.5% | 2.8% | 22.4% |
+| 9z | 27.1% | 3.4% | 20.0% |
+| Legacy | 26.3% | 2.3% | 24.1% |
+| Monte | 15.8% | 1.5% | 32.3% |
 
-**Recommended ballot** (E[correct] and P(≥5) agree here):
-- **3-0:** GamerLegion, BetBoom
-- **Advance:** NRG, MIBR, B8, TYLOO, M80, BIG
-- **0-3:** THUNDER dOWNUNDER, FlyQuest
-- **True coin odds: P(≥5/10) ≈ 59%**
+**Recommended ballot** (E[correct] and P(≥5) agree, no correlated-pick warning):
+- **3-0:** Vitality, Falcons
+- **Advance:** Spirit, Natus Vincere, FUT Esports, MOUZ, FURIA, Aurora
+- **0-3:** Monte, Legacy
+- **True coin odds: P(≥5/10) ≈ 42%** — structurally lower than Stage 1's 59%: a flatter,
+  stronger field plus all-Bo3 makes this the hardest coin of the event. The median outcome
+  is 4/10; treat anything ≥5 as the good branch, not the expected one.
+
+### Stage-1 scorecard (the previous call, settled)
+
+The Stage-1 ballot above this section in earlier revisions scored **exactly 5/10** — the coin hit
+(≥5 needed) on a predicted P(≥5) of ~59%. Match-level calibration over the 33 real Stage-1
+matches: log-loss 0.579 vs 0.693 coinflip, 73% favorite accuracy, and the shipped spread S=40 was
+the sweep argmin (`python -m scripts.score_stage`). One instructive miss: the B8 *advance* pick
+failed because B8 went **3-0** — an advance pick scores only on 3-1/3-2, the exact rule documented
+above. The model knew (it gave B8 22.9% to 3-0); the parlay just rolled that branch.
 
 ## Live odds setup (optional)
 
