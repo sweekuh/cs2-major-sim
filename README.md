@@ -85,41 +85,45 @@ inflation and the advance-pick scoring rule above). The full story is in
 **[docs/LESSONS.md](docs/LESSONS.md)** — worth reading if you care about how subtle simulation
 math goes wrong.
 
-## Predictions — call-my-shot (Stage 3, all-Bo3, market-ensemble)
+## Predictions — call-my-shot (Stage 3, all-Bo3, live market odds)
 
-Snapshot 2026-06-09, ahead of Stage 3 (June 11–15, every match Bo3). Per-match book APIs were
-unreachable from the build environment, so R1 is priced from a **websearch ensemble** (Polymarket
-futures-implied strengths + analyst-consensus reads, per-match variance = the sources'
-disagreement) back-solved into ratings and run through the epistemic loop (K=12 × 200k sims).
-Softer than a de-vigged Pinnacle anchor — re-fetch real odds before trusting the mid-table order.
-These are a model's odds, not a guarantee.
+Snapshot 2026-06-09 evening (2026-06-10 02:07 UTC), ahead of Stage 3 (June 11–15, every match
+Bo3), from **live Kalshi markets**: the eight KXCS2GAME R1 series prices (Bo3-stamped, priced
+directly in-sim) plus the sixteen KXCS2QUALIFIERS playoff-qualify mids — logit-renormalized to
+sum exactly 8, then back-solved into rounds-2-5 ratings by the qualify fit (converged, max err
+0.7%) — over 200k sims. Single-provider, so no epistemic spread band; OddsPapi posted no Cologne
+Stage-3 markets at fetch time. This supersedes the earlier websearch-ensemble snapshot (which
+warned: "re-fetch real odds before trusting the mid-table order" — the market indeed reordered
+the mid-table: FUT Esports 57.5%→38.7%, FURIA 53.0%→65.9%, Falcons 77.4%→89.8%). These are a
+model's odds, not a guarantee.
 
 | Team | P(advance) | P(3-0) | P(0-3) |
 |---|---:|---:|---:|
-| Vitality | 96.9% | 56.5% | 0.3% |
-| Spirit | 77.8% | 22.3% | 3.5% |
-| Falcons | 77.4% | 25.7% | 2.7% |
-| Natus Vincere | 66.9% | 15.4% | 6.0% |
-| FUT Esports | 57.5% | 7.7% | 9.8% |
-| MOUZ | 55.6% | 11.2% | 8.0% |
-| Aurora | 53.8% | 12.3% | 7.4% |
-| FURIA | 53.0% | 11.0% | 8.4% |
-| The MongolZ | 48.5% | 9.3% | 10.1% |
-| BetBoom | 46.9% | 7.8% | 11.2% |
-| PARIVISION | 34.8% | 6.1% | 14.4% |
-| G2 | 34.3% | 4.5% | 19.4% |
-| B8 | 27.5% | 2.8% | 22.4% |
-| 9z | 27.1% | 3.4% | 20.0% |
-| Legacy | 26.3% | 2.3% | 24.1% |
-| Monte | 15.8% | 1.5% | 32.3% |
+| Vitality | 94.7% | 51.5% | 0.4% |
+| Falcons | 89.8% | 36.2% | 0.8% |
+| Spirit | 82.4% | 20.9% | 2.3% |
+| Natus Vincere | 81.3% | 21.9% | 2.3% |
+| FURIA | 65.9% | 15.4% | 3.4% |
+| Aurora | 59.3% | 13.2% | 4.4% |
+| MOUZ | 54.8% | 9.1% | 6.4% |
+| PARIVISION | 43.0% | 7.2% | 8.8% |
+| The MongolZ | 42.0% | 6.7% | 9.0% |
+| G2 | 41.8% | 4.4% | 13.9% |
+| FUT Esports | 38.7% | 3.6% | 14.6% |
+| BetBoom | 31.9% | 3.7% | 14.9% |
+| Legacy | 31.2% | 2.7% | 19.9% |
+| 9z | 23.5% | 2.2% | 20.5% |
+| B8 | 10.1% | 0.6% | 40.1% |
+| Monte | 9.8% | 0.6% | 38.3% |
 
-**Recommended ballot** (E[correct] and P(≥5) agree, no correlated-pick warning):
+**Recommended ballot** (E[correct] and P(≥5) agree exactly, no correlated-pick warning):
 - **3-0:** Vitality, Falcons
-- **Advance:** Spirit, Natus Vincere, FUT Esports, MOUZ, FURIA, Aurora
-- **0-3:** Monte, Legacy
-- **True coin odds: P(≥5/10) ≈ 42%** — structurally lower than Stage 1's 59%: a flatter,
-  stronger field plus all-Bo3 makes this the hardest coin of the event. The median outcome
-  is 4/10; treat anything ≥5 as the good branch, not the expected one.
+- **Advance:** Spirit, Natus Vincere, FURIA, Aurora, MOUZ, G2
+- **0-3:** B8, Monte
+- **True coin odds: P(≥5/10) ≈ 54%** — the live market is more top-heavy than the websearch
+  ensemble was (its flatter field priced the coin at ~42%), and a sharper favorite hierarchy
+  makes the parlay easier. E[correct] = 4.7, so ≥5 is still slightly better than a coin flip,
+  not a lock.
 
 ### Stage-1 scorecard (the previous call, settled)
 
