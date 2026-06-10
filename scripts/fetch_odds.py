@@ -180,6 +180,12 @@ def main(out_path: str | Path = DEFAULT_OUT, *, stage_id: str = "stage1",
     for _n in ("httpx", "httpcore"):
         logging.getLogger(_n).setLevel(logging.WARNING)
     teams, _cfg = load_stage(_path_for_stage(stage_id))
+    # On an all-Bo3 stage (Stage 3) every series a provider prices IS a Bo3 by rule, regardless
+    # of the provider's per-market flag (Kalshi carries none and defaults False — correct for the
+    # Bo1 opening rounds of Stage 1/2 only). Left False, the app's invert_series(p, bo3=False)
+    # would take the SERIES price as a MAP prob and re-inflate it through p²(3−2p) in the sim —
+    # systematically overrating every favorite (the same silent-corruption class as Pitfall 9).
+    all_bo3 = bool((_cfg or {}).get("all_bo3", False))
 
     if fixtures is not None:
         # Recorded path (tests / recorded button fixtures): parse each provider's fixture.
@@ -207,7 +213,7 @@ def main(out_path: str | Path = DEFAULT_OUT, *, stage_id: str = "stage1",
             "p": bp.p,
             "var": bp.var,
             "n_sources": bp.n_sources,
-            "bo3": bp.bo3,
+            "bo3": True if all_bo3 else bp.bo3,
             # Per-source prices for the "why the books disagree" drill-down (D3). ADDITIVE within
             # schema v1 (NOT a version bump): the loader returns the dict intact and an older,
             # sources-unaware app simply ignores this key — so a new cache still loads in an old app
