@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "status": "DRAFT",
+    "warning": "Series tickers are best-known guesses. Verify against live https://api.elections.kalshi.com/trade-api/v2/series and the Kalshi World Cup market pages before relying on them.",
+    "discover": "GET /trade-api/v2/markets?series_ticker=<series>&status=open (keyless) to enumerate live markets"
+  },
+  "series": {
+    "KXMENWORLDCUP": {"market_type": "champion", "desc": "Men's World Cup winner"},
+    "KXWCGROUPWIN": {"market_type": "group_winner", "desc": "World Cup group winner (per group)"},
+    "KXWCGROUPQUAL": {"market_type": "advance", "desc": "World Cup group qualifier / advancement"}
+  },
+  "notes": "Per-match winner series (one event_ticker per fixture, complementary yes/no per outcome) classify as 'match' by default. Exotic series (exact group order, furthest stage, stage of elimination, Golden Boot) to be added in Phase 2 once their tickers are confirmed live."
+}

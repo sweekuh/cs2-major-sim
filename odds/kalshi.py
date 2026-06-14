@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 from odds._match import build_name_to_id, resolve_id
@@ -157,3 +158,133 @@ class KalshiProvider:
                 if not cursor or not markets:
                     break
         return self.get_quotes({"markets": kept}, teams=teams)
+
+
+_KALSHI_BASE = "https://api.elections.kalshi.com/trade-api/v2"
+
+
+@dataclass(frozen=True)
+class KalshiMarketState:
+    """A snapshot of one open Kalshi World Cup market: price, spread, and depth proxy.
+
+    ``mid`` is the yes-mid in dollars (≈ P(yes)); ``spread`` the yes bid-ask width; ``depth`` an
+    open-interest/volume proxy the ranker uses to down-weight thin books. ``market_type`` is the
+    family the market belongs to (champion / group_winner / advance / match / exotic), resolved
+    from its ``series_ticker`` so the pricing layer knows which model probability to compare.
+    """
+
+    series_ticker: str
+    event_ticker: str
+    ticker: str
+    market_type: str
+    title: str
+    yes_sub_title: str
+    yes_bid: float
+    yes_ask: float
+    mid: float
+    spread: float
+    depth: float
+    status: str
+
+
+# series_ticker -> market family. Extend via data/kalshi_wc_tickers.json as Kalshi posts more.
+_SERIES_TYPE = {
+    "KXMENWORLDCUP": "champion",
+    "KXWCGROUPWIN": "group_winner",
+    "KXWCGROUPQUAL": "advance",
+}
+
+
+def classify_series(series_ticker: str) -> str:
+    """Map a Kalshi series ticker to a market family (default 'match' for per-game winner series)."""
+    return _SERIES_TYPE.get(str(series_ticker).strip().upper(), "match")
+
+
+def _f(mk: dict, key: str) -> float | None:
+    try:
+        return float(mk[key])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+class KalshiWCProvider:
+    """Read open Kalshi World Cup markets into priced ``KalshiMarketState`` snapshots (keyless).
+
+    Generalizes the KXCS2GAME reader to any WC series. Parsing is tournament/market-type agnostic
+    — it extracts price/spread/depth and the descriptive fields; mapping a state to the model's
+    fair value for the right outcome happens in the pricing/pipeline layer.
+    """
+
+    name = "kalshi_wc"
+
+    def get_states(self, fixtures) -> list[KalshiMarketState]:
+        """Parse a markets fixture (dict/list/path) -> list[KalshiMarketState]. Fail-soft to []."""
+        try:
+            raw = _as_dict(fixtures)
+        except (OSError, ValueError):
+            return []
+        markets = raw.get("markets") if isinstance(raw, dict) else raw
+        if not isinstance(markets, list):
+            return []
+        out: list[KalshiMarketState] = []
+        for mk in markets:
+            st = self._parse_one(mk)
+            if st is not None:
+                out.append(st)
+        return out
+
+    def _parse_one(self, mk: dict) -> KalshiMarketState | None:
+        if not isinstance(mk, dict):
+            return None
+        ticker = str(mk.get("ticker") or "").strip()
+        if not ticker:
+            return None
+        yes_bid = _f(mk, "yes_bid_dollars")
+        yes_ask = _f(mk, "yes_ask_dollars")
+        if yes_bid is None or yes_ask is None or yes_ask < yes_bid:
+            return None
+        mid = normalize_market_price((yes_bid + yes_ask) / 2.0)
+        spread = yes_ask - yes_bid
+        series = str(mk.get("series_ticker") or "").strip()
+        depth = _f(mk, "open_interest") or _f(mk, "volume") or _f(mk, "liquidity") or 0.0
+        return KalshiMarketState(
+            series_ticker=series,
+            event_ticker=str(mk.get("event_ticker") or ""),
+            ticker=ticker,
+            market_type=classify_series(series),
+            title=str(mk.get("title") or ""),
+            yes_sub_title=str(mk.get("yes_sub_title") or ""),
+            yes_bid=yes_bid,
+            yes_ask=yes_ask,
+            mid=mid,
+            spread=spread,
+            depth=depth,
+            status=str(mk.get("status") or ""),
+        )
+
+    def fetch(self, *, series_tickers: list[str], status: str = "open") -> list[KalshiMarketState]:
+        """Live keyless fetch of open WC markets across the given series. httpx lazy-imported HERE.
+
+        Pages each series' markets (bounded), concatenates, and parses to states. Network errors
+        fail soft to whatever was gathered (D1/DX-01: httpx imported inside this branch only).
+        """
+        import httpx
+
+        kept: list[dict] = []
+        with httpx.Client(timeout=25.0) as client:
+            for series in series_tickers:
+                cursor: str | None = None
+                for _ in range(12):  # bounded paging per series
+                    params = {"series_ticker": series, "status": status, "limit": 200}
+                    if cursor:
+                        params["cursor"] = cursor
+                    try:
+                        data = client.get(f"{_KALSHI_BASE}/markets", params=params).json()
+                    except Exception:  # noqa: BLE001 — per-series fail-soft
+                        break
+                    markets = data.get("markets") or []
+                    kept.extend(markets)
+                    cursor = data.get("cursor")
+                    if not cursor or not markets:
+                        break
+        return self.get_states({"markets": kept})
