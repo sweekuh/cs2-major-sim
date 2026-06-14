@@ -200,6 +200,48 @@ def devig_three_way_shin(o_h: float, o_d: float, o_a: float) -> tuple[float, flo
     return (p[0], p[1], p[2])
 
 
+def devig_power(inverse_odds: list[float]) -> list[float]:
+    """Power-method de-vig: fair p_i = (1/o_i)**k with k chosen so Σ p_i = 1.
+
+    Raising the raw inverse odds (each < 1 when there's an overround) to a power k > 1 shrinks them
+    to sum to 1 while amplifying the favourite/longshot ratio — a favorite-longshot correction in
+    the same spirit as Shin, but multiplicative and without an insider model (a cheaper alternative
+    to A/B against Shin on CLV). With no overround (B ≤ 1) it falls back to plain normalization.
+    """
+    r = [float(x) for x in inverse_odds]
+    B = sum(r)
+    if B <= 1.0:
+        return [x / B for x in r]
+    lo, hi = 1.0, 50.0  # Σ r_i^k decreases from B>1 (k=1) toward 0; a root k>1 with Σ=1 exists
+    for _ in range(100):
+        mid = 0.5 * (lo + hi)
+        if sum(x ** mid for x in r) > 1.0:
+            lo = mid
+        else:
+            hi = mid
+    k = 0.5 * (lo + hi)
+    p = [x ** k for x in r]
+    s = sum(p)
+    return [x / s for x in p]
+
+
+def devig_three_way_power(o_h: float, o_d: float, o_a: float) -> tuple[float, float, float]:
+    """Power-method de-vig of fixed 1X2 odds -> (P(home), P(draw), P(away)). See ``devig_power``."""
+    p = devig_power([1.0 / o_h, 1.0 / o_d, 1.0 / o_a])
+    return (p[0], p[1], p[2])
+
+
+def devig_1x2(o_h: float, o_d: float, o_a: float, *, method: str = "shin") -> tuple[float, float, float]:
+    """Dispatch 1X2 de-vig by ``method``: 'shin' (default), 'power', or 'proportional'."""
+    if method == "shin":
+        return devig_three_way_shin(o_h, o_d, o_a)
+    if method == "power":
+        return devig_three_way_power(o_h, o_d, o_a)
+    if method == "proportional":
+        return devig_three_way(o_h, o_d, o_a)
+    raise ValueError(f"unknown de-vig method {method!r} (use 'shin', 'power', or 'proportional')")
+
+
 def pool_1x2(quotes: list["Quote1X2"]) -> "BlendedProb1X2":
     """Weighted log-opinion pool of INDEPENDENT 1X2 opinions for ONE match (the 3-outcome ``pool``).
 

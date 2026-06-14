@@ -12,8 +12,11 @@ import pytest
 from odds.base import (
     BlendedProb1X2,
     Quote1X2,
+    devig_1x2,
+    devig_power,
     devig_shin,
     devig_three_way,
+    devig_three_way_power,
     devig_three_way_shin,
     pool_1x2,
 )
@@ -80,6 +83,28 @@ def test_shin_loads_vig_onto_longshot_vs_proportional():
     assert shin[0] > prop[0]   # favourite up under Shin
     assert shin[2] < prop[2]   # longshot down under Shin
     assert sum(shin) == pytest.approx(1.0)
+
+
+def test_power_devig_sums_to_one_and_corrects_longshot():
+    odds = (1.30, 5.5, 11.0)
+    power = devig_three_way_power(*odds)
+    prop = devig_three_way(*odds)
+    assert sum(power) == pytest.approx(1.0)
+    assert power[0] > prop[0]   # favourite up vs proportional
+    assert power[2] < prop[2]   # longshot down
+
+
+def test_power_equals_normalization_with_no_overround():
+    assert devig_power([0.5, 0.25, 0.25]) == pytest.approx([0.5, 0.25, 0.25])
+
+
+def test_devig_dispatch_methods_agree_with_direct_calls():
+    odds = (1.8, 3.6, 4.5)
+    assert devig_1x2(*odds, method="shin") == pytest.approx(devig_three_way_shin(*odds))
+    assert devig_1x2(*odds, method="power") == pytest.approx(devig_three_way_power(*odds))
+    assert devig_1x2(*odds, method="proportional") == pytest.approx(devig_three_way(*odds))
+    with pytest.raises(ValueError):
+        devig_1x2(*odds, method="bogus")
 
 
 def test_pool_originate_weight_pulls_toward_sharp():
