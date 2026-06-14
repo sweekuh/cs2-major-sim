@@ -44,14 +44,35 @@ def _round_robin_pairs(team_ids: list[int]) -> list[tuple[int, int]]:
             for i in range(len(team_ids)) for j in range(i + 1, len(team_ids))]
 
 
+def orient_for_host(home: int, away: int, hosts) -> tuple[int, int, bool]:
+    """Orient a fixture so a host team is the home side and the match is non-neutral.
+
+    Returns ``(home_id, away_id, neutral)``. A host vs a non-host is played at the host's home
+    (neutral=False, host as home); otherwise (no host, or both hosts) it stays neutral.
+    """
+    home_is, away_is = home in hosts, away in hosts
+    if home_is and not away_is:
+        return home, away, False
+    if away_is and not home_is:
+        return away, home, False
+    return home, away, True
+
+
 def play_group(team_ids: list[int], model: MatchModel, rng: np.random.Generator,
-               *, neutral: bool = True) -> list[tuple[int, int, int, int]]:
-    """Simulate every group match -> list of (home_id, away_id, home_goals, away_goals)."""
+               *, neutral: bool = True, hosts=frozenset()) -> list[tuple[int, int, int, int]]:
+    """Simulate every group match -> list of (home_id, away_id, home_goals, away_goals).
+
+    With ``hosts`` empty this is fully neutral (unchanged). A host's group matches are played at
+    home (home advantage applied to the host); ``neutral=False`` forces every match non-neutral.
+    """
     results = []
     for home, away in _round_robin_pairs(team_ids):
-        lam_h, lam_a = expected_goals(model, home, away, neutral=neutral)
+        h, a, m_neutral = orient_for_host(home, away, hosts)
+        if not neutral:
+            m_neutral = False
+        lam_h, lam_a = expected_goals(model, h, a, neutral=m_neutral)
         hg, ag = sample_score(lam_h, lam_a, rng, rho=model.rho)
-        results.append((home, away, hg, ag))
+        results.append((h, a, hg, ag))
     return results
 
 
@@ -119,8 +140,8 @@ def _break_tie(block: list[int], results, rng: np.random.Generator) -> list[int]
 
 
 def simulate_group(team_ids: list[int], model: MatchModel, rng: np.random.Generator,
-                   *, neutral: bool = True):
+                   *, neutral: bool = True, hosts=frozenset()):
     """Play and rank one group. Returns (ranked_ids, standings_by_id, results)."""
-    results = play_group(team_ids, model, rng, neutral=neutral)
+    results = play_group(team_ids, model, rng, neutral=neutral, hosts=hosts)
     order = rank_group(team_ids, results, rng)
     return order, _standings(team_ids, results), results

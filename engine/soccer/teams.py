@@ -83,3 +83,13 @@ def groups(teams: list[SoccerTeam]) -> dict[str, list[SoccerTeam]]:
     for t in teams:
         out.setdefault(t.group, []).append(t)
     return out
+
+
+# The 2026 World Cup is co-hosted by Mexico, the USA, and Canada (they play group matches at home).
+HOST_NAMES = ("Mexico", "USA", "Canada")
+
+
+def host_ids(teams: list[SoccerTeam], host_names=HOST_NAMES) -> frozenset[int]:
+    """Resolve the host nations to a frozenset of team ids (for the tournament ``hosts`` arg)."""
+    wanted = {n.lower() for n in host_names}
+    return frozenset(t.id for t in teams if t.name.lower() in wanted)

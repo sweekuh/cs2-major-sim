@@ -49,8 +49,12 @@ def _seed_qualifiers(winners, runners, thirds, standings) -> list[int]:
 
 
 def simulate_one(groups: dict[str, list[int]], model: MatchModel,
-                 rng: np.random.Generator, *, neutral: bool = True) -> dict:
-    """Simulate a single full tournament and return its sample record."""
+                 rng: np.random.Generator, *, neutral: bool = True, hosts=frozenset()) -> dict:
+    """Simulate a single full tournament and return its sample record.
+
+    ``hosts`` (optional) get home advantage in their GROUP matches; the knockout is modelled as
+    neutral (later-round venues aren't fixed by team — a documented simplification).
+    """
     group_order: dict[str, tuple] = {}
     group_rank: dict[int, int] = {}
     standings: dict[int, GroupRow] = {}
@@ -58,7 +62,7 @@ def simulate_one(groups: dict[str, list[int]], model: MatchModel,
     runners: list[int] = []
     thirds: list[int] = []
     for g, ids in groups.items():
-        order, st, _ = simulate_group(ids, model, rng, neutral=neutral)
+        order, st, _ = simulate_group(ids, model, rng, neutral=neutral, hosts=hosts)
         group_order[g] = tuple(order)
         for rank, tid in enumerate(order, start=1):
             group_rank[tid] = rank
@@ -81,16 +85,17 @@ def simulate_one(groups: dict[str, list[int]], model: MatchModel,
 
 
 def run_tournament(groups: dict[str, list[int]], model: MatchModel, n_sims: int,
-                   *, seed: int, neutral: bool = True) -> TournamentResult:
+                   *, seed: int, neutral: bool = True, hosts=frozenset()) -> TournamentResult:
     """Run ``n_sims`` full tournaments with deterministic per-sim RNG; retain every sample.
 
     Determinism depends only on ``seed`` (and ``n_sims``): each sim draws from its own child
-    Generator, so results are reproducible across runs and machines.
+    Generator, so results are reproducible across runs and machines. ``hosts`` (optional) get
+    home advantage in their group matches.
     """
     if n_sims <= 0:
         raise ValueError(f"n_sims must be positive, got {n_sims!r}")
     child_seeds = np.random.SeedSequence(seed).spawn(n_sims)
     team_ids = [tid for ids in groups.values() for tid in ids]
-    sample = [simulate_one(groups, model, np.random.default_rng(cs), neutral=neutral)
+    sample = [simulate_one(groups, model, np.random.default_rng(cs), neutral=neutral, hosts=hosts)
               for cs in child_seeds]
     return TournamentResult(n=n_sims, teams=team_ids, sample=sample)
