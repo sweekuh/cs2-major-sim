@@ -16,41 +16,13 @@ import math
 from pathlib import Path
 
 from engine.soccer.dixon_coles import match_1x2, strengths_from_elo
+from engine.soccer.scoring import brier, log_loss, outcome_index, reliability_bins, rps
 from engine.soccer.teams import load_teams
 from odds._match import build_name_to_id, resolve_id
 from odds.base import devig_three_way_shin
 
 _RESULTS = Path(__file__).resolve().parents[1] / "data" / "wc2026_results.json"
 _OUTCOME_LABEL = {0: "home", 1: "draw", 2: "away"}
-
-
-def outcome_index(home_goals: int, away_goals: int) -> int:
-    """0 home win / 1 draw / 2 away win."""
-    if home_goals > away_goals:
-        return 0
-    if home_goals == away_goals:
-        return 1
-    return 2
-
-
-def log_loss(probs, actual: int) -> float:
-    return -math.log(max(probs[actual], 1e-12))
-
-
-def brier(probs, actual: int) -> float:
-    return sum((p - (1.0 if i == actual else 0.0)) ** 2 for i, p in enumerate(probs))
-
-
-def rps(probs, actual: int) -> float:
-    """Ranked Probability Score for ordered (home, draw, away). Lower is better."""
-    y = [1.0 if i == actual else 0.0 for i in range(3)]
-    cp = cy = 0.0
-    total = 0.0
-    for i in range(2):  # r-1 = 2 cumulative terms
-        cp += probs[i]
-        cy += y[i]
-        total += (cp - cy) ** 2
-    return total / 2.0
 
 
 def _mean(xs):
@@ -64,7 +36,7 @@ def main() -> None:
     matches = json.loads(_RESULTS.read_text())["matches"]
 
     uniform = (1 / 3, 1 / 3, 1 / 3)
-    rows = []
+    preds, outs = [], []
     m_ll, m_br, m_rps = [], [], []
     u_ll = []
     mk_ll, mk_model_ll = [], []  # market vs model on the subset that has odds
@@ -84,6 +56,7 @@ def main() -> None:
         ll, br, rp = log_loss(probs, actual), brier(probs, actual), rps(probs, actual)
         m_ll.append(ll); m_br.append(br); m_rps.append(rp)
         u_ll.append(log_loss(uniform, actual))
+        preds.append(probs); outs.append(actual)
 
         flag = "" if m.get("verified", True) else " *"
         label = f"{m['home']} v {m['away']}{flag}"
@@ -107,6 +80,11 @@ def main() -> None:
     if mk_ll:
         print(f"\n  On {len(mk_ll)} match(es) with a pre-match line:")
         print(f"    market log-loss {_mean(mk_ll):.3f}   vs model {_mean(mk_model_ll):.3f}")
+
+    print(f"\n  Reliability (predicted vs empirical over all outcome slots):")
+    for b in reliability_bins(preds, outs, n_bins=5):
+        print(f"    pred {b['lo']:.1f}-{b['hi']:.1f}: mean_pred {b['mean_pred']:.2f}  "
+              f"empirical {b['empirical']:.2f}  (n={b['n']})")
 
     print("\n  * = unverified result (single-source). Caveat: ~10 matches is illustrative, not "
           "conclusive — it validates the pipeline and gives a directional read only.\n")
