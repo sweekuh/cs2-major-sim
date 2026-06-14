@@ -13,7 +13,9 @@ from engine.soccer.dixon_coles import strengths_from_elo
 from engine.soccer.markets import (
     p_advance,
     p_champion,
+    p_eliminated_in_group,
     p_exact_group_order,
+    p_group_position,
     p_group_winner,
     p_reach_stage,
 )
@@ -68,6 +70,24 @@ def test_exact_group_order_is_a_distribution():
     dist = p_exact_group_order(r, "A")
     assert sum(dist.values()) == pytest.approx(1.0)
     assert all(len(order) == 4 for order in dist)
+
+
+def test_group_position_distribution():
+    r = _run()
+    pos = p_group_position(r)
+    # Each team's four position probabilities sum to 1.
+    for tid in r.teams:
+        assert sum(pos[tid].values()) == pytest.approx(1.0)
+    # Exactly one team finishes 1st per group -> 12 firsts across the field.
+    assert sum(pos[tid][1] for tid in r.teams) == pytest.approx(12.0)
+
+
+def test_eliminated_in_group_complements_advance():
+    r = _run()
+    elim = p_eliminated_in_group(r)
+    adv = p_advance(r)
+    for tid in r.teams:
+        assert elim[tid] + adv[tid] == pytest.approx(1.0)
 
 
 def test_determinism_same_seed_same_result():

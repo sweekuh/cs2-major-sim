@@ -52,6 +52,25 @@ def p_group_winner(result: TournamentResult) -> dict[int, float]:
     return {tid: c / result.n for tid, c in out.items()}
 
 
+def p_group_position(result: TournamentResult) -> dict[int, dict[int, float]]:
+    """P(finish exactly 1st/2nd/3rd/4th in the group) per team — underpins the position markets."""
+    out = {tid: {1: 0, 2: 0, 3: 0, 4: 0} for tid in result.teams}
+    for s in result.sample:
+        for tid, rank in s["group_rank"].items():
+            out[tid][rank] += 1
+    return {tid: {pos: c / result.n for pos, c in dist.items()} for tid, dist in out.items()}
+
+
+def p_eliminated_in_group(result: TournamentResult) -> dict[int, float]:
+    """P(exit at the group stage / fail to reach the knockout) per team = 1 - P(advance)."""
+    out = {tid: 0 for tid in result.teams}
+    for s in result.sample:
+        for tid, reached in s["stage_reached"].items():
+            if reached == 0:
+                out[tid] += 1
+    return {tid: c / result.n for tid, c in out.items()}
+
+
 def p_exact_group_order(result: TournamentResult, group: str) -> dict[tuple, float]:
     """Distribution over exact finishing orders for one group (the thin/exotic market)."""
     c = Counter(s["group_order"][group] for s in result.sample)
