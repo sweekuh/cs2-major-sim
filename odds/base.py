@@ -21,6 +21,7 @@ NON-NEGOTIABLES (CLAUDE.md + 05-RESEARCH D3/D4):
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
@@ -159,6 +160,44 @@ def devig_three_way(o_h: float, o_d: float, o_a: float) -> tuple[float, float, f
     ih, id_, ia = 1.0 / o_h, 1.0 / o_d, 1.0 / o_a
     s = ih + id_ + ia
     return (ih / s, id_ / s, ia / s)
+
+
+def devig_shin(inverse_odds: list[float]) -> list[float]:
+    """Shin's-method de-vig of raw inverse odds (1/o per outcome) — the favorite-longshot-aware
+    alternative to proportional normalization (Štrumbelj 2014: more accurate true probabilities).
+
+    Shin (1992) models the overround as protection against a proportion ``z`` of insider trading;
+    the true probabilities satisfy
+        p_i = (sqrt(z² + 4(1-z)·r_i²/B) - z) / (2(1-z)),   B = Σ r_i,
+    with ``z`` chosen so Σ p_i = 1 (``Σ p_i`` is strictly decreasing in z, so a bisection finds it).
+    Loading the vig onto longshots gives the favourite a slightly HIGHER true prob than proportional
+    de-vig. With no overround (B ≤ 1) there is nothing to Shin-correct, so it falls back to plain
+    normalization. Returns probabilities summing to 1.
+    """
+    r = [float(x) for x in inverse_odds]
+    B = sum(r)
+    if B <= 1.0:  # no overround (or an arb) — Shin's z would be non-positive; just normalize.
+        return [x / B for x in r]
+
+    def p_of(z: float) -> list[float]:
+        return [(math.sqrt(z * z + 4.0 * (1.0 - z) * ri * ri / B) - z) / (2.0 * (1.0 - z)) for ri in r]
+
+    lo, hi = 0.0, 0.9999
+    for _ in range(100):  # bisection on z; Σp(z) decreases from sqrt(B)>1 toward <1
+        mid = 0.5 * (lo + hi)
+        if sum(p_of(mid)) > 1.0:
+            lo = mid
+        else:
+            hi = mid
+    p = p_of(0.5 * (lo + hi))
+    s = sum(p)
+    return [x / s for x in p]  # renormalize away any residual bisection error
+
+
+def devig_three_way_shin(o_h: float, o_d: float, o_a: float) -> tuple[float, float, float]:
+    """Shin's-method de-vig of fixed 1X2 odds -> (P(home), P(draw), P(away)). See ``devig_shin``."""
+    p = devig_shin([1.0 / o_h, 1.0 / o_d, 1.0 / o_a])
+    return (p[0], p[1], p[2])
 
 
 def pool_1x2(quotes: list["Quote1X2"]) -> "BlendedProb1X2":

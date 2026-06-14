@@ -18,7 +18,7 @@ from pathlib import Path
 from engine.soccer.dixon_coles import match_1x2, strengths_from_elo
 from engine.soccer.teams import load_teams
 from odds._match import build_name_to_id, resolve_id
-from odds.base import devig_three_way
+from odds.base import devig_three_way_shin
 
 _RESULTS = Path(__file__).resolve().parents[1] / "data" / "wc2026_results.json"
 _OUTCOME_LABEL = {0: "home", 1: "draw", 2: "away"}
@@ -93,7 +93,7 @@ def main() -> None:
 
         if m.get("odds"):
             o = m["odds"]
-            mk = devig_three_way(o["home"], o["draw"], o["away"])
+            mk = devig_three_way_shin(o["home"], o["draw"], o["away"])
             mk_ll.append(log_loss(mk, actual))
             mk_model_ll.append(ll)
 

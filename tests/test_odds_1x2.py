@@ -9,7 +9,14 @@ from __future__ import annotations
 
 import pytest
 
-from odds.base import BlendedProb1X2, Quote1X2, devig_three_way, pool_1x2
+from odds.base import (
+    BlendedProb1X2,
+    Quote1X2,
+    devig_shin,
+    devig_three_way,
+    devig_three_way_shin,
+    pool_1x2,
+)
 
 
 def _q(provider, p, originate=1.0, liquidity=0.0):
@@ -50,6 +57,29 @@ def test_pool_disagreeing_sources_var_positive_and_sums_to_one():
     assert sum(blend.as_tuple()) == pytest.approx(1.0)
     assert all(v > 0.0 for v in blend.var)
     assert blend.n_sources == 2
+
+
+def test_shin_devig_sums_to_one():
+    p = devig_three_way_shin(1.8, 3.6, 4.5)
+    assert sum(p) == pytest.approx(1.0)
+    assert p[0] > p[1] > p[2]  # favourite ordering preserved
+
+
+def test_shin_equals_normalization_with_no_overround():
+    # Fair odds (Σ 1/o == 1) -> nothing to Shin-correct -> plain normalization.
+    p = devig_shin([0.5, 0.25, 0.25])
+    assert p == pytest.approx([0.5, 0.25, 0.25])
+
+
+def test_shin_loads_vig_onto_longshot_vs_proportional():
+    # With a heavy favourite, Shin gives the favourite a HIGHER true prob than proportional
+    # de-vig (favorite-longshot correction), and the longshot a LOWER one.
+    odds = (1.30, 5.5, 11.0)
+    shin = devig_three_way_shin(*odds)
+    prop = devig_three_way(*odds)
+    assert shin[0] > prop[0]   # favourite up under Shin
+    assert shin[2] < prop[2]   # longshot down under Shin
+    assert sum(shin) == pytest.approx(1.0)
 
 
 def test_pool_originate_weight_pulls_toward_sharp():

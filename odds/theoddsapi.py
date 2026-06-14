@@ -25,7 +25,7 @@ import json
 from pathlib import Path
 
 from odds._match import build_name_to_id, resolve_id
-from odds.base import Quote1X2, devig_three_way, pool_1x2
+from odds.base import Quote1X2, devig_three_way_shin, pool_1x2
 
 # Sharp originators / no-vig exchange weighted highest; any other book is a soft copy.
 _SHARP_KEYS = {"pinnacle", "betfair_ex_eu", "betfair_ex_uk", "betfair"}
@@ -111,7 +111,7 @@ class TheOddsApiProvider:
             prices = _h2h_prices(bk, home, away)
             if prices is None:
                 continue
-            p_home, p_draw, p_away = devig_three_way(*prices)
+            p_home, p_draw, p_away = devig_three_way_shin(*prices)
             key = str(bk.get("key", "")).strip().lower()
             originate = _SHARP_ORIGINATE if key in _SHARP_KEYS else _SOFT_ORIGINATE
             bundle.append(
