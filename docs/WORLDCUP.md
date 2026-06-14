@@ -103,43 +103,48 @@ unaffected** (edits to `odds/base.py` and `odds/kalshi.py` are purely additive).
 | Tests | `tests/test_odds_1x2.py`, `test_fees.py`, `test_clv.py`, `test_theoddsapi.py`, `test_kalshi_wc.py`, `test_soccer_teams.py` | Fixture-driven, no httpx in the import path. |
 
 **Known Phase-0 gaps / caveats**
-- `data/wc2026_teams.json` and `data/kalshi_wc_tickers.json` are **DRAFT placeholders** — verify
-  the real 2026 group draw, Elo priors, and live Kalshi series tickers before trusting output.
+- `data/wc2026_teams.json` now carries the **real** confirmed group draw (A–L); Elo priors are
+  approximate (top teams anchored to confirmed eloratings.net values, lower pots best-estimate —
+  verify before trusting precise probabilities). `data/kalshi_wc_tickers.json` series tickers are
+  still best-guess — verify against live Kalshi series.
 - No live wiring yet: `fetch()` methods exist but haven't been run against live endpoints; the
   Kalshi WebSocket client and the pipeline orchestrator are not built.
-- `devig_three_way` is proportional only (Shin/power is a Phase-1 tweak).
+- `devig_three_way` is proportional only (Shin/power is a remaining tweak).
 
 ---
 
-## 4. Phase 1 — NEXT (goals model + calibration + tournament sim)
+## 4. Phase 1 — SHIPPED (goals model + calibration + tournament sim + backtest)
 
-Build the fair-value engine, with the three research tweaks baked in. Target package
-`engine/soccer/`:
+The full fair-value engine, tested. **28 new Phase-1 tests pass** (65 total across the fork).
 
-- `dixon_coles.py` — bivariate-Poisson match model: `expected_goals`, `scoreline_matrix`
-  (with the Dixon-Coles low-score `τ`/`ρ` correction), `outcome_1x2` (closed form), `sample_score`
-  (the per-match draw).
-- `calibrate.py` — fit `(attack, defence, home_adv)` to de-vigged sharp 1X2. Reuse the
-  Gauss-Newton + gauge-anchor + Levenberg pattern from `engine/backsolve.py:95-131`, but the
-  residual is a 3-vector per match and there are two params/team. Add time-decay + match-importance
-  weighting and shrinkage priors (tweak #2).
-- `group_stage.py` — 12-group round-robin + FIFA tiebreakers (points → GD → GF → head-to-head
-  mini-table → fair play → drawing of lots; the last consumes rng). Must simulate scorelines, not
-  just W/D/L.
-- `tournament.py` — reuse the `run_mc_progressive` harness shape (chunked `SeedSequence` RNG +
-  epistemic outer loop from `engine/probs.py`'s `epistemic_draws`/`beta_moment_fit`), but define a
-  soccer-shaped `Result.sample` per sim: `{group_rank, stage_reached, eliminated_in, champion,
-  group_order, top_scorer}`.
-- `markets.py` — price each Kalshi market type off the sample (`p_champion`, `p_group_winner`,
-  `p_advance`, `p_exact_group_order`, `p_furthest_stage`, `p_stage_of_elimination`, `p_golden_boot`,
-  and closed-form `p_match_1x2`).
-- Add **Shin/power de-vig** to `odds/base.py` (tweak #1).
-- Tests: `test_dixon_coles.py`, `test_calibrate_recovery.py` (build known model → recover
-  gauge-invariant strength differences, mirror `test_backsolve.py::test_rating_roundtrip`),
-  `test_group_tiebreakers.py`.
+| Module | What it does |
+|--------|--------------|
+| `engine/soccer/dixon_coles.py` | Dixon-Coles bivariate-Poisson: `expected_goals`, `scoreline_matrix` (low-score `τ`/`ρ` correction), `outcome_1x2`/`match_1x2` (closed form), `sample_score` (per-match draw), `strengths_from_elo` (Elo→strength warm start). |
+| `engine/soccer/group_stage.py` | Round-robin `play_group` + `rank_group` with the FIFA 2026 tiebreaker chain (points → GD → GF → head-to-head mini-table → lots). Scoreline-level, as tiebreakers require. |
+| `engine/soccer/knockout.py` | `simulate_knockout` — standard strength-seeded 32-team bracket; draws → ~50/50 shootout; stage codes 1–6. |
+| `engine/soccer/tournament.py` | `run_tournament` — deterministic per-sim RNG, retains a soccer-shaped `sample` (`champion`, `group_rank`, `stage_reached`, `group_order`). One run prices every market. |
+| `engine/soccer/markets.py` | `p_champion`, `p_advance`, `p_group_winner`, `p_reach_stage`, `p_exact_group_order`, `p_furthest_stage` off the sample. |
+| `engine/soccer/calibrate.py` | `calibrate_strengths` — damped Gauss-Newton + gauge anchor (the `backsolve.py` pattern), 3-vector residual, numerical Jacobian, optional time-decay/importance weights. |
+| `scripts/backtest_wc.py` | Match-level backtest of the Elo-prior model vs played results (log-loss / Brier / RPS vs uniform + market). |
+| `data/wc2026_teams.json` | Real A–L draw + approximate Elo. `data/wc2026_results.json` — played 11–14 Jun results (corroborated Jun 11–13; Jun 14 single-source). |
 
-Later phases (P2: exotic pricing + Kalshi WebSocket + cross-venue + ranking/alerting; P3: knockout
-bracket; execution gated behind [Q-LEGAL]) — see the architecture in §1 and the original plan.
+Tests: `test_dixon_coles.py`, `test_group_stage.py`, `test_tournament.py`, `test_calibrate_recovery.py`.
+
+### Backtest result (2026-06-14, ~10 matches — illustrative only)
+`uv run python -m scripts.backtest_wc`. The uncalibrated Elo-prior model **barely beats** the
+uniform baseline (log-loss 1.009 vs 1.099, +0.090), nailing the clear games (Mexico, Scotland,
+Germany) but punished by upsets (Qatar 1-1 Switzerland, Australia 2-0 Türkiye, Korea 2-1 Czechia).
+This is exactly the research's prediction: an independent model has, at best, marginal match-level
+skill — and a handful of games is statistically uninformative. The value is the **machinery
+working end-to-end on real data + an honest scoreboard**, not a demonstrated edge.
+
+### Remaining tweaks / next
+- **Shin/power de-vig** in `odds/base.py` (proportional only so far).
+- **Calibration to live sharp 1X2** + time-decay/importance weighting in practice (the function
+  supports weights; not yet wired to a live odds pull — the Jun-2026 odds data was too sparse to
+  calibrate against).
+- P2: exotic pricing wired to live Kalshi reads + Kalshi WebSocket + cross-venue + ranking/alerting.
+  Execution gated behind [Q-LEGAL]. See §1 and the architecture.
 
 ---
 

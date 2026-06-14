@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "purpose": "Backtest set: 2026 World Cup matches played 11-14 June 2026, used to score the model at match level.",
+    "sourcing": "Results corroborated across multiple outlets (ESPN/NBC/Fox/RotoWire/Olympics) via web search; see PR description. June 11-13 are well-corroborated (verified=true); June 14 reported by single outlets (verified=false). WebFetch was blocked, so treat as best-effort, not official.",
+    "odds": "Pre-match decimal 1X2 where retrievable; only Mexico-South Africa had a usable sharp-ish line. null elsewhere.",
+    "outcome_codes": "home/draw/away relative to the listed home team (venues are neutral; 'home' is just the first-listed team)."
+  },
+  "matches": [
+    {"date": "2026-06-11", "home": "Mexico",      "away": "South Africa", "home_goals": 2, "away_goals": 0, "verified": true,  "odds": {"home": 1.40, "draw": 4.60, "away": 8.75}},
+    {"date": "2026-06-11", "home": "South Korea", "away": "Czechia",      "home_goals": 2, "away_goals": 1, "verified": true,  "odds": null},
+    {"date": "2026-06-12", "home": "USA",         "away": "Paraguay",     "home_goals": 4, "away_goals": 1, "verified": true,  "odds": null},
+    {"date": "2026-06-12", "home": "Canada",      "away": "Bosnia and Herzegovina", "home_goals": 1, "away_goals": 1, "verified": true, "odds": null},
+    {"date": "2026-06-13", "home": "Qatar",       "away": "Switzerland",  "home_goals": 1, "away_goals": 1, "verified": true,  "odds": null},
+    {"date": "2026-06-13", "home": "Brazil",      "away": "Morocco",      "home_goals": 1, "away_goals": 1, "verified": true,  "odds": null},
+    {"date": "2026-06-13", "home": "Scotland",    "away": "Haiti",        "home_goals": 1, "away_goals": 0, "verified": true,  "odds": null},
+    {"date": "2026-06-13", "home": "Australia",   "away": "Turkiye",      "home_goals": 2, "away_goals": 0, "verified": true,  "odds": null},
+    {"date": "2026-06-14", "home": "Germany",     "away": "Curacao",      "home_goals": 7, "away_goals": 1, "verified": false, "odds": null},
+    {"date": "2026-06-14", "home": "Netherlands", "away": "Japan",        "home_goals": 2, "away_goals": 2, "verified": false, "odds": null}
+  ]
+}
