@@ -95,6 +95,16 @@ def test_calibration_respects_weights():
     assert p1_when_1 > 0.5 > p1_when_2  # weighting pulls the fit toward the heavier match
 
 
+def test_shrinkage_keeps_sparse_team_near_prior():
+    # A single strong target pushes team 2's strength far from the prior; shrinkage reins it in.
+    prior = MatchModel(attack={1: 0.0, 2: 0.0}, defence={1: 0.0, 2: 0.0}, home_adv=0.0, base=0.3, rho=-0.05)
+    target = {(1, 2): (0.85, 0.10, 0.05)}  # team 1 heavily favoured -> team 2 strength wants to drop
+    free = calibrate_strengths(prior, target, anchor_id=1, iters=60, shrinkage=0.0)
+    shrunk = calibrate_strengths(prior, target, anchor_id=1, iters=60, shrinkage=5.0)
+    assert abs(shrunk.attack[2]) < abs(free.attack[2])   # shrinkage pulls toward the prior (0)
+    assert abs(shrunk.attack[2]) < abs(free.attack[2]) * 0.6
+
+
 def test_anchor_held_fixed():
     prior = MatchModel(attack={i: 0.5 for i in IDS}, defence={i: 0.5 for i in IDS},
                        home_adv=0.0, base=0.3, rho=-0.05)

@@ -67,12 +67,15 @@ def build_match_weights(matches, half_life_days: float = DEFAULT_HALF_LIFE_DAYS
 def calibrate_strengths(prior: MatchModel, targets: Target, *, anchor_id: int,
                         iters: int = 60, neutral: bool = True, damping: float = 1e-2,
                         eps: float = 1e-4, weights: dict[tuple[int, int], float] | None = None,
-                        max_goals: int = 8) -> MatchModel:
+                        shrinkage: float = 0.0, max_goals: int = 8) -> MatchModel:
     """Fit (attack, defence) so model 1X2 matches ``targets``; anchor's strengths held fixed.
 
     ``targets`` maps ``(home_id, away_id) -> (p_home, p_draw, p_away)`` (already de-vigged).
     Returns a new ``MatchModel`` sharing ``prior``'s base/home_adv/rho. ``weights`` (optional)
-    scales each match's residual (time-decay / match-importance).
+    scales each match's residual (time-decay / match-importance). ``shrinkage`` (optional, >= 0)
+    adds a Tikhonov penalty pulling each strength toward its PRIOR value — regularization for
+    sparse national teams (few/contradictory targets) so they stay near the Elo prior rather than
+    overfitting. 0.0 = no shrinkage (unchanged).
     """
     ids = sorted(prior.attack.keys())
     free = [t for t in ids if t != anchor_id]
@@ -85,6 +88,7 @@ def calibrate_strengths(prior: MatchModel, targets: Target, *, anchor_id: int,
     for t in free:
         x[2 * fi[t]] = prior.attack[t]
         x[2 * fi[t] + 1] = prior.defence[t]
+    x0 = x.copy()  # the prior, the shrinkage target
 
     w = np.array([np.sqrt((weights or {}).get(m, 1.0)) for m, _ in matches], dtype=float)
 
@@ -115,11 +119,12 @@ def calibrate_strengths(prior: MatchModel, targets: Target, *, anchor_id: int,
             xp[p] += eps
             J[:, p] = (residual(xp) - r0) / eps
         JtJ = J.T @ J
-        JtJ[np.diag_indices_from(JtJ)] += damping  # Levenberg damping
+        JtJ[np.diag_indices_from(JtJ)] += damping + shrinkage  # Levenberg + Tikhonov-to-prior
+        grad = J.T @ r0 + shrinkage * (x - x0)  # shrinkage gradient pulls toward the prior
         try:
-            dx = np.linalg.solve(JtJ, -J.T @ r0)
+            dx = np.linalg.solve(JtJ, -grad)
         except np.linalg.LinAlgError:
-            dx = np.linalg.lstsq(JtJ, -J.T @ r0, rcond=None)[0]
+            dx = np.linalg.lstsq(JtJ, -grad, rcond=None)[0]
         x = x + dx
         if np.linalg.norm(dx) < 1e-9:
             break
