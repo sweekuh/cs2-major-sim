@@ -12,7 +12,13 @@ import itertools
 import numpy as np
 import pytest
 
-from engine.soccer.calibrate import calibrate_strengths
+from engine.soccer.calibrate import (
+    IMPORTANCE,
+    build_match_weights,
+    calibrate_strengths,
+    match_weight,
+    time_decay,
+)
 from engine.soccer.dixon_coles import MatchModel, match_1x2
 
 IDS = [1, 2, 3, 4, 5]
@@ -49,6 +55,44 @@ def test_recovery_matches_gauge_invariant_differences():
             TRUE.attack[t] - TRUE.attack[ANCHOR], abs=3e-2)
         assert (fit.defence[t] - fit.defence[ANCHOR]) == pytest.approx(
             TRUE.defence[t] - TRUE.defence[ANCHOR], abs=3e-2)
+
+
+def test_time_decay_halves_at_half_life():
+    assert time_decay(0) == pytest.approx(1.0)
+    assert time_decay(365, 365) == pytest.approx(0.5)
+    assert time_decay(730, 365) == pytest.approx(0.25)
+
+
+def test_match_weight_importance_ordering():
+    assert IMPORTANCE["world_cup"] > IMPORTANCE["qualifier"] > IMPORTANCE["friendly"]
+    # Same recency, a World Cup match outweighs a friendly.
+    assert match_weight(10, "world_cup") > match_weight(10, "friendly")
+    # Unknown competition falls back to recency only (multiplier 1.0).
+    assert match_weight(0, "mystery_cup") == pytest.approx(1.0)
+
+
+def test_build_match_weights_shape():
+    w = build_match_weights([
+        {"home_id": 1, "away_id": 2, "days_ago": 0, "competition": "world_cup"},
+        {"home_id": 3, "away_id": 4, "days_ago": 365, "competition": "friendly"},
+    ])
+    assert w[(1, 2)] == pytest.approx(4.0)         # 1.0 recency x 4.0 importance
+    assert w[(3, 4)] == pytest.approx(0.5)         # 0.5 recency x 1.0 importance
+
+
+def test_calibration_respects_weights():
+    # Two contradictory targets about whether team 1 or team 2 is stronger; the up-weighted one wins.
+    prior = MatchModel(attack={1: 0.0, 2: 0.0}, defence={1: 0.0, 2: 0.0}, home_adv=0.0, base=0.3, rho=-0.05)
+    targets = {(1, 2): (0.70, 0.20, 0.10),   # team 1 strongly favoured
+               (2, 1): (0.70, 0.20, 0.10)}   # team 2 strongly favoured (neutral -> contradictory)
+
+    favour_1 = calibrate_strengths(prior, targets, anchor_id=1, iters=60,
+                                   weights={(1, 2): 10.0, (2, 1): 1.0})
+    favour_2 = calibrate_strengths(prior, targets, anchor_id=1, iters=60,
+                                   weights={(1, 2): 1.0, (2, 1): 10.0})
+    p1_when_1 = match_1x2(favour_1, 1, 2, neutral=True)[0]
+    p1_when_2 = match_1x2(favour_2, 1, 2, neutral=True)[0]
+    assert p1_when_1 > 0.5 > p1_when_2  # weighting pulls the fit toward the heavier match
 
 
 def test_anchor_held_fixed():

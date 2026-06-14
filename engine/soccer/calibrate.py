@@ -25,6 +25,44 @@ from engine.soccer.dixon_coles import MatchModel, match_1x2
 
 Target = dict[tuple[int, int], tuple[float, float, float]]
 
+# Match-importance multipliers (FIFA/Elo convention): competitive matches carry more signal than
+# friendlies, which are documented predictive noise for national teams (arxiv 1705.09575).
+IMPORTANCE = {
+    "friendly": 1.0,
+    "qualifier": 2.5,
+    "nations_league": 2.5,
+    "continental": 3.0,
+    "confederations": 3.0,
+    "world_cup": 4.0,
+}
+DEFAULT_HALF_LIFE_DAYS = 365.0
+
+
+def time_decay(days_ago: float, half_life_days: float = DEFAULT_HALF_LIFE_DAYS) -> float:
+    """Exponential recency weight: ``0.5 ** (days_ago / half_life_days)`` (1.0 today, 0.5 at the
+    half-life). Older results count less, the standard Dixon-Coles time-weighting."""
+    return 0.5 ** (max(0.0, days_ago) / half_life_days)
+
+
+def match_weight(days_ago: float, competition: str = "friendly",
+                 half_life_days: float = DEFAULT_HALF_LIFE_DAYS) -> float:
+    """Combined weight = recency decay x match-importance multiplier (unknown competition -> 1.0)."""
+    return time_decay(days_ago, half_life_days) * IMPORTANCE.get(competition, 1.0)
+
+
+def build_match_weights(matches, half_life_days: float = DEFAULT_HALF_LIFE_DAYS
+                        ) -> dict[tuple[int, int], float]:
+    """Build the ``weights`` dict ``calibrate_strengths`` consumes from match metadata.
+
+    ``matches`` is an iterable of dicts with ``home_id``, ``away_id``, ``days_ago`` and optional
+    ``competition``. Returns ``{(home_id, away_id): recency x importance}``.
+    """
+    return {
+        (m["home_id"], m["away_id"]): match_weight(
+            m["days_ago"], m.get("competition", "friendly"), half_life_days)
+        for m in matches
+    }
+
 
 def calibrate_strengths(prior: MatchModel, targets: Target, *, anchor_id: int,
                         iters: int = 60, neutral: bool = True, damping: float = 1e-2,
