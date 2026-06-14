@@ -1,5 +1,11 @@
 # swiss-mc — IEM Cologne 2026 Swiss Monte Carlo & Pick'Em Optimizer
 
+> **Private fork in progress → Kalshi 2026 World Cup edge monitor.** This repo is being adapted
+> from the CS2 Swiss simulator (below) into a goals-based World Cup fair-value monitor. For that
+> effort — architecture, research go/no-go, what's shipped, and the Phase-1 plan — see
+> **[docs/WORLDCUP.md](docs/WORLDCUP.md)**. The CS2 documentation below remains the record of the
+> engine the fork reuses.
+
 Monte-Carlo simulates the IEM Cologne Major 2026 CS2 Swiss stage and gives you honest per-team
 odds, market-anchored ratings, and the math-optimal Pick'Em ballot. The point isn't a pretty
 dashboard, it's a **correct** one: every probability is validated against the Valve rulebook and
