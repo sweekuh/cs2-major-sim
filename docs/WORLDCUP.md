@@ -138,13 +138,29 @@ This is exactly the research's prediction: an independent model has, at best, ma
 skill — and a handful of games is statistically uninformative. The value is the **machinery
 working end-to-end on real data + an honest scoreboard**, not a demonstrated edge.
 
-### Remaining tweaks / next
-- **Shin/power de-vig** in `odds/base.py` (proportional only so far).
-- **Calibration to live sharp 1X2** + time-decay/importance weighting in practice (the function
-  supports weights; not yet wired to a live odds pull — the Jun-2026 odds data was too sparse to
-  calibrate against).
-- P2: exotic pricing wired to live Kalshi reads + Kalshi WebSocket + cross-venue + ranking/alerting.
-  Execution gated behind [Q-LEGAL]. See §1 and the architecture.
+### Phase-1.x improvement loop (shipped, each tested + committed)
+Driven by the roadmap loop after the base engine:
+1. **Shin's-method de-vig** + 6. **power-method de-vig** + `devig_1x2(method=)` dispatcher
+   (`odds/base.py`) — favorite-longshot-aware sharp-reference de-vig; Shin is the default.
+2. **Time-decay + match-importance weighting** and 3. **shrinkage (Tikhonov) prior** in
+   `calibrate.py` — sharper, more stable national-team fits.
+4. **Reusable scoring module** `engine/soccer/scoring.py` (log-loss/Brier/RPS + reliability diagram).
+5. **Exotic markets** `p_group_position`, `p_eliminated_in_group`.
+7. **Edge core** `monitor/edge.py` — model fair value vs Kalshi price → costed, side-chosen,
+   depth-ranked signals; 10. **fractional-Kelly** stake sizing on each signal.
+8. **Host advantage** for Mexico/USA/Canada in group play (`tournament`/`group_stage`, `host_ids`).
+9. **Monitor pipeline** `monitor/pipeline.py` — `scan()` maps Kalshi market states to model probs
+   (champion/group-winner/advance) and ranks edges, surfacing `unmapped` markets.
+
+### Remaining / next
+- **Live wiring**: run `theoddsapi.fetch` → `calibrate_strengths` (weights from real match
+  dates/competitions) → `run_tournament` → `pipeline.scan` against live `KalshiWCProvider.fetch`
+  reads. The match model is ready; the Jun-2026 odds data was too sparse to calibrate against yet.
+- **Per-match 1X2** markets in the pipeline (currently `unmapped`) — price via the calibrated
+  match model once a real Kalshi soccer match-market fixture confirms the title/outcome shape.
+- **Kalshi WebSocket** live order book; **knockout** real FIFA best-third slot table; **Golden
+  Boot** (needs a player model); **correlation-aware** stake sizing across the correlated book.
+- Execution remains gated behind **[Q-LEGAL]**. See §1.
 
 ---
 
