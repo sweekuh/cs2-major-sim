@@ -41,6 +41,13 @@ def targets_from_quotes(quotes) -> dict[tuple[int, int], tuple[float, float, flo
     return {q.match: (q.p_home, q.p_draw, q.p_away) for q in quotes}
 
 
+def filter_targets(targets, valid_ids):
+    """Drop calibration targets referencing a team id not in ``valid_ids`` — keeps ``build_model``
+    fail-soft no matter where the targets came from (a stray id would otherwise crash the fit)."""
+    s = set(valid_ids)
+    return {m: p for m, p in targets.items() if m[0] in s and m[1] in s}
+
+
 def results_to_tuples(matches, name_to_id) -> list[tuple[int, int, int, int]]:
     """Resolve finished-match records into ``(home_id, away_id, home_goals, away_goals)`` tuples
     for ``engine.soccer.elo_update.apply_results``. Skips records missing a score or an

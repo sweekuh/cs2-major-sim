@@ -29,7 +29,7 @@ from engine.soccer.teams import groups as group_by_letter
 from engine.soccer.teams import host_ids, load_teams
 from engine.soccer.tournament import run_tournament
 from monitor.edge import stake_row
-from monitor.match_edge import results_to_tuples, targets_from_quotes
+from monitor.match_edge import filter_targets, results_to_tuples, targets_from_quotes
 from monitor.pipeline import scan
 from monitor.signal_log import Signal, SignalLog
 from odds._match import build_name_to_id
@@ -84,9 +84,11 @@ def main(*, n_sims: int = 20_000, seed: int = 0, threshold: float = 0.03, bankro
     new_elo = apply_results({t.id: t.elo for t in teams}, res, hosts=hosts)
     upd_teams = [dataclasses.replace(t, elo=new_elo[t.id]) for t in teams]
 
-    # 2. live sharp odds -> per-team calibration targets
+    # 2. live sharp odds -> per-team calibration targets (filtered to known ids -> build_model fail-soft)
     quotes = _fetch_odds(teams, regions=regions)
-    targets = targets_from_quotes(quotes)
+    targets = filter_targets(targets_from_quotes(quotes), {t.id for t in upd_teams})
+    covered = {tid for m in targets for tid in m}
+    coverage = len(covered) / max(1, len(upd_teams))  # fraction of the field calibrated -> model_conf
 
     # 3. build the model (results-updated Elo + spread fit + per-team calibration of covered teams)
     model = build_model(upd_teams, targets, home_adv=home_adv, shrinkage=0.1, neutral=True)
@@ -119,10 +121,14 @@ def main(*, n_sims: int = 20_000, seed: int = 0, threshold: float = 0.03, bankro
             print(f"{r['ticker']:<26}{r['type']:<13}{r['side']:<5}{r['model']:>7.3f}{r['mid']:>6.2f}"
                   f"{r['net_edge']:>7.3f}{r['kelly']:>7.3f}{r['stake']:>8.2f}")
             if store is not None:
-                store.record(Signal(
-                    ticker=s.ticker, market_type=s.market_type, side=s.side, fair_value=s.model_prob,
-                    fair_source="model", kalshi_mid=s.mid, spread=s.spread, depth=s.depth,
-                    net_edge=s.net_edge, model_conf=1.0, alerted=False))
+                try:
+                    store.record(Signal(
+                        ticker=s.ticker, market_type=s.market_type, side=s.side,
+                        fair_value=s.model_prob, fair_source="model", kalshi_mid=s.mid,
+                        spread=s.spread, depth=s.depth, net_edge=s.net_edge,
+                        model_conf=round(coverage, 3), alerted=False))
+                except Exception as exc:  # noqa: BLE001 — one bad row must not sink the run
+                    print(f"  [warn] could not log {s.ticker}: {type(exc).__name__}")
     finally:
         if store is not None:
             store.close()

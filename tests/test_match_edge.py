@@ -9,6 +9,7 @@ from engine.soccer.dixon_coles import MatchModel, match_1x2, strengths_from_elo
 from engine.soccer.teams import SoccerTeam
 from monitor.match_edge import (
     decimal_ev,
+    filter_targets,
     kalshi_ev,
     market_targets,
     match_prediction,
@@ -69,6 +70,11 @@ def test_market_targets_skips_invalid_odds_without_crashing():
                             "odds": {"home": -1.45, "draw": 4.5, "away": 6.5}}], n2i) == {}
     assert market_targets([{"home": "France", "away": "Senegal",
                             "odds": {"home": 0.5, "draw": 4.5, "away": 6.5}}], n2i) == {}
+
+
+def test_filter_targets_drops_unknown_ids():
+    t = {(1, 2): (0.5, 0.3, 0.2), (1, 99): (0.4, 0.3, 0.3), (99, 2): (0.4, 0.3, 0.3)}
+    assert filter_targets(t, {1, 2}) == {(1, 2): (0.5, 0.3, 0.2)}
 
 
 def test_targets_from_quotes_keys_by_match():
