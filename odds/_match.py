@@ -23,19 +23,21 @@ def _norm(s: str) -> str:
 
 
 def resolve_id(name: str, name_to_id: dict[str, int]) -> int | None:
-    """Resolve a provider team string to an engine id (case/space-insensitive contains).
+    """Resolve a provider team string to an engine id (case/space-insensitive).
 
     Exact normalized match first; otherwise a substring match either direction (handles
-    "Team Liquid" vs "Liquid"). Returns None when nothing matches — the caller then DROPS the
-    quote rather than guessing a wrong team.
+    "Team Liquid" vs "Liquid"). Returns None when nothing matches OR when the substring match is
+    AMBIGUOUS (more than one candidate contains/contained by the key, e.g. "Guinea" vs
+    "Equatorial Guinea"/"Guinea-Bissau") — the caller then DROPS the quote rather than guessing a
+    wrong team. Exact match always wins over substring, so an exact name is never ambiguous.
     """
     key = _norm(name)
+    if not key:
+        return None
     if key in name_to_id:
         return name_to_id[key]
-    for cand, tid in name_to_id.items():
-        if key and (key in cand or cand in key):
-            return tid
-    return None
+    matches = {tid for cand, tid in name_to_id.items() if key in cand or cand in key}
+    return next(iter(matches)) if len(matches) == 1 else None
 
 
 def resolve_match(name_a: str, name_b: str, teams) -> tuple[tuple[int, int], bool] | None:

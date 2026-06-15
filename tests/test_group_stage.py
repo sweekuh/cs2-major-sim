@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from engine.soccer.group_stage import _standings, play_group, rank_group
+from engine.soccer.group_stage import _break_tie, _standings, play_group, rank_group
 from engine.soccer.dixon_coles import MatchModel
 
 RNG = np.random.default_rng(0)
@@ -53,6 +53,17 @@ def test_full_tie_goes_to_lots_and_is_a_permutation():
     # Deterministic given the rng seed.
     again = rank_group([1, 2, 3, 4], all_draws, np.random.default_rng(5))
     assert out == again
+
+
+def test_break_tie_separates_leader_then_lots_on_reduced_subgroup():
+    # Team 1 beats 2 and 3 (clear h2h leader); 2 and 3 draw -> reduced h2h among {2,3} still level
+    # -> lots. Exercises the FIFA re-loop: 1 is separated, {2,3} recursed then drawn.
+    results = [(1, 2, 1, 0), (1, 3, 1, 0), (2, 3, 0, 0)]
+    out = _break_tie([1, 2, 3], results, np.random.default_rng(2))
+    assert out[0] == 1
+    assert sorted(out[1:]) == [2, 3]
+    # Deterministic given the rng seed.
+    assert _break_tie([1, 2, 3], results, np.random.default_rng(2)) == out
 
 
 def test_play_group_emits_six_matches():

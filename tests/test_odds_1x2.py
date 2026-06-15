@@ -114,3 +114,23 @@ def test_pool_originate_weight_pulls_toward_sharp():
     blend = pool_1x2([sharp, soft])
     assert blend.p_home > 0.6  # pulled toward the sharp 0.7, not the midpoint
     assert sum(blend.as_tuple()) == pytest.approx(1.0)
+
+
+def test_pool_respects_originate_with_zero_liquidity():
+    # Regression (H1): liquidity 0 on every quote must NOT collapse the originate weighting to a
+    # flat average — the sharp source still pulls harder.
+    sharp = _q("pinnacle", (0.7, 0.2, 0.1), originate=1.0, liquidity=0.0)
+    soft = _q("soft", (0.4, 0.3, 0.3), originate=0.3, liquidity=0.0)
+    blend = pool_1x2([sharp, soft])
+    flat = pool_1x2([_q("a", (0.7, 0.2, 0.1), originate=1.0),
+                     _q("b", (0.4, 0.3, 0.3), originate=1.0)])
+    assert blend.p_home > flat.p_home  # sharp-weighted, not equal-weighted
+    assert sum(blend.as_tuple()) == pytest.approx(1.0)
+
+
+def test_devig_shin_and_power_reject_degenerate_input():
+    for fn in (devig_shin, devig_power):
+        with pytest.raises(ValueError):
+            fn([])
+        with pytest.raises(ValueError):
+            fn([0.0, 0.0, 0.0])

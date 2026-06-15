@@ -51,7 +51,10 @@ def simulate_knockout(seeded_ids: list[int], model: MatchModel,
     ``seeded_ids`` is best-first (index 0 = top seed); it is arranged into standard bracket order
     so the first-round pairs are adjacent and the two best seeds can only meet in the final.
     """
-    order = standard_seeding(len(seeded_ids))
+    n = len(seeded_ids)
+    if n <= 0 or (n & (n - 1)) != 0:
+        raise ValueError(f"knockout needs a power-of-two field, got {n} teams")
+    order = standard_seeding(n)
     current = [seeded_ids[s - 1] for s in order]
     stage = {tid: 1 for tid in seeded_ids}  # everyone reaches at least the first round they enter
     round_num = 1

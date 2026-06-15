@@ -71,7 +71,10 @@ def simulate_one(groups: dict[str, list[int]], model: MatchModel,
         runners.append(order[1])
         thirds.append(order[2])
 
-    best_thirds = sorted(thirds, key=lambda t: _third_key(standings[t]), reverse=True)[:8]
+    # Shuffle before the stable sort so third-placed teams EXACTLY level at the 8-team cut are
+    # separated by lots (FIFA), not by deterministic group insertion order.
+    shuffled = [thirds[k] for k in rng.permutation(len(thirds))]
+    best_thirds = sorted(shuffled, key=lambda t: _third_key(standings[t]), reverse=True)[:8]
     seeded = _seed_qualifiers(winners, runners, best_thirds, standings)
     stage, champion = simulate_knockout(seeded, model, rng)
 

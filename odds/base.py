@@ -175,6 +175,8 @@ def devig_shin(inverse_odds: list[float]) -> list[float]:
     normalization. Returns probabilities summing to 1.
     """
     r = [float(x) for x in inverse_odds]
+    if not r or any(x <= 0.0 for x in r):
+        raise ValueError("inverse_odds must be non-empty and strictly positive")
     B = sum(r)
     if B <= 1.0:  # no overround (or an arb) — Shin's z would be non-positive; just normalize.
         return [x / B for x in r]
@@ -209,6 +211,8 @@ def devig_power(inverse_odds: list[float]) -> list[float]:
     to A/B against Shin on CLV). With no overround (B ≤ 1) it falls back to plain normalization.
     """
     r = [float(x) for x in inverse_odds]
+    if not r or any(x <= 0.0 for x in r):
+        raise ValueError("inverse_odds must be non-empty and strictly positive")
     B = sum(r)
     if B <= 1.0:
         return [x / B for x in r]
@@ -255,7 +259,7 @@ def pool_1x2(quotes: list["Quote1X2"]) -> "BlendedProb1X2":
     n = len(quotes)
     logs = np.array([[q.p_home, q.p_draw, q.p_away] for q in quotes], dtype=float)
     logs = np.log(np.clip(logs, _EPS, 1.0))
-    w = np.array([q.originate * np.log1p(q.liquidity) for q in quotes], dtype=float)
+    w = np.array([q.originate * (1.0 + np.log1p(q.liquidity)) for q in quotes], dtype=float)
     total = w.sum()
     if total <= 0.0:
         w = np.ones(n, dtype=float)
@@ -308,7 +312,7 @@ def pool(quotes: list[OddsQuote]) -> BlendedProb:
     (all quotes for one match share a series format).
     """
     ps = np.array([q.p_a_raw for q in quotes], dtype=float)
-    w = np.array([q.originate * np.log1p(q.liquidity) for q in quotes], dtype=float)
+    w = np.array([q.originate * (1.0 + np.log1p(q.liquidity)) for q in quotes], dtype=float)
     total = w.sum()
     # Degenerate weights (e.g. all-zero liquidity -> log1p(0)==0): fall back to equal weight so
     # a thin-but-real set of opinions still pools rather than dividing by zero.

@@ -121,20 +121,30 @@ def rank_group(team_ids: list[int], results: list[tuple[int, int, int, int]],
 
 
 def _break_tie(block: list[int], results, rng: np.random.Generator) -> list[int]:
-    """Order a tied block by head-to-head mini-table, then random drawing of lots."""
+    """Order a tied block by the head-to-head mini-table, then drawing of lots.
+
+    Follows the FIFA re-loop: the mini-table is computed over only the matches AMONG the block; if
+    it separates some teams but leaves a smaller subgroup level, the procedure recurses on that
+    subgroup (recomputing head-to-head among just those teams). A subgroup that does not separate
+    at all (e.g. a perfect cycle, or no matches) goes to lots, deterministic given the rng.
+    """
+    if len(block) <= 1:
+        return list(block)
     h2h = _standings(block, [r for r in results if r[0] in block and r[1] in block])
     ordered = sorted(block, key=lambda t: _key(h2h[t]), reverse=True)
-    # Anything still identical on the h2h key goes to lots (deterministic given the rng).
     out: list[int] = []
     i = 0
     while i < len(ordered):
         j = i + 1
         while j < len(ordered) and _key(h2h[ordered[j]]) == _key(h2h[ordered[i]]):
             j += 1
-        tied = ordered[i:j]
-        if len(tied) > 1:
-            tied = [tied[k] for k in rng.permutation(len(tied))]
-        out.extend(tied)
+        sub = ordered[i:j]
+        if len(sub) == 1:
+            out.append(sub[0])
+        elif len(sub) == len(block):  # no separation at this level -> lots
+            out.extend(sub[k] for k in rng.permutation(len(sub)))
+        else:  # FIFA re-loop: recompute head-to-head among the reduced subgroup
+            out.extend(_break_tie(sub, results, rng))
         i = j
     return out
 

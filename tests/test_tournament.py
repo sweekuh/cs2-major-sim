@@ -96,6 +96,14 @@ def test_determinism_same_seed_same_result():
     assert a == b
 
 
+def test_knockout_requires_power_of_two():
+    import numpy as np
+
+    from engine.soccer.knockout import simulate_knockout
+    with pytest.raises(ValueError):
+        simulate_knockout([1, 2, 3, 4, 5, 6], MODEL, np.random.default_rng(0))
+
+
 def test_stronger_field_more_likely_to_win():
     # The strongest team by Elo should have a higher title chance than the weakest.
     r = _run(n=400, seed=1)
