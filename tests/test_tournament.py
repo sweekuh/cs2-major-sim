@@ -94,6 +94,8 @@ def test_eliminated_in_group_complements_advance():
 def test_top_n_sorted_descending():
     out = top_n({1: 0.1, 2: 0.5, 3: 0.3, 4: 0.05}, 2)
     assert out == [(2, 0.5), (3, 0.3)]
+    assert top_n({1: 0.1, 2: 0.5}, 0) == []
+    assert top_n({1: 0.1, 2: 0.5}, -1) == []  # negative n -> empty, not a dropped element
 
 
 def test_determinism_same_seed_same_result():

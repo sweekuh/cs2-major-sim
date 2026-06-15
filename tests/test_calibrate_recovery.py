@@ -118,6 +118,20 @@ def test_fit_elo_scale_recovers_known_spread():
     assert fit == pytest.approx(true_scale, rel=0.1)
 
 
+def test_fit_elo_scale_empty_targets_returns_midpoint_not_bound():
+    teams = [SoccerTeam(id=1, name="A", group="A", elo=1800)]
+    assert fit_elo_scale(teams, {}, lo=50.0, hi=3000.0) == pytest.approx(1525.0)
+
+
+def test_fit_elo_scale_handles_extreme_target_without_nan():
+    # A near-certain market with a big Elo gap forces tiny scales into the Poisson-overflow zone;
+    # the NaN-safe loss + uniform scoreline fallback must keep the fit finite and in-range.
+    teams = [SoccerTeam(id=1, name="Strong", group="A", elo=2100),
+             SoccerTeam(id=2, name="Weak", group="A", elo=1300)]
+    fit = fit_elo_scale(teams, {(1, 2): (0.999, 0.0009, 0.0001)}, lo=50.0, hi=3000.0)
+    assert 50.0 <= fit <= 3000.0 and fit == fit  # finite, in range (fit==fit rejects NaN)
+
+
 def test_fit_elo_scale_larger_when_market_less_confident():
     teams = [SoccerTeam(id=1, name="Strong", group="A", elo=2100),
              SoccerTeam(id=2, name="Weak", group="A", elo=1500)]

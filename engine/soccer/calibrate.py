@@ -19,6 +19,8 @@ weighting; pass higher weights for more recent / more competitive fixtures.
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from engine.soccer.dixon_coles import (
@@ -43,13 +45,16 @@ def fit_elo_scale(teams, targets: "Target", *, base: float = DEFAULT_BASE, rho: 
     ``targets`` over a 1-D golden-section search — well-identified even from a few matches, since
     it's a single global parameter. Returns the best ``elo_per_goal`` (larger = less confident).
     """
+    if not targets:
+        return 0.5 * (lo + hi)  # nothing to fit -> neutral midpoint rather than a bound artifact
+
     def loss(scale: float) -> float:
         m = strengths_from_elo(teams, elo_per_goal=scale, base=base, rho=rho)
         err = 0.0
         for (h, a), tgt in targets.items():
             p = match_1x2(m, h, a, neutral=neutral)
             err += sum((pi - ti) ** 2 for pi, ti in zip(p, tgt))
-        return err
+        return err if math.isfinite(err) else float("inf")  # never let NaN steer the search
 
     inv_phi = (5 ** 0.5 - 1) / 2  # 0.618...
     a, b = lo, hi

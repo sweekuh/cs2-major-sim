@@ -85,7 +85,13 @@ def scoreline_matrix(lam_h: float, lam_a: float, rho: float = DEFAULT_RHO,
     pa = _poisson_pmf(lam_a, max_goals)
     m = np.outer(ph, pa) * _tau(lam_h, lam_a, rho, max_goals + 1)
     m = np.clip(m, 0.0, None)  # the τ corner can go slightly negative for extreme λ/rho
-    return m / m.sum()
+    s = m.sum()
+    if not np.isfinite(s) or s <= 0.0:
+        # Pathological λ (an absurd rating spread under a tiny spread scale) under/overflows the
+        # Poisson pmf to all-zero; fall back to a uniform scoreline so downstream math stays finite
+        # instead of propagating NaN (which would silently mis-steer e.g. the fit_elo_scale search).
+        return np.full_like(m, 1.0 / m.size)
+    return m / s
 
 
 def outcome_1x2(matrix: np.ndarray) -> tuple[float, float, float]:

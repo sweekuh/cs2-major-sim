@@ -85,4 +85,4 @@ def p_furthest_stage(result: TournamentResult, team_id: int) -> dict[int, float]
 
 def top_n(probs: dict[int, float], n: int = 15) -> list[tuple[int, float]]:
     """The ``n`` highest-probability (team_id, prob) pairs from a market table, descending."""
-    return sorted(probs.items(), key=lambda kv: kv[1], reverse=True)[:n]
+    return sorted(probs.items(), key=lambda kv: kv[1], reverse=True)[:max(0, n)]
