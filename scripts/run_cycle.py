@@ -71,14 +71,15 @@ def main(*, home_adv: float = 0.3, calibrate: bool = False, movers: int = 6) -> 
     print(f"{'match':<26}{'P(home)':>8}{'P(draw)':>8}{'P(away)':>8}  pick  best +EV")
     print("-" * 74)
     for m in fixtures:
-        hid, aid = resolve_id(m["home"], n2i), resolve_id(m["away"], n2i)
-        if hid is None or aid is None:
-            print(f"  [skip] {m['home']} v {m['away']}")
+        home, away = m.get("home", ""), m.get("away", "")
+        hid, aid = resolve_id(home, n2i), resolve_id(away, n2i)
+        if hid is None or aid is None or hid == aid:
+            print(f"  [skip] {home} v {away}")
             continue
         neutral = True if (calibrate and targets) else m.get("neutral", hid not in hosts)
         p = match_prediction(model, hid, aid, neutral=neutral)
         pr = p["probs"]
-        pick = m["home"] if p["pick"] == "home" else (m["away"] if p["pick"] == "away" else "Draw")
+        pick = home if p["pick"] == "home" else (away if p["pick"] == "away" else "Draw")
         best = ""
         odds = m.get("odds") or {}
         evs = [(decimal_ev(pr[k], odds[k]), k) for k in ("home", "draw", "away")
@@ -86,9 +87,9 @@ def main(*, home_adv: float = 0.3, calibrate: bool = False, movers: int = 6) -> 
         pos = [(ev, k) for ev, k in evs if ev > 0]
         if pos:
             ev, k = max(pos)
-            who = m["home"] if k == "home" else (m["away"] if k == "away" else "Draw")
+            who = home if k == "home" else (away if k == "away" else "Draw")
             best = f"{who} {ev:+.2f}"
-        print(f"{m['home'] + ' v ' + m['away']:<26}{pr['home']:>8.1%}{pr['draw']:>8.1%}"
+        print(f"{home + ' v ' + away:<26}{pr['home']:>8.1%}{pr['draw']:>8.1%}"
               f"{pr['away']:>8.1%}  {pick[:5]:<5} {best}")
     print("\n  Read-only, illustrative. +EV here uses raw book odds; calibrate=True removes the model's"
           " overconfidence so only genuine gaps remain. Compare to live Kalshi for real edge.\n")
