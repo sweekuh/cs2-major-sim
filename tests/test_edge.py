@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from monitor.edge import evaluate, find_edges
+from monitor.edge import evaluate, find_edges, kelly_fraction, kelly_stake
 from odds.kalshi import KalshiMarketState
 
 
@@ -27,6 +27,21 @@ def test_buy_no_when_model_below_mid():
     sig = evaluate(0.10, _state(mid=0.20, spread=0.02))
     assert sig.side == "no"
     assert sig.net_edge == pytest.approx(0.07)
+
+
+def test_kelly_fraction_yes_and_no_sides():
+    # YES at 0.20 with true 0.30: (0.30-0.20)/(1-0.20) = 0.125
+    assert kelly_fraction(0.30, 0.20, "yes") == pytest.approx(0.125)
+    # NO at 0.20 with true 0.10: (0.20-0.10)/0.20 = 0.5
+    assert kelly_fraction(0.10, 0.20, "no") == pytest.approx(0.5)
+    # No edge that side -> 0 (never negative).
+    assert kelly_fraction(0.10, 0.20, "yes") == 0.0
+
+
+def test_kelly_stake_is_fractional():
+    sig = evaluate(0.30, _state(mid=0.20, spread=0.02))  # kelly 0.125, side yes
+    assert sig.kelly == pytest.approx(0.125)
+    assert kelly_stake(sig, bankroll=1000.0, fraction=0.25) == pytest.approx(31.25)
 
 
 def test_find_edges_filters_below_threshold():

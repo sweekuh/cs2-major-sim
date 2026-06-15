@@ -21,7 +21,8 @@ from odds.kalshi import KalshiMarketState
 @dataclass(frozen=True)
 class EdgeSignal:
     """A costed edge candidate. ``side`` is the contract to buy (yes if the model thinks YES is
-    underpriced, else no); ``net_edge`` already subtracts fee + half-spread; ``score`` ranks it."""
+    underpriced, else no); ``net_edge`` already subtracts fee + half-spread; ``kelly`` is the full
+    Kelly fraction for that side (size with ``kelly_stake``); ``score`` ranks it."""
 
     ticker: str
     market_type: str
@@ -31,7 +32,26 @@ class EdgeSignal:
     spread: float
     depth: float
     net_edge: float
+    kelly: float
     score: float
+
+
+def kelly_fraction(model_prob: float, mid: float, side: str) -> float:
+    """Full Kelly fraction for a Kalshi $1 contract priced at ``mid``, given the model's true prob.
+
+    Buying YES at price ``c`` with true prob ``p``: f = (p - c) / (1 - c). Buying NO (true prob
+    1-p, cost 1-c): f = (c - p) / c. Clamped at 0 (no bet when there's no edge that side).
+    """
+    if side == "yes":
+        f = (model_prob - mid) / (1.0 - mid) if mid < 1.0 else 0.0
+    else:
+        f = (mid - model_prob) / mid if mid > 0.0 else 0.0
+    return max(0.0, f)
+
+
+def kelly_stake(signal: "EdgeSignal", bankroll: float, fraction: float = 0.25) -> float:
+    """Recommended stake = ``fraction`` x full-Kelly x bankroll (quarter-Kelly by default)."""
+    return max(0.0, signal.kelly) * fraction * bankroll
 
 
 def evaluate(model_prob: float, state: KalshiMarketState, *, maker: bool = False) -> EdgeSignal:
@@ -42,7 +62,7 @@ def evaluate(model_prob: float, state: KalshiMarketState, *, maker: bool = False
     return EdgeSignal(
         ticker=state.ticker, market_type=state.market_type, side=side,
         model_prob=model_prob, mid=state.mid, spread=state.spread, depth=state.depth,
-        net_edge=ne, score=score,
+        net_edge=ne, kelly=kelly_fraction(model_prob, state.mid, side), score=score,
     )
 
 
