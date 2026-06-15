@@ -15,6 +15,7 @@ import pytest
 from engine.soccer.calibrate import (
     IMPORTANCE,
     build_match_weights,
+    build_model,
     calibrate_strengths,
     fit_elo_scale,
     match_weight,
@@ -138,6 +139,24 @@ def test_fit_elo_scale_larger_when_market_less_confident():
     # A near-even market (50/27/23) implies a MUCH wider spread than the Elo gap suggests.
     fit = fit_elo_scale(teams, {(1, 2): (0.50, 0.27, 0.23)}, neutral=True)
     assert fit > 250.0  # bigger scale = less confident than the default
+
+
+def test_build_model_no_targets_is_elo_prior():
+    teams = [SoccerTeam(id=1, name="A", group="A", elo=2000), SoccerTeam(id=2, name="B", group="A", elo=1600)]
+    m = build_model(teams)
+    ref = strengths_from_elo(teams)
+    assert match_1x2(m, 1, 2, neutral=True) == pytest.approx(match_1x2(ref, 1, 2, neutral=True))
+
+
+def test_build_model_calibrates_covered_teams_to_market():
+    teams = [SoccerTeam(id=i, name=f"T{i}", group="A", elo=elo)
+             for i, elo in enumerate([2100, 1950, 1800, 1650, 1500], start=1)]
+    truth = strengths_from_elo(teams, elo_per_goal=500.0)  # a wider (less confident) true spread
+    targets = {(h, a): match_1x2(truth, h, a, neutral=True)
+               for h, a in itertools.permutations([t.id for t in teams], 2)}
+    m = build_model(teams, targets, shrinkage=0.0)  # full calibration
+    for (h, a), tgt in targets.items():
+        assert match_1x2(m, h, a, neutral=True) == pytest.approx(tgt, abs=8e-3)
 
 
 def test_calibrate_rejects_unknown_anchor():

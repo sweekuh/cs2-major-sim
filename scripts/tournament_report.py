@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from engine.soccer.calibrate import fit_elo_scale
+from engine.soccer.calibrate import build_model
 from engine.soccer.dixon_coles import strengths_from_elo
 from engine.soccer.markets import (
     p_advance,
@@ -37,32 +37,31 @@ _FIXTURES = Path(__file__).resolve().parents[1] / "data" / "wc2026_fixtures.json
 
 
 def main(*, n_sims: int = 20_000, seed: int = 0, home_adv: float = 0.3,
-         calibrate_scale: bool = False) -> None:
+         calibrate: bool = False) -> None:
     teams, _ = load_teams()
     name = {t.id: t.name for t in teams}
     groups = {g: [t.id for t in members] for g, members in group_by_letter(teams).items()}
 
-    elo_per_goal = 250.0
-    calibrated = False  # whether the spread fit ACTUALLY ran (not just requested)
-    if calibrate_scale:
+    calibrated = False  # whether calibration ACTUALLY ran (not just requested)
+    model = strengths_from_elo(teams, home_adv=home_adv)
+    if calibrate:
         try:
             fixtures = json.loads(_FIXTURES.read_text()).get("matches", [])
         except (OSError, ValueError):
             fixtures = []
         targets = market_targets(fixtures, build_name_to_id(teams))
         if targets:
-            elo_per_goal = fit_elo_scale(teams, targets, neutral=True)
+            model = build_model(teams, targets, home_adv=home_adv, shrinkage=0.2, neutral=True)
             calibrated = True
-            print(f"\n[fit Elo->goals spread to {len(targets)} market matches: "
-                  f"elo_per_goal {elo_per_goal:.0f} (default 250; larger = less confident)]")
+            print(f"\n[calibrated to {len(targets)} market matches: global spread fit + per-team "
+                  f"calibration of covered teams]")
         else:
-            print("\n[calibrate_scale requested but no de-viggable market odds found — "
-                  "falling back to the UNCALIBRATED default spread]")
+            print("\n[calibrate requested but no de-viggable market odds found — "
+                  "falling back to the UNCALIBRATED Elo prior]")
 
-    model = strengths_from_elo(teams, elo_per_goal=elo_per_goal, home_adv=home_adv)
     result = run_tournament(groups, model, n_sims, seed=seed, hosts=host_ids(teams))
 
-    tag = "spread-calibrated" if calibrated else "uncalibrated"
+    tag = "market-calibrated" if calibrated else "uncalibrated"
     print(f"\nWorld Cup model book — {n_sims:,} sims, Elo prior ({tag}), host advantage on\n")
 
     print("Title odds (top 12):")

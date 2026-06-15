@@ -34,6 +34,29 @@ from engine.soccer.dixon_coles import (
 Target = dict[tuple[int, int], tuple[float, float, float]]
 
 
+def build_model(teams, targets: "Target | None" = None, *, home_adv: float = 0.0,
+                anchor_id: int | None = None, shrinkage: float = 0.2, fit_spread: bool = True,
+                neutral: bool = True) -> MatchModel:
+    """Best-available calibrated model from team Elo priors + whatever sharp 1X2 ``targets`` exist.
+
+    The one call the live odds path uses. Composition:
+      1. if ``targets`` and ``fit_spread``: fit the global Elo->goals spread to them (fixes overall
+         overconfidence) — else use the default spread;
+      2. build the Elo-prior model at that spread;
+      3. if ``targets``: per-team calibrate the COVERED teams toward their market lines (gauge-
+         anchored, ``shrinkage`` toward the prior so sparsely-covered teams stay stable).
+    With no targets this is just the spread-default Elo prior. With targets covering every team and
+    low shrinkage it becomes a full market calibration. ``anchor_id`` defaults to a target's home team.
+    """
+    targets = targets or {}
+    scale = fit_elo_scale(teams, targets, neutral=neutral) if (targets and fit_spread) else 250.0
+    prior = strengths_from_elo(teams, elo_per_goal=scale, home_adv=home_adv)
+    if not targets:
+        return prior
+    anchor = anchor_id if anchor_id is not None else next(iter(targets))[0]
+    return calibrate_strengths(prior, targets, anchor_id=anchor, shrinkage=shrinkage, neutral=neutral)
+
+
 def fit_elo_scale(teams, targets: "Target", *, base: float = DEFAULT_BASE, rho: float = DEFAULT_RHO,
                   neutral: bool = True, lo: float = 50.0, hi: float = 3000.0,
                   iters: int = 60) -> float:
