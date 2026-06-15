@@ -1,13 +1,423 @@
 {
   "meta": {
-    "date": "2026-06-16",
-    "note": "Group-stage matchday-1 fixtures for June 16 2026 (all neutral venues). Decimal 1X2 odds are rounded conversions of reported bookmaker moneylines (bet365/FanDuel/DraftKings) via web search — indicative, fluctuate by book. Verified schedule across NBC/CBS/ESPN/Al Jazeera.",
-    "kalshi_seen": "Argentina vs Algeria only: Argentina ~0.71 / Draw ~0.20 / Algeria ~0.11"
+    "purpose": "Upcoming group-stage fixtures (rest of the stage), June 16-27 2026. run_cycle/predict_matches price these.",
+    "schedule_source": "Full 72-match group-stage schedule via web search (Yahoo/Sky/ESPN/FIFA/Wikipedia), normalized to data team names; 6 per group, every team 3x (completeness PASS).",
+    "venues": "All marked neutral=true: home-listing order follows FIFA convention but is not a verified host-home venue, so home advantage is not applied (safe default).",
+    "odds": "Only the June 16 matches carry pre-match decimal 1X2 (from the prior fixtures file). Populate more odds (or use the live Odds API) for broader EV/calibration.",
+    "count": 56
   },
   "matches": [
-    {"date": "2026-06-16", "home": "France",    "away": "Senegal", "neutral": true, "group": "I", "odds": {"home": 1.45, "draw": 4.50, "away": 6.50}},
-    {"date": "2026-06-16", "home": "Iraq",      "away": "Norway",  "neutral": true, "group": "I", "odds": {"home": 12.0, "draw": 6.25, "away": 1.22}},
-    {"date": "2026-06-16", "home": "Argentina", "away": "Algeria", "neutral": true, "group": "J", "odds": {"home": 1.42, "draw": 4.50, "away": 7.00}},
-    {"date": "2026-06-16", "home": "Austria",   "away": "Jordan",  "neutral": true, "group": "J", "odds": {"home": 1.34, "draw": 5.50, "away": 10.5}}
+    {
+      "date": "2026-06-16",
+      "group": "I",
+      "home": "France",
+      "away": "Senegal",
+      "neutral": true,
+      "odds": {
+        "home": 1.45,
+        "draw": 4.5,
+        "away": 6.5
+      }
+    },
+    {
+      "date": "2026-06-16",
+      "group": "I",
+      "home": "Iraq",
+      "away": "Norway",
+      "neutral": true,
+      "odds": {
+        "home": 12.0,
+        "draw": 6.25,
+        "away": 1.22
+      }
+    },
+    {
+      "date": "2026-06-16",
+      "group": "J",
+      "home": "Argentina",
+      "away": "Algeria",
+      "neutral": true,
+      "odds": {
+        "home": 1.42,
+        "draw": 4.5,
+        "away": 7.0
+      }
+    },
+    {
+      "date": "2026-06-16",
+      "group": "J",
+      "home": "Austria",
+      "away": "Jordan",
+      "neutral": true,
+      "odds": {
+        "home": 1.34,
+        "draw": 5.5,
+        "away": 10.5
+      }
+    },
+    {
+      "date": "2026-06-17",
+      "group": "K",
+      "home": "Portugal",
+      "away": "DR Congo",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-17",
+      "group": "K",
+      "home": "Uzbekistan",
+      "away": "Colombia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-17",
+      "group": "L",
+      "home": "England",
+      "away": "Croatia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-17",
+      "group": "L",
+      "home": "Ghana",
+      "away": "Panama",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-18",
+      "group": "A",
+      "home": "Czechia",
+      "away": "South Africa",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-18",
+      "group": "A",
+      "home": "Mexico",
+      "away": "South Korea",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-18",
+      "group": "B",
+      "home": "Switzerland",
+      "away": "Bosnia and Herzegovina",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-18",
+      "group": "B",
+      "home": "Canada",
+      "away": "Qatar",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-19",
+      "group": "C",
+      "home": "Scotland",
+      "away": "Morocco",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-19",
+      "group": "C",
+      "home": "Brazil",
+      "away": "Haiti",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-19",
+      "group": "D",
+      "home": "USA",
+      "away": "Australia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-19",
+      "group": "D",
+      "home": "Turkiye",
+      "away": "Paraguay",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-20",
+      "group": "E",
+      "home": "Germany",
+      "away": "Cote d'Ivoire",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-20",
+      "group": "E",
+      "home": "Ecuador",
+      "away": "Curacao",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-20",
+      "group": "F",
+      "home": "Netherlands",
+      "away": "Sweden",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-20",
+      "group": "F",
+      "home": "Tunisia",
+      "away": "Japan",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-21",
+      "group": "G",
+      "home": "Belgium",
+      "away": "Iran",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-21",
+      "group": "G",
+      "home": "New Zealand",
+      "away": "Egypt",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-21",
+      "group": "H",
+      "home": "Spain",
+      "away": "Saudi Arabia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-21",
+      "group": "H",
+      "home": "Uruguay",
+      "away": "Cabo Verde",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-22",
+      "group": "I",
+      "home": "France",
+      "away": "Iraq",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-22",
+      "group": "I",
+      "home": "Norway",
+      "away": "Senegal",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-22",
+      "group": "J",
+      "home": "Argentina",
+      "away": "Austria",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-22",
+      "group": "J",
+      "home": "Jordan",
+      "away": "Algeria",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-23",
+      "group": "K",
+      "home": "Portugal",
+      "away": "Uzbekistan",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-23",
+      "group": "K",
+      "home": "Colombia",
+      "away": "DR Congo",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-23",
+      "group": "L",
+      "home": "England",
+      "away": "Ghana",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-23",
+      "group": "L",
+      "home": "Panama",
+      "away": "Croatia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "A",
+      "home": "Czechia",
+      "away": "Mexico",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "A",
+      "home": "South Africa",
+      "away": "South Korea",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "B",
+      "home": "Switzerland",
+      "away": "Canada",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "B",
+      "home": "Bosnia and Herzegovina",
+      "away": "Qatar",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "C",
+      "home": "Scotland",
+      "away": "Brazil",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-24",
+      "group": "C",
+      "home": "Morocco",
+      "away": "Haiti",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "D",
+      "home": "Turkiye",
+      "away": "USA",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "D",
+      "home": "Paraguay",
+      "away": "Australia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "E",
+      "home": "Curacao",
+      "away": "Cote d'Ivoire",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "E",
+      "home": "Ecuador",
+      "away": "Germany",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "F",
+      "home": "Japan",
+      "away": "Sweden",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-25",
+      "group": "F",
+      "home": "Tunisia",
+      "away": "Netherlands",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "G",
+      "home": "Egypt",
+      "away": "Iran",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "G",
+      "home": "New Zealand",
+      "away": "Belgium",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "H",
+      "home": "Cabo Verde",
+      "away": "Saudi Arabia",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "H",
+      "home": "Uruguay",
+      "away": "Spain",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "I",
+      "home": "Norway",
+      "away": "France",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-26",
+      "group": "I",
+      "home": "Senegal",
+      "away": "Iraq",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "J",
+      "home": "Algeria",
+      "away": "Austria",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "J",
+      "home": "Jordan",
+      "away": "Argentina",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "K",
+      "home": "Colombia",
+      "away": "Portugal",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "K",
+      "home": "DR Congo",
+      "away": "Uzbekistan",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "L",
+      "home": "Croatia",
+      "away": "Ghana",
+      "neutral": true
+    },
+    {
+      "date": "2026-06-27",
+      "group": "L",
+      "home": "Panama",
+      "away": "England",
+      "neutral": true
+    }
   ]
 }
