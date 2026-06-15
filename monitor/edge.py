@@ -54,6 +54,20 @@ def kelly_stake(signal: "EdgeSignal", bankroll: float, fraction: float = 0.25) -
     return max(0.0, signal.kelly) * fraction * bankroll
 
 
+def stake_row(sig: "EdgeSignal", *, bankroll: float = 1000.0, fraction: float = 0.25) -> dict:
+    """Flatten a signal into a display row (ticker, side, model/mid, net edge, Kelly, stake $)."""
+    return {
+        "ticker": sig.ticker,
+        "type": sig.market_type,
+        "side": sig.side,
+        "model": round(sig.model_prob, 3),
+        "mid": round(sig.mid, 3),
+        "net_edge": round(sig.net_edge, 3),
+        "kelly": round(sig.kelly, 3),
+        "stake": round(kelly_stake(sig, bankroll, fraction), 2),
+    }
+
+
 def evaluate(model_prob: float, state: KalshiMarketState, *, maker: bool = False) -> EdgeSignal:
     """Cost out one (model_prob, market) pair into an EdgeSignal (no threshold applied here)."""
     side = "yes" if model_prob > state.mid else "no"

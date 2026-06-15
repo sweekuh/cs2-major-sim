@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from monitor.edge import evaluate, find_edges, kelly_fraction, kelly_stake
+from monitor.edge import evaluate, find_edges, kelly_fraction, kelly_stake, stake_row
 from odds.kalshi import KalshiMarketState
 
 
@@ -42,6 +42,13 @@ def test_kelly_stake_is_fractional():
     sig = evaluate(0.30, _state(mid=0.20, spread=0.02))  # kelly 0.125, side yes
     assert sig.kelly == pytest.approx(0.125)
     assert kelly_stake(sig, bankroll=1000.0, fraction=0.25) == pytest.approx(31.25)
+
+
+def test_stake_row_flattens_signal():
+    row = stake_row(evaluate(0.30, _state(ticker="X", mid=0.20, spread=0.02)), bankroll=1000.0)
+    assert row["ticker"] == "X" and row["side"] == "yes"
+    assert row["net_edge"] == pytest.approx(0.07)
+    assert row["stake"] == pytest.approx(31.25)  # quarter-Kelly of 0.125 on 1000
 
 
 def test_find_edges_filters_below_threshold():
