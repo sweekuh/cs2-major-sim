@@ -194,3 +194,48 @@ Live reads (Phase-1+, once endpoints verified): `TheOddsApiProvider().fetch(...)
 Odds API key; `KalshiWCProvider().fetch(series_tickers=[...])` is keyless. Confirm **[Q-FEES]**
 (soccer taker coefficient = 0.07, no category override) against the live fee schedule before
 trusting `net_edge` for any real-money decision.
+
+## 7. Operating loop & runbook
+
+Two nested loops: an **operating loop** (run as games finish, to predict and price) and an
+**improvement loop** (build → adversarial review → fix). A **triage** step decides whether an
+apparent edge is real, a calibration artifact, or a bug.
+
+### A. Operating loop (per match-day / as results land)
+1. **Ingest results → update the model.** Append finished scorelines to `data/wc2026_results.json`,
+   then `uv run python -m scripts.run_cycle`. `apply_results` (`engine/soccer/elo_update.py`) folds
+   them into team Elo (zero-sum, host-aware); `build_model` rebuilds the goals model. The cycle
+   prints the biggest strength movers and the upcoming-fixture predictions.
+2. **Calibrate to the market.** With `THE_ODDS_API_KEY` set + network open, pull de-vigged sharp
+   1X2 (`TheOddsApiProvider`) and pass `calibrate=True` so `build_model` per-team-calibrates the
+   covered teams (kills the Elo overconfidence). Without odds it stays results-updated Elo.
+3. **Find EV.** Predict remaining fixtures (`scripts.predict_matches`) and/or scan Kalshi
+   (`scripts.monitor_wc` → `pipeline.scan`) for costed, Kelly-sized, ranked signals
+   (`net_edge = |fair − mid| − fee − spread/2`).
+4. **Log + measure (the truth oracle).** Persist every emitted signal (`monitor/signal_log.py`)
+   and, after each market settles, backfill the Pinnacle close to compute CLV. Mean CLV > 0 and
+   significant is the only proof the edge is real; if it isn't, stop or rebuild fair value.
+5. **Act (gated, manual).** Read-only by default. Execution stays behind **[Q-LEGAL]**.
+
+### B. Triage — is this apparent edge real?
+Run this check on any flagged bet before trusting it (the tooling already surfaces each signal):
+- **Model > market by >10 pts, or EVshp ≤ 0** (`scripts.predict_matches`): it's model
+  overconfidence, not edge — calibrate and re-check. (Liquid favourites almost always land here.)
+- **Edge survives calibration AND EVshp > 0 AND in a thin/exotic market with fillable depth:** a
+  genuine candidate — size with fractional Kelly, log it, watch CLV.
+- **Edge appears on a liquid, deep market:** suspect a bug or a stale/mis-mapped price, not alpha.
+- **A team prices far from market after calibration:** likely its Elo prior is off and it lacks
+  market coverage — needs per-team calibration data, not a bet.
+
+### C. Improvement loop (build → review → fix)
+Each change: write it small with its pros/cons/impact → implement with tests → run the suite →
+**adversarial review** (a reviewer agent that runs code to verify suspicions) → triage findings by
+severity → fix the real ones with regression tests → commit. This session ran ~20 iterations and
+~6 review cycles this way; treat a green suite + a clean review as the bar for each commit.
+
+### D. Issue triage (when something breaks)
+- **Test failure / review CRITICAL-HIGH:** fix before the next feature.
+- **Numbers look wrong:** check data first (`data/wc2026_*.json` drafts, team-name resolution),
+  then calibration (spread + per-team), then the model — in that order.
+- **Network/empty fetch:** expected in a sandbox; the live path fails soft. Needs an env key +
+  a network policy allowing the provider host.
