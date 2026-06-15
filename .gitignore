@@ -19,6 +19,11 @@ data/odds_fetch.log
 # are NOT ignored — those are committed source.)
 data/results_cache.json
 
+# Signal log (sqlite) written by scripts/monitor_wc_live.py — a runtime artifact (signals + CLV),
+# not source. NEVER commit (it accrues live trading telemetry).
+*.db
+wc_signals.db
+
 # Python
 __pycache__/
 *.py[cod]

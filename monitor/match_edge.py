@@ -35,6 +35,12 @@ def market_targets(fixtures, name_to_id) -> dict[tuple[int, int], tuple[float, f
     return out
 
 
+def targets_from_quotes(quotes) -> dict[tuple[int, int], tuple[float, float, float]]:
+    """Calibration targets keyed by (home_id, away_id) from already-de-vigged ``Quote1X2`` objects
+    (the live ``TheOddsApiProvider`` output). Last quote per match wins on a duplicate."""
+    return {q.match: (q.p_home, q.p_draw, q.p_away) for q in quotes}
+
+
 def results_to_tuples(matches, name_to_id) -> list[tuple[int, int, int, int]]:
     """Resolve finished-match records into ``(home_id, away_id, home_goals, away_goals)`` tuples
     for ``engine.soccer.elo_update.apply_results``. Skips records missing a score or an

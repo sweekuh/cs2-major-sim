@@ -13,8 +13,10 @@ from monitor.match_edge import (
     market_targets,
     match_prediction,
     results_to_tuples,
+    targets_from_quotes,
 )
 from odds._match import build_name_to_id
+from odds.base import Quote1X2
 
 # Team 1 clearly stronger than team 2.
 MODEL = MatchModel(attack={1: 0.4, 2: -0.4}, defence={1: 0.4, 2: -0.4}, home_adv=0.3, base=0.3, rho=-0.05)
@@ -67,6 +69,13 @@ def test_market_targets_skips_invalid_odds_without_crashing():
                             "odds": {"home": -1.45, "draw": 4.5, "away": 6.5}}], n2i) == {}
     assert market_targets([{"home": "France", "away": "Senegal",
                             "odds": {"home": 0.5, "draw": 4.5, "away": 6.5}}], n2i) == {}
+
+
+def test_targets_from_quotes_keys_by_match():
+    q = Quote1X2(provider="theoddsapi:sharp", match=(1, 2), p_home=0.60, p_draw=0.25, p_away=0.15,
+                 originate=1.0, liquidity=0.0, ts=0.0)
+    assert targets_from_quotes([q]) == {(1, 2): (0.60, 0.25, 0.15)}
+    assert targets_from_quotes([]) == {}
 
 
 def test_results_to_tuples_resolves_and_skips():
