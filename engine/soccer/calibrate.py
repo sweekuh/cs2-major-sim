@@ -77,6 +77,8 @@ def calibrate_strengths(prior: MatchModel, targets: Target, *, anchor_id: int,
     sparse national teams (few/contradictory targets) so they stay near the Elo prior rather than
     overfitting. 0.0 = no shrinkage (unchanged).
     """
+    if anchor_id not in prior.attack:
+        raise ValueError(f"anchor_id {anchor_id} is not a team in the model")
     ids = sorted(prior.attack.keys())
     free = [t for t in ids if t != anchor_id]
     fi = {t: k for k, t in enumerate(free)}

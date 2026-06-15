@@ -24,7 +24,9 @@ def market_targets(fixtures, name_to_id) -> dict[tuple[int, int], tuple[float, f
     out: dict[tuple[int, int], tuple[float, float, float]] = {}
     for m in fixtures:
         o = m.get("odds") or {}
-        if not all(o.get(k) for k in _OUTCOMES):
+        # Require a valid decimal price (> 1.0) on all three outcomes; anything else (missing,
+        # zero, negative, or sub-1.0) is not de-viggable and is skipped (fail-soft, no crash).
+        if not all(isinstance(o.get(k), (int, float)) and o.get(k) > 1.0 for k in _OUTCOMES):
             continue
         hid, aid = resolve_id(m["home"], name_to_id), resolve_id(m["away"], name_to_id)
         if hid is None or aid is None or hid == aid:

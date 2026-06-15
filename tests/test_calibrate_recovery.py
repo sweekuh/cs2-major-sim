@@ -105,6 +105,12 @@ def test_shrinkage_keeps_sparse_team_near_prior():
     assert abs(shrunk.attack[2]) < abs(free.attack[2]) * 0.6
 
 
+def test_calibrate_rejects_unknown_anchor():
+    prior = MatchModel(attack={1: 0.0, 2: 0.0}, defence={1: 0.0, 2: 0.0}, home_adv=0.0, base=0.3, rho=-0.05)
+    with pytest.raises(ValueError):
+        calibrate_strengths(prior, {(1, 2): (0.5, 0.3, 0.2)}, anchor_id=999)
+
+
 def test_anchor_held_fixed():
     prior = MatchModel(attack={i: 0.5 for i in IDS}, defence={i: 0.5 for i in IDS},
                        home_adv=0.0, base=0.3, rho=-0.05)

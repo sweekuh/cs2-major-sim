@@ -54,6 +54,15 @@ def test_market_targets_skips_partial_or_unresolved():
                             "odds": {"home": 2, "draw": 3, "away": 4}}], n2i) == {}
 
 
+def test_market_targets_skips_invalid_odds_without_crashing():
+    n2i = build_name_to_id(_TEAMS)
+    # Negative and sub-1.0 are not valid decimal odds -> skipped (would otherwise crash the de-vig).
+    assert market_targets([{"home": "France", "away": "Senegal",
+                            "odds": {"home": -1.45, "draw": 4.5, "away": 6.5}}], n2i) == {}
+    assert market_targets([{"home": "France", "away": "Senegal",
+                            "odds": {"home": 0.5, "draw": 4.5, "away": 6.5}}], n2i) == {}
+
+
 def test_calibration_collapses_overconfidence_toward_market():
     n2i = build_name_to_id(_TEAMS)
     targets = market_targets(_FIX, n2i)

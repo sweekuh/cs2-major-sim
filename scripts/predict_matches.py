@@ -42,9 +42,12 @@ def main(*, home_adv: float = 0.3, calibrate: bool = False) -> None:
         targets = market_targets(fixtures, n2i)
         if targets:
             anchor = next(iter(targets))[0]  # first home team pins the gauge
-            model = calibrate_strengths(model, targets, anchor_id=anchor, shrinkage=0.1, neutral=True)
-            print("\n[calibrated to today's de-vigged sharp 1X2 — model should now agree with the "
-                  "market and report ~no edge on these liquid games]")
+            # shrinkage=0.0: this re-prices the SAME matches it's fit to, which is fully determined,
+            # so the model reproduces the sharp line exactly (a positive shrinkage would leave a
+            # residual biased toward the favorite-heavy Elo prior and fake small +EV).
+            model = calibrate_strengths(model, targets, anchor_id=anchor, shrinkage=0.0, neutral=True)
+            print("\n[calibrated to today's de-vigged sharp 1X2 — the model now reprices these "
+                  "matches at the market, so EVmod ~ EVshp and any +EV here is just residual noise]")
 
     print("\nWorld Cup match predictions — model vs de-vigged (Shin) market\n")
     print("  EVmod = EV/$1 using the (overconfident) model prob; EVshp = EV/$1 using the de-vigged"
@@ -59,17 +62,21 @@ def main(*, home_adv: float = 0.3, calibrate: bool = False) -> None:
         if hid is None or aid is None:
             print(f"  [skip] unresolved: {m['home']} vs {m['away']}")
             continue
-        neutral = m.get("neutral", hid not in hosts)
+        # When calibrated, predict neutral=True to match how the model was fit (else a host fixture
+        # would re-add home advantage already absorbed into the calibrated strengths).
+        neutral = True if calibrate else m.get("neutral", hid not in hosts)
         p = match_prediction(model, hid, aid, neutral=neutral)["probs"]
         odds = m.get("odds") or {}
         market = None
-        if all(odds.get(k) for k in ("home", "draw", "away")):
+        if all(isinstance(odds.get(k), (int, float)) and odds.get(k) > 1.0
+               for k in ("home", "draw", "away")):
             market = dict(zip(("home", "draw", "away"),
                               devig_three_way_shin(odds["home"], odds["draw"], odds["away"])))
             overconf.append((m, sum(abs(p[k] - market[k]) for k in p)))
         label = f"{m['home'][:11]} v {m['away'][:10]}"
         for outcome, name in (("home", m["home"]), ("draw", "Draw"), ("away", m["away"])):
             o = odds.get(outcome)
+            o = o if (isinstance(o, (int, float)) and o > 1.0) else None  # only value valid odds
             mk = market[outcome] if market else None
             gap = (p[outcome] - mk) if mk is not None else None
             ev = decimal_ev(p[outcome], o) if o else None
