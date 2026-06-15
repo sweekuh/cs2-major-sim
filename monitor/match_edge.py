@@ -9,8 +9,28 @@ from __future__ import annotations
 
 from engine.soccer.dixon_coles import MatchModel, match_1x2
 from monitor.fees import per_contract_fee
+from odds._match import resolve_id
+from odds.base import devig_three_way_shin
 
 _OUTCOMES = ("home", "draw", "away")
+
+
+def market_targets(fixtures, name_to_id) -> dict[tuple[int, int], tuple[float, float, float]]:
+    """De-vig each fixture's 1X2 odds (Shin) into calibration targets keyed by (home_id, away_id).
+
+    Skips fixtures without a full home/draw/away price or with an unresolvable team. The result
+    feeds ``engine.soccer.calibrate.calibrate_strengths`` so the model agrees with the sharp line.
+    """
+    out: dict[tuple[int, int], tuple[float, float, float]] = {}
+    for m in fixtures:
+        o = m.get("odds") or {}
+        if not all(o.get(k) for k in _OUTCOMES):
+            continue
+        hid, aid = resolve_id(m["home"], name_to_id), resolve_id(m["away"], name_to_id)
+        if hid is None or aid is None or hid == aid:
+            continue
+        out[(hid, aid)] = devig_three_way_shin(o["home"], o["draw"], o["away"])
+    return out
 
 
 def match_prediction(model: MatchModel, home_id: int, away_id: int, *, neutral: bool = True) -> dict:

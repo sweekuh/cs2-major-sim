@@ -14,16 +14,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from engine.soccer.calibrate import calibrate_strengths
 from engine.soccer.dixon_coles import strengths_from_elo
 from engine.soccer.teams import host_ids, load_teams
-from monitor.match_edge import decimal_ev, match_prediction
+from monitor.match_edge import decimal_ev, market_targets, match_prediction
 from odds._match import build_name_to_id, resolve_id
 from odds.base import devig_three_way_shin
 
 _FIXTURES = Path(__file__).resolve().parents[1] / "data" / "wc2026_fixtures.json"
 
 
-def main(*, home_adv: float = 0.3) -> None:
+def main(*, home_adv: float = 0.3, calibrate: bool = False) -> None:
     teams, _ = load_teams()
     model = strengths_from_elo(teams, home_adv=home_adv)
     hosts = host_ids(teams)
@@ -36,6 +37,14 @@ def main(*, home_adv: float = 0.3) -> None:
     if not fixtures:
         print("\nNo fixtures in data/wc2026_fixtures.json — populate it with the day's matches.\n")
         return
+
+    if calibrate:
+        targets = market_targets(fixtures, n2i)
+        if targets:
+            anchor = next(iter(targets))[0]  # first home team pins the gauge
+            model = calibrate_strengths(model, targets, anchor_id=anchor, shrinkage=0.1, neutral=True)
+            print("\n[calibrated to today's de-vigged sharp 1X2 — model should now agree with the "
+                  "market and report ~no edge on these liquid games]")
 
     print("\nWorld Cup match predictions — model vs de-vigged (Shin) market\n")
     print("  EVmod = EV/$1 using the (overconfident) model prob; EVshp = EV/$1 using the de-vigged"
