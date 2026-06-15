@@ -1,0 +1,13 @@
+{
+  "meta": {
+    "date": "2026-06-16",
+    "note": "Group-stage matchday-1 fixtures for June 16 2026 (all neutral venues). Decimal 1X2 odds are rounded conversions of reported bookmaker moneylines (bet365/FanDuel/DraftKings) via web search — indicative, fluctuate by book. Verified schedule across NBC/CBS/ESPN/Al Jazeera.",
+    "kalshi_seen": "Argentina vs Algeria only: Argentina ~0.71 / Draw ~0.20 / Algeria ~0.11"
+  },
+  "matches": [
+    {"date": "2026-06-16", "home": "France",    "away": "Senegal", "neutral": true, "group": "I", "odds": {"home": 1.45, "draw": 4.50, "away": 6.50}},
+    {"date": "2026-06-16", "home": "Iraq",      "away": "Norway",  "neutral": true, "group": "I", "odds": {"home": 12.0, "draw": 6.25, "away": 1.22}},
+    {"date": "2026-06-16", "home": "Argentina", "away": "Algeria", "neutral": true, "group": "J", "odds": {"home": 1.42, "draw": 4.50, "away": 7.00}},
+    {"date": "2026-06-16", "home": "Austria",   "away": "Jordan",  "neutral": true, "group": "J", "odds": {"home": 1.34, "draw": 5.50, "away": 10.5}}
+  ]
+}
