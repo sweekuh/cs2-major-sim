@@ -21,9 +21,50 @@ from __future__ import annotations
 
 import numpy as np
 
-from engine.soccer.dixon_coles import MatchModel, match_1x2
+from engine.soccer.dixon_coles import (
+    DEFAULT_BASE,
+    DEFAULT_RHO,
+    MatchModel,
+    match_1x2,
+    strengths_from_elo,
+)
 
 Target = dict[tuple[int, int], tuple[float, float, float]]
+
+
+def fit_elo_scale(teams, targets: "Target", *, base: float = DEFAULT_BASE, rho: float = DEFAULT_RHO,
+                  neutral: bool = True, lo: float = 50.0, hi: float = 3000.0,
+                  iters: int = 60) -> float:
+    """Fit the global Elo->goals spread (``elo_per_goal``) so model 1X2 matches the market.
+
+    The model's confidence scales with ``(elo_diff) / elo_per_goal``; a too-small scale makes
+    strong teams near-certain (the overconfidence seen at the tournament level). This minimizes the
+    squared 1X2 error between ``strengths_from_elo(teams, elo_per_goal=scale)`` and the de-vigged
+    ``targets`` over a 1-D golden-section search — well-identified even from a few matches, since
+    it's a single global parameter. Returns the best ``elo_per_goal`` (larger = less confident).
+    """
+    def loss(scale: float) -> float:
+        m = strengths_from_elo(teams, elo_per_goal=scale, base=base, rho=rho)
+        err = 0.0
+        for (h, a), tgt in targets.items():
+            p = match_1x2(m, h, a, neutral=neutral)
+            err += sum((pi - ti) ** 2 for pi, ti in zip(p, tgt))
+        return err
+
+    inv_phi = (5 ** 0.5 - 1) / 2  # 0.618...
+    a, b = lo, hi
+    c, d = b - inv_phi * (b - a), a + inv_phi * (b - a)
+    fc, fd = loss(c), loss(d)
+    for _ in range(iters):
+        if fc < fd:
+            b, d, fd = d, c, fc
+            c = b - inv_phi * (b - a)
+            fc = loss(c)
+        else:
+            a, c, fc = c, d, fd
+            d = a + inv_phi * (b - a)
+            fd = loss(d)
+    return 0.5 * (a + b)
 
 # Match-importance multipliers (FIFA/Elo convention): competitive matches carry more signal than
 # friendlies, which are documented predictive noise for national teams (arxiv 1705.09575).

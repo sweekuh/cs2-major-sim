@@ -13,6 +13,10 @@ Run: ``uv run python -m scripts.tournament_report``
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+from engine.soccer.calibrate import fit_elo_scale
 from engine.soccer.dixon_coles import strengths_from_elo
 from engine.soccer.markets import (
     p_advance,
@@ -25,18 +29,36 @@ from engine.soccer.markets import (
 from engine.soccer.teams import groups as group_by_letter
 from engine.soccer.teams import host_ids, load_teams
 from engine.soccer.tournament import run_tournament
+from monitor.match_edge import market_targets
+from odds._match import build_name_to_id
 
 _STAGE = {1: "R32", 2: "R16", 3: "QF", 4: "SF", 5: "Final", 6: "Champion"}
+_FIXTURES = Path(__file__).resolve().parents[1] / "data" / "wc2026_fixtures.json"
 
 
-def main(*, n_sims: int = 20_000, seed: int = 0, home_adv: float = 0.3) -> None:
+def main(*, n_sims: int = 20_000, seed: int = 0, home_adv: float = 0.3,
+         calibrate_scale: bool = False) -> None:
     teams, _ = load_teams()
     name = {t.id: t.name for t in teams}
     groups = {g: [t.id for t in members] for g, members in group_by_letter(teams).items()}
-    model = strengths_from_elo(teams, home_adv=home_adv)
+
+    elo_per_goal = 250.0
+    if calibrate_scale:
+        try:
+            fixtures = json.loads(_FIXTURES.read_text()).get("matches", [])
+        except (OSError, ValueError):
+            fixtures = []
+        targets = market_targets(fixtures, build_name_to_id(teams))
+        if targets:
+            elo_per_goal = fit_elo_scale(teams, targets, neutral=True)
+            print(f"\n[fit Elo->goals spread to {len(targets)} market matches: "
+                  f"elo_per_goal {elo_per_goal:.0f} (default 250; larger = less confident)]")
+
+    model = strengths_from_elo(teams, elo_per_goal=elo_per_goal, home_adv=home_adv)
     result = run_tournament(groups, model, n_sims, seed=seed, hosts=host_ids(teams))
 
-    print(f"\nWorld Cup model book — {n_sims:,} sims, Elo prior (uncalibrated), host advantage on\n")
+    tag = "spread-calibrated" if calibrate_scale else "uncalibrated"
+    print(f"\nWorld Cup model book — {n_sims:,} sims, Elo prior ({tag}), host advantage on\n")
 
     print("Title odds (top 12):")
     for tid, p in top_n(p_champion(result), 12):
@@ -65,10 +87,14 @@ def main(*, n_sims: int = 20_000, seed: int = 0, home_adv: float = 0.3) -> None:
     fav = top_n(p_champion(result), 1)[0][0]
     dist = p_furthest_stage(result, fav)
     print(f"  {name[fav]}: " + "  ".join(f"{_STAGE[s]} {p:.0%}" for s, p in dist.items() if s >= 1))
-    print("\n  NOTE: these title odds are far ABOVE the real market (model favourite ~49% vs market"
-          " ~16%) — the uncalibrated Elo->goals spread is too strong, compounded over 7 rounds.")
-    print("  So this book is illustrative of the machinery only; the spread must be calibrated to"
-          " market before any exotic price is trustworthy for edge-hunting.\n")
+    if calibrate_scale:
+        print("\n  Spread calibrated to the day's market lines, so tournament confidence is realistic."
+              " Still a GLOBAL spread + Elo team priors — per-team market calibration is needed"
+              " before trusting any single exotic price for edge.\n")
+    else:
+        print("\n  NOTE: these title odds are far ABOVE the real market (model favourite ~49% vs"
+              " market ~16%) — the uncalibrated Elo->goals spread is too strong, compounded over 7"
+              " rounds. Run with calibrate_scale=True to fix the spread; illustrative only.\n")
 
 
 if __name__ == "__main__":

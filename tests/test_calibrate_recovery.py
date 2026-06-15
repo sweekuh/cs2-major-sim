@@ -16,10 +16,12 @@ from engine.soccer.calibrate import (
     IMPORTANCE,
     build_match_weights,
     calibrate_strengths,
+    fit_elo_scale,
     match_weight,
     time_decay,
 )
-from engine.soccer.dixon_coles import MatchModel, match_1x2
+from engine.soccer.dixon_coles import MatchModel, match_1x2, strengths_from_elo
+from engine.soccer.teams import SoccerTeam
 
 IDS = [1, 2, 3, 4, 5]
 TRUE = MatchModel(
@@ -103,6 +105,25 @@ def test_shrinkage_keeps_sparse_team_near_prior():
     shrunk = calibrate_strengths(prior, target, anchor_id=1, iters=60, shrinkage=5.0)
     assert abs(shrunk.attack[2]) < abs(free.attack[2])   # shrinkage pulls toward the prior (0)
     assert abs(shrunk.attack[2]) < abs(free.attack[2]) * 0.6
+
+
+def test_fit_elo_scale_recovers_known_spread():
+    teams = [SoccerTeam(id=i, name=f"T{i}", group="A", elo=elo)
+             for i, elo in enumerate([2100, 1950, 1800, 1650, 1500], start=1)]
+    true_scale = 400.0
+    truth = strengths_from_elo(teams, elo_per_goal=true_scale)
+    targets = {(h, a): match_1x2(truth, h, a, neutral=True)
+               for h, a in itertools.permutations([t.id for t in teams], 2)}
+    fit = fit_elo_scale(teams, targets, neutral=True)
+    assert fit == pytest.approx(true_scale, rel=0.1)
+
+
+def test_fit_elo_scale_larger_when_market_less_confident():
+    teams = [SoccerTeam(id=1, name="Strong", group="A", elo=2100),
+             SoccerTeam(id=2, name="Weak", group="A", elo=1500)]
+    # A near-even market (50/27/23) implies a MUCH wider spread than the Elo gap suggests.
+    fit = fit_elo_scale(teams, {(1, 2): (0.50, 0.27, 0.23)}, neutral=True)
+    assert fit > 250.0  # bigger scale = less confident than the default
 
 
 def test_calibrate_rejects_unknown_anchor():
