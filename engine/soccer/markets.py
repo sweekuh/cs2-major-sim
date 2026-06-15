@@ -81,3 +81,8 @@ def p_furthest_stage(result: TournamentResult, team_id: int) -> dict[int, float]
     """Distribution over the deepest stage one team reaches (stage-of-elimination market)."""
     c = Counter(s["stage_reached"][team_id] for s in result.sample if team_id in s["stage_reached"])
     return {stage: cnt / result.n for stage, cnt in sorted(c.items())}
+
+
+def top_n(probs: dict[int, float], n: int = 15) -> list[tuple[int, float]]:
+    """The ``n`` highest-probability (team_id, prob) pairs from a market table, descending."""
+    return sorted(probs.items(), key=lambda kv: kv[1], reverse=True)[:n]

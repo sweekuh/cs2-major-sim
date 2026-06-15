@@ -18,6 +18,7 @@ from engine.soccer.markets import (
     p_group_position,
     p_group_winner,
     p_reach_stage,
+    top_n,
 )
 from engine.soccer.teams import groups as group_by_letter
 from engine.soccer.teams import load_teams
@@ -88,6 +89,11 @@ def test_eliminated_in_group_complements_advance():
     adv = p_advance(r)
     for tid in r.teams:
         assert elim[tid] + adv[tid] == pytest.approx(1.0)
+
+
+def test_top_n_sorted_descending():
+    out = top_n({1: 0.1, 2: 0.5, 3: 0.3, 4: 0.05}, 2)
+    assert out == [(2, 0.5), (3, 0.3)]
 
 
 def test_determinism_same_seed_same_result():
