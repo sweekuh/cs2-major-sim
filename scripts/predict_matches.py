@@ -38,8 +38,11 @@ def main(*, home_adv: float = 0.3) -> None:
         return
 
     print("\nWorld Cup match predictions — model vs de-vigged (Shin) market\n")
-    print(f"{'match':<26}{'outcome':<10}{'model':>7}{'market':>8}{'gap':>7}{'odds':>7}{'EV/$1':>8}")
-    print("-" * 73)
+    print("  EVmod = EV/$1 using the (overconfident) model prob; EVshp = EV/$1 using the de-vigged"
+          " sharp prob.\n  EVshp > 0 would be genuine value; EVmod > 0 with EVshp <= 0 is pure"
+          " model overconfidence.\n")
+    print(f"{'match':<24}{'outcome':<9}{'model':>7}{'market':>8}{'gap':>7}{'odds':>6}{'EVmod':>7}{'EVshp':>7}")
+    print("-" * 75)
     plus_ev = []
     overconf = []  # (match, sum |model-market| over outcomes) to flag miscalibration
     for m in fixtures:
@@ -61,22 +64,27 @@ def main(*, home_adv: float = 0.3) -> None:
             mk = market[outcome] if market else None
             gap = (p[outcome] - mk) if mk is not None else None
             ev = decimal_ev(p[outcome], o) if o else None
-            print(f"{label if outcome == 'home' else '':<26}{outcome:<10}{p[outcome]:>7.1%}"
+            ev_sharp = decimal_ev(mk, o) if (o and mk is not None) else None
+            print(f"{label if outcome == 'home' else '':<24}{outcome:<9}{p[outcome]:>7.1%}"
                   f"{(f'{mk:.1%}' if mk is not None else '—'):>8}"
                   f"{(f'{gap:+.1%}' if gap is not None else '—'):>7}"
-                  f"{(f'{o:.2f}' if o else '—'):>7}"
-                  f"{(f'{ev:+.2f}' if ev is not None else '—'):>8}")
-            if ev and ev > 0:
-                plus_ev.append((m, name, p[outcome], mk, o, ev))
+                  f"{(f'{o:.2f}' if o else '—'):>6}"
+                  f"{(f'{ev:+.2f}' if ev is not None else '—'):>7}"
+                  f"{(f'{ev_sharp:+.2f}' if ev_sharp is not None else '—'):>7}")
+            if ev is not None and ev > 0:
+                plus_ev.append((m, name, p[outcome], mk, o, ev, ev_sharp))
 
     if plus_ev:
         print("\nApparent +EV bets (model prob x decimal odds - 1 > 0):")
-        for m, name, prob, mk, odd, ev in sorted(plus_ev, key=lambda r: r[5], reverse=True):
+        for m, name, prob, mk, odd, ev, ev_sharp in sorted(plus_ev, key=lambda r: r[5], reverse=True):
             tag = ""
-            if mk is not None and prob - mk > 0.10:
-                tag = "  <- model >10pts over market: likely overconfidence, NOT edge"
+            if ev_sharp is not None and ev_sharp <= 0:
+                tag = "  <- but EVshp <= 0: -EV to a sharp; the 'edge' is model overconfidence, NOT real"
+            elif mk is not None and prob - mk > 0.10:
+                tag = "  <- model >10pts over market: likely overconfidence"
+            mk_str = f"{mk:.0%}" if mk is not None else "n/a"
             print(f"  {name + ' (' + m['home'] + ' v ' + m['away'] + ')':<42}"
-                  f"model {prob:.0%} vs mkt {mk:.0%}  EV {ev:+.2f}{tag}")
+                  f"model {prob:.0%} vs mkt {mk_str}  EVmod {ev:+.2f}{tag}")
 
     if overconf:
         worst = max(overconf, key=lambda r: r[1])
