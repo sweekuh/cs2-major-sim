@@ -35,6 +35,24 @@ def market_targets(fixtures, name_to_id) -> dict[tuple[int, int], tuple[float, f
     return out
 
 
+def results_to_tuples(matches, name_to_id) -> list[tuple[int, int, int, int]]:
+    """Resolve finished-match records into ``(home_id, away_id, home_goals, away_goals)`` tuples
+    for ``engine.soccer.elo_update.apply_results``. Skips records missing a score or an
+    unresolvable / same-id team (fail-soft, no crash)."""
+    out: list[tuple[int, int, int, int]] = []
+    for m in matches:
+        if m.get("home_goals") is None or m.get("away_goals") is None:
+            continue
+        hid, aid = resolve_id(m.get("home", ""), name_to_id), resolve_id(m.get("away", ""), name_to_id)
+        if hid is None or aid is None or hid == aid:
+            continue
+        try:
+            out.append((hid, aid, int(m["home_goals"]), int(m["away_goals"])))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def match_prediction(model: MatchModel, home_id: int, away_id: int, *, neutral: bool = True) -> dict:
     """Model 1X2 for a fixture + the most likely outcome. ``neutral=False`` applies home advantage."""
     probs = dict(zip(_OUTCOMES, match_1x2(model, home_id, away_id, neutral=neutral)))

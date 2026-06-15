@@ -7,7 +7,13 @@ import pytest
 from engine.soccer.calibrate import calibrate_strengths
 from engine.soccer.dixon_coles import MatchModel, match_1x2, strengths_from_elo
 from engine.soccer.teams import SoccerTeam
-from monitor.match_edge import decimal_ev, kalshi_ev, market_targets, match_prediction
+from monitor.match_edge import (
+    decimal_ev,
+    kalshi_ev,
+    market_targets,
+    match_prediction,
+    results_to_tuples,
+)
 from odds._match import build_name_to_id
 
 # Team 1 clearly stronger than team 2.
@@ -61,6 +67,16 @@ def test_market_targets_skips_invalid_odds_without_crashing():
                             "odds": {"home": -1.45, "draw": 4.5, "away": 6.5}}], n2i) == {}
     assert market_targets([{"home": "France", "away": "Senegal",
                             "odds": {"home": 0.5, "draw": 4.5, "away": 6.5}}], n2i) == {}
+
+
+def test_results_to_tuples_resolves_and_skips():
+    n2i = build_name_to_id(_TEAMS)  # France=1, Senegal=2
+    matches = [
+        {"home": "France", "away": "Senegal", "home_goals": 2, "away_goals": 1},   # ok
+        {"home": "France", "away": "Senegal", "home_goals": None, "away_goals": 1},  # no score -> skip
+        {"home": "Atlantis", "away": "Senegal", "home_goals": 1, "away_goals": 0},   # unresolved -> skip
+    ]
+    assert results_to_tuples(matches, n2i) == [(1, 2, 2, 1)]
 
 
 def test_calibration_collapses_overconfidence_toward_market():
