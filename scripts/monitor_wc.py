@@ -6,6 +6,10 @@ edge signals. Read-only — it identifies bets, it does not place them. Network 
 markets (or an outage) prints an empty feed rather than raising.
 
 Run: ``uv run python -m scripts.monitor_wc``
+
+For the richer entry point — API-key auth (size Kelly against your real Kalshi balance), a saved
+``data/ev_report.json`` artifact, and an offline ``--fixture`` mode — use ``scripts.ev_report``
+(docs/EV_MONITOR.md). This module stays the minimal keyless console monitor.
 """
 
 from __future__ import annotations

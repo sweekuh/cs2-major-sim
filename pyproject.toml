@@ -12,7 +12,12 @@ requires-python = ">=3.12"
 # lazy-imported only inside the providers' live-fetch branch and dotenv only inside
 # scripts/fetch_odds.py — NEVER at the app/ui import path, so the zero-config first run is
 # preserved (DX-01, ui/odds_loader.py is json-only).
+# cryptography signs Kalshi authenticated requests (RSA-PSS; odds/kalshi_auth.py). Like httpx it is
+# lazy-imported only inside the auth path (never at the app/engine import path), so the keyless
+# monitor still imports with no crypto dep present. Version NOT live-verified on PyPI (egress to
+# files.pythonhosted.org is blocked in this env); lower-bound pin only — run `uv lock` to resolve.
 dependencies = [
+    "cryptography>=41",
     "httpx>=0.28,<0.29",
     "numpy>=2.4,<2.5",
     "python-dotenv>=1.2,<2",

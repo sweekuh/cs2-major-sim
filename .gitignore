@@ -3,6 +3,14 @@ files.zip
 
 # Secrets (HANDOFF §8: never commit)
 .env
+# Kalshi RSA private key — never commit a key file dropped in the repo root.
+*.pem
+kalshi_private_key*
+
+# EV report — a runtime artifact written by scripts/ev_report.py (ranked signals + stake sizing
+# derived from your account balance). Not source; regenerated each run.
+data/ev_report.json
+data/ev_report.md
 
 # Fetched odds cache (a runtime artifact, not source — ODDS-07). Its ABSENCE is the normal
 # first-run state and is handled fail-soft (rating-only + banner). scripts/fetch_odds.py writes

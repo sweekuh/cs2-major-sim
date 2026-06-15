@@ -153,9 +153,18 @@ Driven by the roadmap loop after the base engine:
    (champion/group-winner/advance) and ranks edges, surfacing `unmapped` markets.
 
 ### Remaining / next
-- **Live wiring**: run `theoddsapi.fetch` → `calibrate_strengths` (weights from real match
-  dates/competitions) → `run_tournament` → `pipeline.scan` against live `KalshiWCProvider.fetch`
-  reads. The match model is ready; the Jun-2026 odds data was too sparse to calibrate against yet.
+- **Kalshi live wiring — DONE (read-only).** `scripts/ev_report.py` runs `run_tournament` →
+  `pipeline.scan` against live `KalshiWCProvider` reads, ranks fee-netted Kelly-sized signals, and
+  persists `data/ev_report.json` (+ `.md`). `odds/kalshi_auth.py` adds the **RSA-PSS authenticated
+  client** (the API key's purpose): keyless market reads by default, signed balance/positions reads
+  so `--use-balance` sizes Kelly against the real bankroll. No order endpoints (execution gated).
+  Two external prerequisites to go live: allowlist `api.elections.kalshi.com` on the env egress
+  policy, and load `KALSHI_API_KEY_ID` + `KALSHI_PRIVATE_KEY` in a fresh session. See
+  [EV_MONITOR.md](EV_MONITOR.md). **Caveat:** `data/kalshi_wc_tickers.json` series are still DRAFT —
+  verify against live `/series` (the script enumerates whatever the configured series return).
+- **Odds-calibration live wiring** (still remaining): run `theoddsapi.fetch` → `calibrate_strengths`
+  (weights from real match dates/competitions) before `run_tournament`, to kill Elo overconfidence
+  on covered teams. The match model is ready; Jun-2026 odds data was too sparse to calibrate yet.
 - **Per-match 1X2** markets in the pipeline (currently `unmapped`) — price via the calibrated
   match model once a real Kalshi soccer match-market fixture confirms the title/outcome shape.
 - **Kalshi WebSocket** live order book; **knockout** real FIFA best-third slot table; **Golden
@@ -209,9 +218,11 @@ apparent edge is real, a calibration artifact, or a bug.
 2. **Calibrate to the market.** With `THE_ODDS_API_KEY` set + network open, pull de-vigged sharp
    1X2 (`TheOddsApiProvider`) and pass `calibrate=True` so `build_model` per-team-calibrates the
    covered teams (kills the Elo overconfidence). Without odds it stays results-updated Elo.
-3. **Find EV.** Predict remaining fixtures (`scripts.predict_matches`) and/or scan Kalshi
-   (`scripts.monitor_wc` → `pipeline.scan`) for costed, Kelly-sized, ranked signals
-   (`net_edge = |fair − mid| − fee − spread/2`).
+3. **Find EV.** Predict remaining fixtures (`scripts.predict_matches`) and/or scan Kalshi for
+   costed, Kelly-sized, ranked signals (`net_edge = |fair − mid| − fee − spread/2`). Use
+   **`scripts.ev_report`** (auth-aware, `--use-balance`, persists `data/ev_report.json` + `.md`;
+   `--fixture` for offline) — or the lighter keyless `scripts.monitor_wc`. Both run `pipeline.scan`.
+   See [EV_MONITOR.md](EV_MONITOR.md).
 4. **Log + measure (the truth oracle).** Persist every emitted signal (`monitor/signal_log.py`)
    and, after each market settles, backfill the Pinnacle close to compute CLV. Mean CLV > 0 and
    significant is the only proof the edge is real; if it isn't, stop or rebuild fair value.
