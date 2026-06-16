@@ -177,7 +177,7 @@ scripts/            fetch_odds + fetch_results — the ONLY provider contact; bo
                     and stamp _meta.stage so a cache can never feed the wrong stage's run
   fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
   score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
-tests/              270+ tests incl. the Budapest backtest gate + real-data seeding gates
+tests/              250+ tests incl. the Budapest backtest gate + real-data seeding gates
                     + playoff bracket / 7-pick optimizer / seed_playoffs gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state

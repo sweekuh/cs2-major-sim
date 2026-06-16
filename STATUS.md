@@ -46,7 +46,7 @@ Last updated: 2026-06-16
   champion), a DIFFERENT scoring model from the Swiss 2/6/2: `engine/playoff_optimizer.py`
   enumerates all 128 bracket-consistent ballots and returns both the E[points]-greedy ballot and
   the P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), sample-only.
-- **277 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
+- **255 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
   Stage-2→Stage-3 chain gate, the playoff bracket-MC invariants / 7-pick optimizer / `seed_playoffs`
   derivation, the committed-bracket guard, and revert-proof guards on the new wiring (the
   `_NEXT_STAGE` entry, the Stage-3 banner, the cross-stage odds refusal, the `_meta.stage` stamp,

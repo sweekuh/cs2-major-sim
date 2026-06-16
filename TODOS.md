@@ -112,7 +112,7 @@ context to pick up cold in 3 months.
   grand final via the new `engine.probs.series_best_of`), `engine/seeding.py:seed_playoffs` (bracket
   seeds from a locked Stage-3 finish — the PLAY-03 chain, separate from the Swiss `_NEXT_STAGE`),
   `engine/playoff_optimizer.py` (the 7-pick round-weighted optimizer — item 3 above), and the
-  app's Playoffs stage (bracket forecast + recommended ballot + coin hero + live lock seam). 34
+  app's Playoffs stage (bracket forecast + recommended ballot + coin hero + live lock seam). 29
   revert-proof tests (bracket invariants, the 128-ballot optimizer, `seed_playoffs` ordering, the
   committed-bracket guard, and the AppTest wiring guards).
 
