@@ -45,8 +45,14 @@ context to pick up cold in 3 months.
   can `@njit` the loop. The closed-form Bo3 (no per-map sampling) helps here.
 - **Depends on:** Engine complete + backtest passing (don't optimize an unverified sim).
 
-## 3. Playoff Pick'Em optimizer (7-pick round-weighted ballot)
+## 3. Playoff Pick'Em optimizer (7-pick round-weighted ballot) — DONE (2026-06-16, v4)
 
+- **Status:** SHIPPED. `engine/playoff_optimizer.py` enumerates all 128 bracket-consistent ballots
+  (4 QF + 2 SF + 1 champion) and returns both the E[points]-greedy ballot and the
+  P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), scored sample-only
+  against `engine/bracket.py`'s retained per-sim bracket sample. Round weights (QF=1/SF=2/GF=3) and
+  achievement tiers (2/1/1) are [INFERRED] editable defaults. NOT the Swiss optimizer (kept
+  separate per REQUIREMENTS V3-03). See the Completed section below. Original context retained:
 - **What:** A separate optimizer for the playoff Pick'Em, which is NOT the Swiss 2/6/2 scheme.
   It's a 7-prediction round-weighted ballot (2 Quarterfinal + 1 Semifinal + 1 Grand Final
   correct picks, per the in-game achievements).
@@ -99,6 +105,16 @@ context to pick up cold in 3 months.
 ---
 
 ## Completed
+
+- **Playoffs (v4) — DONE (2026-06-16).** The 8-team single-elimination Champions bracket, simulated
+  end-to-end on the REAL Stage-3 finish (committed to `data/playoffs.json`, seeds confirmed vs the
+  official bracket): `engine/bracket.py` (single-elim sim + chunked-RNG MC, Bo3 quarters/semis + Bo5
+  grand final via the new `engine.probs.series_best_of`), `engine/seeding.py:seed_playoffs` (bracket
+  seeds from a locked Stage-3 finish — the PLAY-03 chain, separate from the Swiss `_NEXT_STAGE`),
+  `engine/playoff_optimizer.py` (the 7-pick round-weighted optimizer — item 3 above), and the
+  app's Playoffs stage (bracket forecast + recommended ballot + coin hero + live lock seam). 29
+  revert-proof tests (bracket invariants, the 128-ballot optimizer, `seed_playoffs` ordering, the
+  committed-bracket guard, and the AppTest wiring guards).
 
 - **Round-by-round backtest GATE — DONE.** Engine reproduces StarLadder Budapest 2025 Stage 1
   pairings exactly (`tests/test_backtest_budapest_2025.py`, green). The only check that proves the

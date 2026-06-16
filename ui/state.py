@@ -97,6 +97,16 @@ KEY_PENDING_LOCK = "pending_lock"
 # Stage-2 seed list. A partial/incomplete prior stage produces NO overlay (no seed list at all).
 KEY_DERIVED_SEEDS = "derived_seeds_overlay"
 
+# --- Playoffs (PLAY-01) ------------------------------------------------------------------
+# KEY_PLAYOFF_LOCKS holds the playoff bracket's live locked results as a flat
+# ``{match_label: winner_id}`` dict ("QF1".."QF4", "SF1", "SF2", "GF"). The bracket is a small
+# fixed single-elim tree, so (unlike the Swiss ordered lock LIST keyed by round) a simple
+# label->winner map is the natural shape: app._playoff_locked_dict resolves each locked match's
+# participants from the seeds + prior locks and projects it into the engine ``locked`` dict. A
+# semifinal can be locked only once BOTH feeder quarterfinals are locked (its participants are
+# otherwise sim-dependent), and likewise the final after both semifinals — the lock UI enforces it.
+KEY_PLAYOFF_LOCKS = "playoff_locks"
+
 # UI-05 canonical inline error copy (UI-SPEC Copywriting Contract — do not drift).
 BAD_RATING_MSG = "Ratings must be numbers. Fix the highlighted cell, then Run."
 

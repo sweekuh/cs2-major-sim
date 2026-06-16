@@ -104,6 +104,41 @@ def seed_next_stage(
     return seeds
 
 
+def seed_playoffs(prior_finals: dict[int, Team]) -> list[Team]:
+    """Derive the 8 playoff BRACKET seeds (1..8) from a FULLY-LOCKED final Swiss stage (PLAY-03).
+
+    The playoffs are a single-elimination BRACKET, not another Swiss stage, so this is a SEPARATE
+    derivation from ``seed_next_stage`` (ROADMAP v4 — deliberately NOT a ``_NEXT_STAGE`` merge:
+    there is no directly-invited 8 to splice in; ALL eight bracket teams come from the prior
+    stage's finish). The advancers (``wins >= ADVANCE_AT_WINS`` — exactly 8 on a complete stage;
+    a non-8 count raises rather than emitting a short list, Pitfall 5) are seeded 1..8 by the SAME
+    literal final-standings chain ``seed_next_stage`` uses for its qualifiers (ONE Buchholz
+    definition, no second copy):
+        1. losses ASCENDING        -> a 3-0 advancer outseeds a 3-1 outseeds a 3-2
+        2. Difficulty Score (Buchholz) DESCENDING within a loss bucket   -> ``-difficulty(t)``
+        3. prior-stage INITIAL seed ASCENDING (final discriminator)       -> ``t.seed``
+
+    id-vs-seed (the project rule "never assume id == seed"): the ``t.seed`` in the tiebreak key is
+    the team's prior-stage INITIAL seed; the OUTPUT Team's ``.seed`` (== ``.id``) is its NEW 1..8
+    BRACKET position. The bracket matchups (1v8, 4v5, 2v7, 3v6) are derived from these seeds in
+    ``engine.bracket`` — not stored here.
+
+    PURE: no RNG, no file I/O, no dict/set iteration-order dependence -> byte-identical output for
+    identical input (mirrors ``seed_next_stage``). Returns an 8-element seed-ordered ``list[Team]``.
+    """
+    advancers = [t for t in prior_finals.values() if t.wins >= ADVANCE_AT_WINS]
+    if len(advancers) != 8:
+        raise ValueError(
+            f"expected exactly 8 playoff advancers (wins >= {ADVANCE_AT_WINS}), "
+            f"got {len(advancers)} — prior stage is not complete (PLAY-03/Pitfall 5)"
+        )
+    ranked = sorted(advancers, key=lambda t: (t.losses, -difficulty(t), t.seed))
+    return [
+        Team(id=i, name=t.name, seed=i, rating=t.rating)
+        for i, t in enumerate(ranked, start=1)
+    ]
+
+
 # ===========================================================================
 # SEED-03 — completeness gate + full-lock replay standings (the auto-derive precondition).
 # ===========================================================================

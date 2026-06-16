@@ -1,17 +1,52 @@
 {
-  "_comment": "[INFERRED] Phase-6 playoff fixture (8-team single-elim bracket). The real 8 teams seed from the final Stage-3 Buchholz in Phase 9 — these placeholder names/ratings are NOT the real bracket, and the playoff is NOT simulated this phase (Phase 9 adds the single-elim sim + Bo5 GF). seeds_confirmed=false so the per-stage [INFERRED]-seed banner shows. size=8; no Swiss advance_at_wins/eliminate_at_losses fields (a bracket has no Swiss thresholds).",
+  "_comment": "[SEEDS CONFIRMED 2026-06-16 vs the OFFICIAL IEM Cologne 2026 playoff bracket] Cologne 2026 Champions/Playoff stage (8-team single-elimination bracket; Bo3 quarterfinals + semifinals, Bo5 grand final; PLAY-01). The 8 teams + their bracket seeds are the REAL Stage-3 finish, read 2026-06-16 from the official posted Stage-3 results bracket and the official playoff bracket. SEEDS derive from the Stage-3 Swiss placement: the two 3-0 teams take seeds 1-2 (Spirit, FURIA), the three 3-1 teams seeds 3-5 (Aurora, Falcons, Vitality), the three 3-2 teams seeds 6-8 (BetBoom, 9z, G2); within-record order is by Stage-3 Buchholz and is CONFIRMED by all four official quarterfinal matchups under the standard Major bracket seeding (1v8, 4v5, 2v7, 3v6): QF1 Spirit(1) vs G2(8), QF2 Falcons(4) vs Vitality(5), QF3 Aurora(3) vs BetBoom(6), QF4 FURIA(2) vs 9z(7). The bracket tree (top half = QF1+QF2 -> SF1, bottom half = QF3+QF4 -> SF2, GF between) is derived in engine.bracket, not stored here. The AUTHORITATIVE derive path is engine.seeding.seed_playoffs from YOUR locked Stage-3 finals (PLAY-03) \u2014 this static file is the hand-editable confirmed FALLBACK; do NOT build a second seeding path off it. RATINGS are LIVE-MARKET CHAMPION-CALIBRATED (PLAY-04, scripts/fit_champion.py): engine.playoff_fit fits them so the bracket sim's P(champion) reproduces the LIVE tournament-winner market THROUGH the real bracket draw. Target = the live IEM Cologne 2026 winner book over the 8 qualifiers, read 2026-06-16 post-Stage-3 (Polymarket ~$21M; Kalshi KXCS2-IEMCOL26 tracks within a couple points but its per-team ladder is bot-blocked): Vitality 41 / Spirit 27 / FURIA 8.8 / Falcons 6.5 / Aurora 3.8 / G2 2 / BetBoom 2 / 9z 1, renormalized to 1.0. This anchors the title race to the live market (strictly better than carried-forward map priors), and ranks by PATH not just strength \u2014 e.g. Falcons' rating (73.9) > FURIA's (70.0) yet FURIA's title odds are HIGHER because FURIA draws 9z in its QF while Falcons must beat Vitality. Re-run scripts/fit_champion.py whenever the market moves (the _LIVE_FUTURES dict) to re-anchor. Resulting P(champion): Vitality ~45%, Spirit ~29%, FURIA ~9%, Falcons ~7%, then the field. (PLAY-01, PLAY-03, PLAY-04)",
   "stage": {
-    "size": 8
+    "size": 8,
+    "qf_bo": 3,
+    "sf_bo": 3,
+    "gf_bo": 5
   },
-  "seeds_confirmed": false,
+  "seeds_confirmed": true,
   "teams": [
-    { "seed": 1, "name": "Playoff Seed 1", "rating": 80 },
-    { "seed": 2, "name": "Playoff Seed 2", "rating": 74 },
-    { "seed": 3, "name": "Playoff Seed 3", "rating": 70 },
-    { "seed": 4, "name": "Playoff Seed 4", "rating": 66 },
-    { "seed": 5, "name": "Playoff Seed 5", "rating": 62 },
-    { "seed": 6, "name": "Playoff Seed 6", "rating": 58 },
-    { "seed": 7, "name": "Playoff Seed 7", "rating": 54 },
-    { "seed": 8, "name": "Playoff Seed 8", "rating": 50 }
+    {
+      "seed": 1,
+      "name": "Spirit",
+      "rating": 81.0
+    },
+    {
+      "seed": 2,
+      "name": "FURIA",
+      "rating": 70.0
+    },
+    {
+      "seed": 3,
+      "name": "Aurora",
+      "rating": 65.8
+    },
+    {
+      "seed": 4,
+      "name": "Falcons",
+      "rating": 73.9
+    },
+    {
+      "seed": 5,
+      "name": "Vitality",
+      "rating": 86.4
+    },
+    {
+      "seed": 6,
+      "name": "BetBoom",
+      "rating": 62.7
+    },
+    {
+      "seed": 7,
+      "name": "9z",
+      "rating": 60.4
+    },
+    {
+      "seed": 8,
+      "name": "G2",
+      "rating": 66.2
+    }
   ]
 }

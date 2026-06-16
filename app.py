@@ -34,12 +34,21 @@ from engine.live import (
     pge5_delta,
     validate_lock,
 )
+from engine.bracket import (
+    GF_FEEDERS,
+    QF_SEEDS,
+    SF_FEEDERS,
+    bo_from_stage_cfg,
+    run_playoff_mc_progressive,
+)
 from engine.montecarlo import run_mc_progressive
 from engine.optimizer import build_outcome_matrices
+from engine.playoff_optimizer import optimize_playoffs
 from engine.seeding import (
     InvitedTeam,
     final_standings_from_locked,
     seed_next_stage,
+    seed_playoffs,
     stage_is_complete,
 )
 from engine.teams import load_stage
@@ -77,6 +86,7 @@ from ui.state import (
     KEY_ODDS_OUTCOME,
     KEY_PENDING_LOCK,
     KEY_PENDING_RESULT_CONFLICT,
+    KEY_PLAYOFF_LOCKS,
     KEY_RATINGS_EDITOR,
     KEY_RESULTS_OUTCOME,
     KEY_RUN_BUTTON,
@@ -376,7 +386,12 @@ else:
 # holds a stage_id (consumed by _path_for_stage); format_func renders the friendly label. Default
 # (first option) is "stage1" — the zero-config first-run stage (DX-01). Writing KEY_STAGE re-keys the
 # whole MC/optimizer cache so a stage switch can never serve the prior stage's numbers (STG-04).
-_STAGE_LABELS = {"stage1": "Stage 1", "stage2": "Stage 2", "stage3": "Stage 3"}
+_STAGE_LABELS = {
+    "stage1": "Stage 1",
+    "stage2": "Stage 2",
+    "stage3": "Stage 3",
+    "playoffs": "Playoffs",
+}
 stage_id = st.selectbox(
     "Stage",
     options=list(_STAGE_LABELS.keys()),
@@ -404,12 +419,20 @@ with controls:
     if _derived_overlay:
         rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in _derived_overlay]
         # Per-stage wording via the canonical int map (STG-06): Stage 2 reads "locked Stage-1
-        # finals", Stage 3 "locked Stage-2 finals" — same chain, same [INFERRED] honesty.
-        _n = _stage_int_for(stage_id)
-        st.caption(
-            f"Stage-{_n} seeds derived from the locked Stage-{_n - 1} finals — [INFERRED], "
-            "verify vs the official seed list."
-        )
+        # finals", Stage 3 "locked Stage-2 finals" — same chain, same [INFERRED] honesty. The
+        # playoffs bracket derives from the locked Stage-3 finish (PLAY-03), a different shape, so
+        # it gets its own wording rather than the "Stage-N from Stage-(N-1)" template.
+        if stage_id == "playoffs":
+            st.caption(
+                "Playoff bracket seeds derived from the locked Stage-3 finals (top 8 by "
+                "Buchholz) — [INFERRED], verify vs the official bracket."
+            )
+        else:
+            _n = _stage_int_for(stage_id)
+            st.caption(
+                f"Stage-{_n} seeds derived from the locked Stage-{_n - 1} finals — [INFERRED], "
+                "verify vs the official seed list."
+            )
     else:
         rows = [{"seed": t.seed, "team": t.name, "rating": t.rating} for t in teams]
     edited = st.data_editor(
@@ -1529,7 +1552,14 @@ def _render_odds_drilldown(blended) -> None:
 
 
 # --- Main column: mode-conditional ordering (UI-01) --------------------------------------
-with main:
+def _render_swiss_main() -> None:
+    """Render the Swiss-stage main column (Stages 1-3).
+
+    Extracted from the ``with main:`` body so the playoffs stage can dispatch to its own bracket
+    renderer (``_render_playoff_main``) instead — the playoffs are a single-elim BRACKET, a
+    different shape from the record-bucket Swiss (PLAY-01). The body is unchanged; only the
+    ``_RESULTS_FETCHED_AT`` write needs a ``global`` now that it lives in a function."""
+    global _RESULTS_FETCHED_AT
     # Phase 6 (RES-02): pre-fill the active stage's KEY_LOCKED from fetched FINISHED results BEFORE
     # anything consumes KEY_LOCKED (the run flow + the LIVE lock controls). Every fetched lock routes
     # through the existing validate path (no bypass, no engine edit); a conflict with a manual lock is
@@ -1542,6 +1572,9 @@ with main:
     # LivePrefixIncomplete precondition); a partial prior stage produces NO seed list. Session-only —
     # never a data/stage2.json rewrite, never flips the per-stage [INFERRED] banner.
     _derive_next_stage_seeds()
+    # PLAY-03: while Stage 3 is the active, fully-locked, complete stage, derive the 8 playoff
+    # bracket seeds into the same overlay the playoff ratings editor reads on the stage switch.
+    _derive_playoff_seeds()
     result, error_msg, cache_key = _run_or_serve()
     # Odds-fed view state (D2/D3): the loaded cache's priced matchups drive the two-tone CI bars
     # (solid sampling + faint epistemic) and the per-book drill-down. Empty / rating-only cache ->
@@ -1626,6 +1659,365 @@ with main:
     # (skipped on a rating-only / pre-D3 cache that has no `sources`). A pure display read.
     if odds_blended:
         _render_odds_drilldown(odds_blended)
+
+
+# --- Playoffs main column (PLAY-01/02/03) ------------------------------------------------
+# The playoffs are a fixed 8-team single-elim BRACKET, not a record-bucket Swiss, so they get a
+# dedicated renderer (NOT another _NEXT_STAGE Swiss path — ROADMAP v4). It reuses the shared
+# controls (the ratings editor, S, N, Run) and the engine.bracket / engine.playoff_optimizer
+# functional core; the live seam is a small {match_label: winner_id} lock map (KEY_PLAYOFF_LOCKS).
+_PLAYOFF_MATCH_LABELS = {
+    "QF1": "Quarterfinal 1",
+    "QF2": "Quarterfinal 2",
+    "QF3": "Quarterfinal 3",
+    "QF4": "Quarterfinal 4",
+    "SF1": "Semifinal 1",
+    "SF2": "Semifinal 2",
+    "GF": "Grand Final (Bo5)",
+}
+
+
+def _derive_playoff_seeds() -> None:
+    """Auto-derive the 8 playoff bracket seeds from a COMPLETE Stage 3 -> editable overlay (PLAY-03).
+
+    The playoffs analog of ``_derive_next_stage_seeds``, kept SEPARATE because the playoffs are a
+    bracket, not a Swiss ``_NEXT_STAGE`` (ROADMAP v4): ``seed_playoffs`` takes ALL 8 advancers as
+    bracket seeds 1-8 (no invited-8 merge). Fires ONLY while Stage 3 is active and fully locked +
+    complete (reusing ``stage_is_complete``), stashing the result in
+    ``KEY_DERIVED_SEEDS['playoffs']`` as an editable [INFERRED] overlay the playoff ratings editor
+    consumes on the stage switch. Session-only — never a data/playoffs.json rewrite. Mirrors the
+    ``_derive_next_stage_seeds`` trust-drop discipline: a derived overlay that diverges from the
+    committed fixture resets the playoffs' seeds_confirmed flag so a derived list never launders
+    under the confirmed badge."""
+    if stage_id != "stage3":
+        return
+    locked_results = st.session_state.get(KEY_LOCKED, [])
+    if not locked_results:
+        return
+    try:
+        if not stage_is_complete(teams, locked_results, S):
+            overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+            if overlay.pop("playoffs", None) is not None:
+                st.session_state[KEY_DERIVED_SEEDS] = overlay
+            return
+        final = final_standings_from_locked(teams, locked_results, S)
+        derived = seed_playoffs(final)
+    except (LivePrefixIncomplete, ValueError, KeyError):
+        return
+    overlay = dict(st.session_state.get(KEY_DERIVED_SEEDS, {}))
+    prev = overlay.get("playoffs")
+    overlay["playoffs"] = derived
+    st.session_state[KEY_DERIVED_SEEDS] = overlay
+    derived_key = [(t.seed, t.name) for t in derived]
+    if prev is None or [(t.seed, t.name) for t in prev] != derived_key:
+        try:
+            pteams, _pcfg = load_stage(_path_for_stage("playoffs"))
+        except (OSError, ValueError):
+            return
+        if derived_key != [(t.seed, t.name) for t in sorted(pteams, key=lambda t: t.seed)]:
+            st.session_state["seeds_confirmed_playoffs"] = False
+
+
+def _playoff_locked_dict(locks: dict[str, int]) -> dict[frozenset, int]:
+    """Project the flat ``{label: winner_id}`` playoff locks into the engine ``locked`` dict.
+
+    Resolves each match's PARTICIPANTS from the seeds (quarterfinals) and prior locked winners
+    (semis/final), so a match contributes a ``frozenset({a,b}) -> winner`` entry only when its
+    participants are known — a semifinal needs BOTH feeder quarterfinals locked, the final both
+    semifinals. Ignores any lock whose winner is not one of the resolved participants (defensive
+    against a stale lock after an upstream re-pick)."""
+    by_seed = {t.seed: t for t in teams}
+    out: dict[frozenset, int] = {}
+    qf_win: dict[str, int] = {}
+    for label, (sa, sb) in QF_SEEDS.items():
+        a, b = by_seed[sa].id, by_seed[sb].id
+        if locks.get(label) in (a, b):
+            out[frozenset((a, b))] = locks[label]
+            qf_win[label] = locks[label]
+    sf_win: dict[str, int] = {}
+    for label, (f1, f2) in SF_FEEDERS.items():
+        if f1 in qf_win and f2 in qf_win:
+            a, b = qf_win[f1], qf_win[f2]
+            if locks.get(label) in (a, b):
+                out[frozenset((a, b))] = locks[label]
+                sf_win[label] = locks[label]
+    if GF_FEEDERS[0] in sf_win and GF_FEEDERS[1] in sf_win:
+        a, b = sf_win[GF_FEEDERS[0]], sf_win[GF_FEEDERS[1]]
+        if locks.get("GF") in (a, b):
+            out[frozenset((a, b))] = locks["GF"]
+    return out
+
+
+def _playoff_match_participants(locks: dict[str, int]) -> dict[str, tuple[int, int] | None]:
+    """``{label: (id_a, id_b) | None}`` — each match's known participants given the locks.
+
+    Quarterfinals are always known (from the seeds); a semi/final is known only once its feeder
+    matches are locked (otherwise its participants are sim-dependent), in which case it is None."""
+    by_seed = {t.seed: t for t in teams}
+    parts: dict[str, tuple[int, int] | None] = {}
+    qf_win: dict[str, int] = {}
+    for label, (sa, sb) in QF_SEEDS.items():
+        a, b = by_seed[sa].id, by_seed[sb].id
+        parts[label] = (a, b)
+        if locks.get(label) in (a, b):
+            qf_win[label] = locks[label]
+    sf_win: dict[str, int] = {}
+    for label, (f1, f2) in SF_FEEDERS.items():
+        if f1 in qf_win and f2 in qf_win:
+            parts[label] = (qf_win[f1], qf_win[f2])
+            if locks.get(label) in (qf_win[f1], qf_win[f2]):
+                sf_win[label] = locks[label]
+        else:
+            parts[label] = None
+    if GF_FEEDERS[0] in sf_win and GF_FEEDERS[1] in sf_win:
+        parts["GF"] = (sf_win[GF_FEEDERS[0]], sf_win[GF_FEEDERS[1]])
+    else:
+        parts["GF"] = None
+    return parts
+
+
+def _render_playoff_lock_controls(name_of: dict[int, str]) -> None:
+    """Live lock controls for the bracket — one winner selector per OPEN match (PLAY-01 live seam).
+
+    Quarterfinals are always open; a semifinal opens once both feeder quarterfinals are locked, the
+    final once both semifinals are locked (its participants are otherwise sim-dependent). Selections
+    are rebuilt in dependency order each rerun so changing an upstream winner cleanly retracts a now-
+    invalid downstream lock. Persists to KEY_PLAYOFF_LOCKS; the re-sim picks it up on the next Run."""
+    st.caption(
+        "Lock a result, then click Run to re-sim the rest of the bracket from here. Semifinals "
+        "open once both feeding quarterfinals are locked; the final once both semifinals are locked."
+    )
+    locks = dict(st.session_state.get(KEY_PLAYOFF_LOCKS, {}))
+    by_seed = {t.seed: t for t in teams}
+    undecided = "— undecided"
+    new_locks: dict[str, int] = {}
+
+    def _winner_selector(label: str, a_id: int, b_id: int) -> int | None:
+        a_name, b_name = name_of[a_id], name_of[b_id]
+        options = [undecided, a_name, b_name]
+        cur = locks.get(label)
+        idx = 1 if cur == a_id else 2 if cur == b_id else 0
+        sel = st.selectbox(
+            f"{_PLAYOFF_MATCH_LABELS[label]} — {a_name} vs {b_name}", options, index=idx
+        )
+        if sel == a_name:
+            return a_id
+        if sel == b_name:
+            return b_id
+        return None
+
+    qf_win: dict[str, int] = {}
+    for label, (sa, sb) in QF_SEEDS.items():
+        w = _winner_selector(label, by_seed[sa].id, by_seed[sb].id)
+        if w is not None:
+            new_locks[label] = w
+            qf_win[label] = w
+    sf_win: dict[str, int] = {}
+    for label, (f1, f2) in SF_FEEDERS.items():
+        if f1 in qf_win and f2 in qf_win:
+            w = _winner_selector(label, qf_win[f1], qf_win[f2])
+            if w is not None:
+                new_locks[label] = w
+                sf_win[label] = w
+        else:
+            st.caption(f"{_PLAYOFF_MATCH_LABELS[label]}: lock both feeding quarterfinals to open.")
+    if GF_FEEDERS[0] in sf_win and GF_FEEDERS[1] in sf_win:
+        w = _winner_selector("GF", sf_win[GF_FEEDERS[0]], sf_win[GF_FEEDERS[1]])
+        if w is not None:
+            new_locks["GF"] = w
+    else:
+        st.caption(f"{_PLAYOFF_MATCH_LABELS['GF']}: lock both semifinals to open.")
+
+    if new_locks != locks:
+        st.session_state[KEY_PLAYOFF_LOCKS] = new_locks
+        st.rerun()
+    if locks:
+        if st.button("Clear bracket locks", key="clear_playoff_locks"):
+            st.session_state[KEY_PLAYOFF_LOCKS] = {}
+            st.rerun()
+
+
+def _run_playoff_or_serve(locked: dict[frozenset, int]):
+    """Validate ratings + dispatch the bracket MC (cache hit/miss). Returns (PlayoffResult, error).
+
+    Mirrors ``_run_or_serve``: a bad rating blocks Run and the engine is never called; otherwise the
+    bracket MC is memoized on a playoffs-scoped cache key (stage_id 'playoffs' leads it, so it never
+    collides with a Swiss Result) folding in ratings, S, N, the locked bracket, and the per-round bo."""
+    if not run_clicked:
+        return None, None
+    if validate_ratings(edited):
+        return None, BAD_RATING_MSG
+    ratings = {r["seed"]: float(r["rating"]) for r in edited}
+    bo = bo_from_stage_cfg(_stage_cfg)
+    cache_key = (
+        "playoffs",
+        freeze_ratings(ratings),
+        S,
+        int(N),
+        freeze_locked(locked),
+        (bo["qf"], bo["sf"], bo["gf"]),
+    )
+    cache = st.session_state[KEY_MC_CACHE]
+    if cache_key in cache:
+        return cache[cache_key], None
+    bar = st.progress(0.0, text="Simulating playoffs…")
+    gen = run_playoff_mc_progressive(teams, ratings, S, int(N), locked, seed=FIXED_SEED, bo=bo)
+    result = None
+    try:
+        while True:
+            p = next(gen)
+            frac = min(1.0, max(0.0, p.done / p.total if p.total else 0.0))
+            bar.progress(frac, text=f"Simulating playoffs… {min(p.done, p.total):,} / {p.total:,}")
+    except StopIteration as stop:
+        result = stop.value
+    bar.empty()
+    cache[cache_key] = result
+    while len(cache) > MAX_CACHE_ENTRIES:
+        cache.pop(next(iter(cache)))
+    return result, None
+
+
+def _render_playoff_probs_empty() -> None:
+    """EMPTY (pre-run) playoff probs state — never blank, never 0% (UI-05)."""
+    st.caption(f"~10s for {int(N) // 1000}k bracket sims. Per-team probs show {EM_DASH} until you Run.")
+    hdr = st.columns([3, 2, 2, 2])
+    hdr[0].markdown("**Team (seed)**")
+    hdr[1].markdown("**P(reach SF)**")
+    hdr[2].markdown("**P(reach Final)**")
+    hdr[3].markdown("**P(champion)**")
+    for t in sorted(teams, key=lambda x: x.seed):
+        c = st.columns([3, 2, 2, 2])
+        c[0].markdown(f"{t.name} ({t.seed})")
+        c[1].markdown(EM_DASH)
+        c[2].markdown(EM_DASH)
+        c[3].markdown(EM_DASH)
+
+
+def _render_playoff_probs(result) -> None:
+    """Per-team P(reach semifinal) / P(reach final) / P(champion), sorted by title odds, with bands."""
+    p_sf, p_gf, p_ch = result.p_sf(), result.p_gf(), result.p_champ()
+    order = sorted(teams, key=lambda t: p_ch.get(t.id, 0.0), reverse=True)
+    hdr = st.columns([3, 2, 2, 2])
+    hdr[0].markdown("**Team (seed)**")
+    hdr[1].markdown("**P(reach SF)**")
+    hdr[2].markdown("**P(reach Final)**")
+    hdr[3].markdown("**P(champion)**")
+    for t in order:
+        c = st.columns([3, 2, 2, 2])
+        c[0].markdown(f"{t.name} ({t.seed})")
+        # _ci_cell_html keys the band on the passed id; playoff ids == seeds, bands keyed by id.
+        c[1].markdown(_ci_cell_html(p_sf.get(t.id, 0.0), t.id, result.band_sf, {}, False), unsafe_allow_html=True)
+        c[2].markdown(_ci_cell_html(p_gf.get(t.id, 0.0), t.id, result.band_gf, {}, False), unsafe_allow_html=True)
+        c[3].markdown(_ci_cell_html(p_ch.get(t.id, 0.0), t.id, result.band_champ, {}, False), unsafe_allow_html=True)
+
+
+def _render_playoff_ballot(result) -> None:
+    """The recommended 7-pick playoff ballot: expected-points hero, the picks, coin/tier odds, A-vs-B (PLAY-02).
+
+    The recommendation maximizes round-weighted expected points (the chosen headline objective);
+    the coin-optimal ballot is reported as the alternative. Weights are QF=1/SF=2/GF=3 (editable)."""
+    out = optimize_playoffs(result, teams)
+    name_of = {t.id: t.name for t in teams}
+    pct_of_max = out.recommended_e_points / out.max_points if out.max_points else 0.0
+    # Hero = the recommended bracket's expected round-weighted score (accent), out of the max.
+    st.markdown(
+        f'<span style="font-size:28px;font-weight:600;font-family:ui-monospace,monospace;'
+        f'color:#7C5CFC">{out.recommended_e_points:.2f}</span>'
+        f'<span style="opacity:0.7;font-size:0.95rem"> / {out.max_points:.0f} expected points</span>',
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        f"Round-weighted expected score of the recommended bracket — {fmt_pct(pct_of_max)} of the "
+        f"{out.max_points:.0f}-point perfect bracket (QF=1, SF=2, GF=3 points; editable)."
+    )
+    picks = out.recommended.picks_by_label()
+    st.markdown("**Recommended bracket (max expected points)**")
+    st.markdown(
+        "- **Quarterfinals:** "
+        + ", ".join(name_of[picks[lbl]] for lbl in ("QF1", "QF2", "QF3", "QF4"))
+    )
+    st.markdown("- **Finalists:** " + ", ".join(name_of[picks[lbl]] for lbl in ("SF1", "SF2")))
+    st.markdown(f"- **Champion:** {name_of[picks['GF']]}  ·  P(title) {fmt_pct(out.p_champion)}")
+    st.caption(
+        f"This bracket's achievement coin odds — P(coin) {fmt_pct(out.recommended_pcoin)} "
+        f"(≥2 QF correct {fmt_pct(out.tier_qf)} · ≥1 SF {fmt_pct(out.tier_sf)} · champion {fmt_pct(out.tier_gf)})."
+    )
+    if out.diff:
+        labels = ", ".join(_PLAYOFF_MATCH_LABELS[d] for d in out.diff)
+        st.caption(
+            f"A coin-optimal ballot (champion {name_of[out.ballot_coin.champion]}) would differ at: "
+            f"{labels} — it trades expected points {out.e_points_points:.2f}→{out.e_points_coin:.2f} for "
+            f"coin odds {fmt_pct(out.recommended_pcoin)}→{fmt_pct(out.pcoin_coin)}."
+        )
+    else:
+        st.caption("The expected-points and coin-optimal ballots agree on every match.")
+
+
+def _render_playoff_bracket(locks: dict[str, int]) -> None:
+    """Render the bracket structure with each match's participants + the locked winner marked."""
+    name_of = {t.id: t.name for t in teams}
+    parts = _playoff_match_participants(locks)
+
+    def _line(label: str) -> str:
+        p = parts.get(label)
+        if p is None:
+            return "_TBD_"
+        a, b = name_of[p[0]], name_of[p[1]]
+        w = locks.get(label)
+        a = f"**{a} ✓**" if w == p[0] else a
+        b = f"**{b} ✓**" if w == p[1] else b
+        return f"{a} vs {b}"
+
+    with st.expander("Bracket", expanded=True):
+        cols = st.columns(3)
+        cols[0].markdown("**Quarterfinals** (Bo3)")
+        for label in ("QF1", "QF2", "QF3", "QF4"):
+            cols[0].markdown(_line(label))
+        cols[1].markdown("**Semifinals** (Bo3)")
+        for label in ("SF1", "SF2"):
+            cols[1].markdown(_line(label))
+        cols[2].markdown("**Grand Final** (Bo5)")
+        cols[2].markdown(_line("GF"))
+
+
+def _render_playoff_main() -> None:
+    """The playoffs main column: live lock controls (LIVE mode) + recommended ballot + probs + bracket."""
+    name_of = {t.id: t.name for t in teams}
+    locks = dict(st.session_state.get(KEY_PLAYOFF_LOCKS, {}))
+    if mode is Mode.LIVE:
+        st.subheader("Lock results")
+        _render_playoff_lock_controls(name_of)
+        locks = dict(st.session_state.get(KEY_PLAYOFF_LOCKS, {}))
+    locked = _playoff_locked_dict(locks)
+    result, error = _run_playoff_or_serve(locked)
+    if result is not None:
+        st.caption(f"{int(N) // 1000}k bracket sims · seed {FIXED_SEED}")
+
+    st.subheader("Recommended ballot")
+    if error:
+        st.error(error)
+    elif result is None:
+        st.info("Run to see the recommended 7-pick playoff ballot.")
+    else:
+        _render_playoff_ballot(result)
+
+    st.subheader("Per-team probabilities")
+    if error:
+        pass
+    elif result is None:
+        st.info("Set ratings, then Run.")
+        _render_playoff_probs_empty()
+    else:
+        _render_playoff_probs(result)
+
+    _render_playoff_bracket(locks)
+
+
+with main:
+    if stage_id == "playoffs":
+        _render_playoff_main()
+    else:
+        _render_swiss_main()
 
 
 # --- Honest methodology footer (full width, both modes) ----------------------------------
