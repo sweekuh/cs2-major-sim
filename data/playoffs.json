@@ -1,5 +1,5 @@
 {
-  "_comment": "[SEEDS CONFIRMED 2026-06-16 vs the OFFICIAL IEM Cologne 2026 playoff bracket] Cologne 2026 Champions/Playoff stage (8-team single-elimination bracket; Bo3 quarterfinals + semifinals, Bo5 grand final; PLAY-01). The 8 teams + their bracket seeds are the REAL Stage-3 finish, read 2026-06-16 from the official posted Stage-3 results bracket and the official playoff bracket. SEEDS derive from the Stage-3 Swiss placement: the two 3-0 teams take seeds 1-2 (Spirit, FURIA), the three 3-1 teams seeds 3-5 (Aurora, Falcons, Vitality), the three 3-2 teams seeds 6-8 (BetBoom, 9z, G2); within-record order is by Stage-3 Buchholz and is CONFIRMED by all four official quarterfinal matchups under the standard Major bracket seeding (1v8, 4v5, 2v7, 3v6): QF1 Spirit(1) vs G2(8), QF2 Falcons(4) vs Vitality(5), QF3 Aurora(3) vs BetBoom(6), QF4 FURIA(2) vs 9z(7). The bracket tree (top half = QF1+QF2 -> SF1, bottom half = QF3+QF4 -> SF2, GF between) is derived in engine.bracket, not stored here. The AUTHORITATIVE derive path is engine.seeding.seed_playoffs from YOUR locked Stage-3 finals (PLAY-03) \u2014 this static file is the hand-editable confirmed FALLBACK; do NOT build a second seeding path off it. RATINGS are CHAMPION-FUTURES-CALIBRATED (PLAY-04, scripts/fit_champion.py): engine.playoff_fit fits them so the bracket sim's P(champion) reproduces the market's tournament-winner futures THROUGH the real bracket draw \u2014 target = pre-event Polymarket futures (Vitality ~50%, Spirit ~20%, Falcons ~9%, per the Stage-3 comment) renormalized over the 8 qualifiers and updated for the Stage-3 finish (3-0 x1.20, 3-1 x1.00, 3-2 x0.85). This anchors the title race to the market (a strictly better champion estimate than carried-forward map priors), and correctly ranks by PATH not just strength (e.g. FURIA's rating < G2's yet FURIA's title odds are higher because its bracket path is easier). The two-table longshots and the form multiplier are [ESTIMATED]/[JUDGMENT]; re-run scripts/fit_champion.py with LIVE futures the moment a provider is reachable and it supersedes this prior. Resulting P(champion): Vitality ~53%, Spirit ~26%, Falcons ~10%, then the field. (PLAY-01, PLAY-03, PLAY-04)",
+  "_comment": "[SEEDS CONFIRMED 2026-06-16 vs the OFFICIAL IEM Cologne 2026 playoff bracket] Cologne 2026 Champions/Playoff stage (8-team single-elimination bracket; Bo3 quarterfinals + semifinals, Bo5 grand final; PLAY-01). The 8 teams + their bracket seeds are the REAL Stage-3 finish, read 2026-06-16 from the official posted Stage-3 results bracket and the official playoff bracket. SEEDS derive from the Stage-3 Swiss placement: the two 3-0 teams take seeds 1-2 (Spirit, FURIA), the three 3-1 teams seeds 3-5 (Aurora, Falcons, Vitality), the three 3-2 teams seeds 6-8 (BetBoom, 9z, G2); within-record order is by Stage-3 Buchholz and is CONFIRMED by all four official quarterfinal matchups under the standard Major bracket seeding (1v8, 4v5, 2v7, 3v6): QF1 Spirit(1) vs G2(8), QF2 Falcons(4) vs Vitality(5), QF3 Aurora(3) vs BetBoom(6), QF4 FURIA(2) vs 9z(7). The bracket tree (top half = QF1+QF2 -> SF1, bottom half = QF3+QF4 -> SF2, GF between) is derived in engine.bracket, not stored here. The AUTHORITATIVE derive path is engine.seeding.seed_playoffs from YOUR locked Stage-3 finals (PLAY-03) \u2014 this static file is the hand-editable confirmed FALLBACK; do NOT build a second seeding path off it. RATINGS are LIVE-MARKET CHAMPION-CALIBRATED (PLAY-04, scripts/fit_champion.py): engine.playoff_fit fits them so the bracket sim's P(champion) reproduces the LIVE tournament-winner market THROUGH the real bracket draw. Target = the live IEM Cologne 2026 winner book over the 8 qualifiers, read 2026-06-16 post-Stage-3 (Polymarket ~$21M; Kalshi KXCS2-IEMCOL26 tracks within a couple points but its per-team ladder is bot-blocked): Vitality 41 / Spirit 27 / FURIA 8.8 / Falcons 6.5 / Aurora 3.8 / G2 2 / BetBoom 2 / 9z 1, renormalized to 1.0. This anchors the title race to the live market (strictly better than carried-forward map priors), and ranks by PATH not just strength \u2014 e.g. Falcons' rating (73.9) > FURIA's (70.0) yet FURIA's title odds are HIGHER because FURIA draws 9z in its QF while Falcons must beat Vitality. Re-run scripts/fit_champion.py whenever the market moves (the _LIVE_FUTURES dict) to re-anchor. Resulting P(champion): Vitality ~45%, Spirit ~29%, FURIA ~9%, Falcons ~7%, then the field. (PLAY-01, PLAY-03, PLAY-04)",
   "stage": {
     "size": 8,
     "qf_bo": 3,
@@ -16,37 +16,37 @@
     {
       "seed": 2,
       "name": "FURIA",
-      "rating": 64.9
+      "rating": 70.0
     },
     {
       "seed": 3,
       "name": "Aurora",
-      "rating": 64.2
+      "rating": 65.8
     },
     {
       "seed": 4,
       "name": "Falcons",
-      "rating": 77.3
+      "rating": 73.9
     },
     {
       "seed": 5,
       "name": "Vitality",
-      "rating": 90.3
+      "rating": 86.4
     },
     {
       "seed": 6,
       "name": "BetBoom",
-      "rating": 61.0
+      "rating": 62.7
     },
     {
       "seed": 7,
       "name": "9z",
-      "rating": 59.5
+      "rating": 60.4
     },
     {
       "seed": 8,
       "name": "G2",
-      "rating": 66.1
+      "rating": 66.2
     }
   ]
 }

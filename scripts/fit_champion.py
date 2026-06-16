@@ -1,23 +1,24 @@
-"""scripts/fit_champion.py — calibrate the playoff ratings to the market's champion futures (PLAY-04).
+"""scripts/fit_champion.py — calibrate the playoff ratings to the LIVE champion market (PLAY-04).
 
-Constructs a champion-probability TARGET from the best external signal available offline (the
-pre-event tournament-winner futures, updated for the Stage-3 finish), fits the 8 playoff ratings so
-the bracket sim reproduces it (``engine.playoff_fit.fit_champion_ratings``), prints the before/after,
-and — with ``--write`` — rewrites ``data/playoffs.json``'s ratings in place (seeds untouched).
+Anchors the champion-probability TARGET to the live tournament-winner market, fits the 8 playoff
+ratings so the bracket sim reproduces it (``engine.playoff_fit.fit_champion_ratings``), prints the
+before/after, and — with ``--write`` — rewrites ``data/playoffs.json``'s ratings in place (seeds
+untouched).
 
-WHY (the accuracy rationale): the shipped playoff ratings were the Stage-3 map priors carried
+WHY (the accuracy rationale): the original playoff ratings were the Stage-3 map priors carried
 forward, which ignore the title race the market prices and the bracket draw. Winner futures are the
 sharpest crowd-sourced read of the champion outcome; anchoring P(champion) to them THROUGH the real
 bracket structure is a strictly better champion estimate (the playoffs' QFIT analog).
 
-TARGET PROVENANCE (documented, not fetched — the build host has no reachable futures provider):
-  - Pre-event winner futures (Polymarket, per data/stage3.json's committed comment, 2026-06-09):
-    Vitality ~50%, Spirit ~20%, Falcons ~9%, NaVi ~8.4%. NaVi/MongolZ etc. did not make playoffs,
-    so the field is renormalized over the 8 qualifiers; the five non-top-3 qualifiers (Aurora,
-    FURIA, BetBoom, 9z, G2) are assigned small pre-event longshot futures (~1-2.5%).  [ESTIMATED]
-  - Stage-3 form update (mild, judgment): 3-0 finishers x1.20, 3-1 x1.00, 3-2 x0.85, then
-    renormalize to 1.0.  [JUDGMENT]
-Re-run with live futures the moment a provider is reachable — the fit then supersedes this prior.
+TARGET PROVENANCE — LIVE MARKET (post-Stage-3, read 2026-06-16 via WebSearch):
+  The live IEM Cologne 2026 winner book over the 8 playoff qualifiers (Polymarket, ~$21M traded;
+  Kalshi's KXCS2-IEMCOL26 tracks it but its per-team ladder is bot-blocked from precise extraction,
+  so the granular Polymarket reads are used — the two track within a couple points on liquid books).
+  These are post-Stage-3 prices: NaVi/MongolZ are eliminated and gone from the book, FURIA repriced
+  UP off its 3-0, Vitality cooled from its ~50% pre-event line to the low-40s off its 3-1. Numbers
+  are point-in-time reads (+/- ~1-2pp) and renormalized to 1.0 (the raw book sums ~0.92, sub-vig
+  rounding). Re-run this script whenever the market moves to re-anchor.
+    Vitality 41 · Spirit 27 · FURIA 8.8 · Falcons 6.5 · Aurora 3.8 · G2 2.0 · BetBoom 2.0 · 9z 1.0
 
 Pure numpy + the bracket engine (no streamlit/httpx). Run:
     python -m scripts.fit_champion            # print the fit
@@ -37,36 +38,25 @@ from engine.teams import load_stage
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _PLAYOFFS_PATH = _REPO_ROOT / "data" / "playoffs.json"
 
-# Pre-event winner futures over the 8 qualifiers, by TEAM NAME (renormalized later). The top three
-# are the committed real Polymarket numbers; the five longshots are [ESTIMATED] pre-event futures.
-_PREEVENT_FUTURES: dict[str, float] = {
-    "Vitality": 0.50,
-    "Spirit": 0.20,
-    "Falcons": 0.09,
-    "Aurora": 0.025,
-    "FURIA": 0.025,
+# Live winner-market prices over the 8 qualifiers, by TEAM NAME (post-Stage-3, 2026-06-16; see the
+# module docstring for source + caveats). Renormalized to 1.0 in build_champion_target.
+_LIVE_FUTURES: dict[str, float] = {
+    "Vitality": 0.410,
+    "Spirit": 0.270,
+    "FURIA": 0.088,
+    "Falcons": 0.065,
+    "Aurora": 0.038,
     "G2": 0.020,
-    "BetBoom": 0.015,
+    "BetBoom": 0.020,
     "9z": 0.010,
 }
-# Stage-3 finish per team (from the official posted results), driving the form multiplier.
-_STAGE3_RECORD: dict[str, str] = {
-    "Spirit": "3-0", "FURIA": "3-0",
-    "Aurora": "3-1", "Falcons": "3-1", "Vitality": "3-1",
-    "BetBoom": "3-2", "9z": "3-2", "G2": "3-2",
-}
-_FORM_MULT = {"3-0": 1.20, "3-1": 1.00, "3-2": 0.85}
 
 
 def build_champion_target(teams) -> dict[int, float]:
-    """The documented champion target by ENGINE ID: pre-event futures x Stage-3 form, renormalized."""
+    """The champion target by ENGINE ID: the live winner-market ladder, renormalized to sum 1.0."""
     id_of = {t.name: t.id for t in teams}
-    raw = {
-        name: _PREEVENT_FUTURES[name] * _FORM_MULT[_STAGE3_RECORD[name]]
-        for name in _PREEVENT_FUTURES
-    }
-    total = sum(raw.values())
-    return {id_of[name]: v / total for name, v in raw.items()}
+    total = sum(_LIVE_FUTURES.values())
+    return {id_of[name]: v / total for name, v in _LIVE_FUTURES.items()}
 
 
 def main(argv: Sequence[str] | None = None) -> dict[int, float]:

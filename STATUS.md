@@ -46,14 +46,16 @@ Last updated: 2026-06-16
   champion), a DIFFERENT scoring model from the Swiss 2/6/2: `engine/playoff_optimizer.py`
   enumerates all 128 bracket-consistent ballots and returns the E[points]-optimal recommendation
   (round weights QF=1/SF=2/GF=3, editable) plus the P(coin)-optimal alternative, sample-only.
-- **Champion-futures calibration (PLAY-04)** — `engine/playoff_fit.py` + `scripts/fit_champion.py`
-  fit the 8 playoff ratings so the bracket sim's P(champion) reproduces the market's tournament-winner
-  futures THROUGH the real bracket draw (the playoffs' QFIT analog). The shipped `data/playoffs.json`
-  ratings are now champion-calibrated, so the title race is market-anchored, not carried-forward map
-  priors — and ranked by PATH not just strength (FURIA's rating < G2's, but its easier draw gives it
-  higher title odds). Resulting forecast: **Vitality ~53%, Spirit ~26%, Falcons ~10%**, robust in
-  ordering across the spread sweep (S=30→50 moves Vitality 47–63%). Re-run with live futures to
-  supersede the [ESTIMATED] longshots + form prior.
+- **Live-market champion calibration (PLAY-04)** — `engine/playoff_fit.py` + `scripts/fit_champion.py`
+  fit the 8 playoff ratings so the bracket sim's P(champion) reproduces the **live** tournament-winner
+  market THROUGH the real bracket draw (the playoffs' QFIT analog). Target is the live IEM Cologne 2026
+  winner book read 2026-06-16 post-Stage-3 (Polymarket ~$21M; Kalshi tracks it, per-team ladder
+  bot-blocked): Vitality 41 / Spirit 27 / FURIA 8.8 / Falcons 6.5 / Aurora 3.8 / G2 2 / BetBoom 2 /
+  9z 1. The shipped `data/playoffs.json` ratings reproduce this, so the title race is live-market-
+  anchored — and ranked by PATH not just strength (Falcons' rating 73.9 > FURIA's 70.0, yet FURIA's
+  title odds are higher: FURIA draws 9z, Falcons must beat Vitality). Forecast: **Vitality ~45%,
+  Spirit ~29%, FURIA ~9%, Falcons ~7%**, then the field. Re-run `scripts/fit_champion.py` (the
+  `_LIVE_FUTURES` dict) whenever the market moves.
 - **260 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
   Stage-2→Stage-3 chain gate, the playoff bracket-MC invariants / 7-pick optimizer / `seed_playoffs`
   derivation, the committed-bracket guard, and revert-proof guards on the new wiring (the
