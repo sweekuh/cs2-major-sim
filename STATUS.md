@@ -44,9 +44,17 @@ Last updated: 2026-06-16
   stage renders the bracket forecast and a live lock seam (lock QF/SF/GF winners, re-sim from here).
 - **Playoff Pick'Em optimizer (v4)** — the 7-pick round-weighted ballot (4 QF + 2 SF + 1
   champion), a DIFFERENT scoring model from the Swiss 2/6/2: `engine/playoff_optimizer.py`
-  enumerates all 128 bracket-consistent ballots and returns both the E[points]-greedy ballot and
-  the P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), sample-only.
-- **255 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
+  enumerates all 128 bracket-consistent ballots and returns the E[points]-optimal recommendation
+  (round weights QF=1/SF=2/GF=3, editable) plus the P(coin)-optimal alternative, sample-only.
+- **Champion-futures calibration (PLAY-04)** — `engine/playoff_fit.py` + `scripts/fit_champion.py`
+  fit the 8 playoff ratings so the bracket sim's P(champion) reproduces the market's tournament-winner
+  futures THROUGH the real bracket draw (the playoffs' QFIT analog). The shipped `data/playoffs.json`
+  ratings are now champion-calibrated, so the title race is market-anchored, not carried-forward map
+  priors — and ranked by PATH not just strength (FURIA's rating < G2's, but its easier draw gives it
+  higher title odds). Resulting forecast: **Vitality ~53%, Spirit ~26%, Falcons ~10%**, robust in
+  ordering across the spread sweep (S=30→50 moves Vitality 47–63%). Re-run with live futures to
+  supersede the [ESTIMATED] longshots + form prior.
+- **260 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
   Stage-2→Stage-3 chain gate, the playoff bracket-MC invariants / 7-pick optimizer / `seed_playoffs`
   derivation, the committed-bracket guard, and revert-proof guards on the new wiring (the
   `_NEXT_STAGE` entry, the Stage-3 banner, the cross-stage odds refusal, the `_meta.stage` stamp,
