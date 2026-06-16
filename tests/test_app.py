@@ -2074,3 +2074,82 @@ def test_malformed_fitted_ratings_fall_back_to_backsolve(monkeypatch, tmp_path):
     assert all(r == expected for r in calls["ratings"]), (
         "a 3-entry fitted_ratings block must be ignored whole and the R1 back-solve used"
     )
+
+
+# --- Playoffs (PLAY-01/02/03) — AppTest wiring guards ------------------------------------
+# Revert-proof guards on the app.py playoff wiring: the stage is selectable, the bracket main
+# column renders, a Run produces title odds + the recommended 7-pick ballot + the coin hero, the
+# committed official-bracket seeding shows, and the live lock seam conditions the bracket re-sim.
+
+
+def _go_playoffs(at):
+    """Switch the app to the playoffs stage (inject the selector's session value, as the
+    stage2/stage3 isolation tests do — robust to the selector widget type)."""
+    from ui.state import KEY_STAGE
+
+    at.session_state[KEY_STAGE] = "playoffs"
+    at.run()
+    return at
+
+
+def test_playoffs_stage_selectable_and_renders():
+    """PLAY-01: the playoffs stage renders its bracket main column without error, with the
+    title-odds probability columns (a DIFFERENT shape from the Swiss P(advance)/P(3-0)/P(0-3))."""
+    at = _apptest().run()
+    assert not at.exception
+    _go_playoffs(at)
+    assert not at.exception
+    text = _all_text(at)
+    assert "Per-team probabilities" in text
+    assert "P(champion)" in text          # the playoff column, not a Swiss column
+    assert "P(reach Final)" in text
+
+
+def test_playoffs_run_shows_champion_ballot_and_coin_hero():
+    """PLAY-02: a playoff Run renders the recommended 7-pick bracket + champion + the coin hero
+    number, and caches a Result on the playoffs-scoped key (never colliding with a Swiss Result)."""
+    at = _apptest().run()
+    _go_playoffs(at)
+    at.number_input(key="N_input").set_value(3000).run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    text = _all_text(at)
+    assert "Recommended bracket" in text
+    assert "Champion:" in text
+    assert "achievement coin" in text.lower()
+    # The accent coin hero number carries a percentage (the playoff P(coin), like the Swiss P(>=5)).
+    assert any("#7C5CFC" in m.value and "%" in m.value for m in at.markdown)
+    # A playoff Result is memoized on the playoffs-scoped cache key ("playoffs" leads the tuple).
+    assert any(k[0] == "playoffs" for k in at.session_state["mc_cache"])
+
+
+def test_playoffs_bracket_shows_official_seeding():
+    """PLAY-03 wiring: the committed playoff bracket renders the REAL Cologne quarterfinal matchups
+    (Spirit-G2, Falcons-Vitality, Aurora-BetBoom, FURIA-9z) — the official-bracket-confirmed seeds."""
+    at = _apptest().run()
+    _go_playoffs(at)
+    text = _all_text(at)
+    for name in ("Spirit", "G2", "Falcons", "Vitality", "Aurora", "BetBoom", "FURIA", "9z"):
+        assert name in text, f"the playoff bracket must list {name}"
+
+
+def test_playoffs_live_lock_conditions_the_resim():
+    """PLAY-01 live seam: a locked quarterfinal winner (KEY_PLAYOFF_LOCKS) makes the bracket re-sim
+    CONDITIONAL — the locked winner reaches the semifinal in every sim, the loser in none."""
+    from ui.state import KEY_PLAYOFF_LOCKS, Mode
+
+    at = _apptest().run()
+    _go_playoffs(at)
+    _mode_widget(at).set_value(Mode.LIVE.value).run()
+    assert not at.exception
+    assert any("lock results" in s.value.lower() for s in at.subheader)
+
+    # Lock QF1 for id 8 (G2, seed 8) over id 1 (Spirit, seed 1), then Run.
+    at.session_state[KEY_PLAYOFF_LOCKS] = {"QF1": 8}
+    at.number_input(key="N_input").set_value(2000).run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    cache = at.session_state["mc_cache"]
+    pres = next(v for k, v in cache.items() if k[0] == "playoffs")
+    assert pres.counts_sf[8] == pres.n   # G2 reaches the SF in every sim (locked)
+    assert pres.counts_sf[1] == 0        # Spirit never does

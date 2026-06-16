@@ -1,17 +1,20 @@
 {
-  "_comment": "[INFERRED] Phase-6 playoff fixture (8-team single-elim bracket). The real 8 teams seed from the final Stage-3 Buchholz in Phase 9 — these placeholder names/ratings are NOT the real bracket, and the playoff is NOT simulated this phase (Phase 9 adds the single-elim sim + Bo5 GF). seeds_confirmed=false so the per-stage [INFERRED]-seed banner shows. size=8; no Swiss advance_at_wins/eliminate_at_losses fields (a bracket has no Swiss thresholds).",
+  "_comment": "[SEEDS CONFIRMED 2026-06-16 vs the OFFICIAL IEM Cologne 2026 playoff bracket] Cologne 2026 Champions/Playoff stage (8-team single-elimination bracket; Bo3 quarterfinals + semifinals, Bo5 grand final; PLAY-01). The 8 teams + their bracket seeds are the REAL Stage-3 finish, read 2026-06-16 from the official posted Stage-3 results bracket and the official playoff bracket. SEEDS derive from the Stage-3 Swiss placement: the two 3-0 teams take seeds 1-2 (Spirit, FURIA), the three 3-1 teams seeds 3-5 (Aurora, Falcons, Vitality), the three 3-2 teams seeds 6-8 (BetBoom, 9z, G2); within-record order is by Stage-3 Buchholz and is CONFIRMED by all four official quarterfinal matchups under the standard Major bracket seeding (1v8, 4v5, 2v7, 3v6): QF1 Spirit(1) vs G2(8), QF2 Falcons(4) vs Vitality(5), QF3 Aurora(3) vs BetBoom(6), QF4 FURIA(2) vs 9z(7). The bracket tree (top half = QF1+QF2 -> SF1, bottom half = QF3+QF4 -> SF2, GF between) is derived in engine.bracket, not stored here. The AUTHORITATIVE derive path is engine.seeding.seed_playoffs from YOUR locked Stage-3 finals (PLAY-03) — this static file is the hand-editable confirmed FALLBACK; do NOT build a second seeding path off it. RATINGS are the Stage-3 market-calibrated priors carried forward (Finding A: ratings carry forward, only seed POSITION reflects how teams placed) — Vitality stays the rating favorite (92) despite the seed-5 line because the Swiss seed reflects placement, not strength; load live playoff odds when markets post to re-anchor. (PLAY-01, PLAY-03)",
   "stage": {
-    "size": 8
+    "size": 8,
+    "qf_bo": 3,
+    "sf_bo": 3,
+    "gf_bo": 5
   },
-  "seeds_confirmed": false,
+  "seeds_confirmed": true,
   "teams": [
-    { "seed": 1, "name": "Playoff Seed 1", "rating": 80 },
-    { "seed": 2, "name": "Playoff Seed 2", "rating": 74 },
-    { "seed": 3, "name": "Playoff Seed 3", "rating": 70 },
-    { "seed": 4, "name": "Playoff Seed 4", "rating": 66 },
-    { "seed": 5, "name": "Playoff Seed 5", "rating": 62 },
-    { "seed": 6, "name": "Playoff Seed 6", "rating": 58 },
-    { "seed": 7, "name": "Playoff Seed 7", "rating": 54 },
-    { "seed": 8, "name": "Playoff Seed 8", "rating": 50 }
+    { "seed": 1, "name": "Spirit", "rating": 81 },
+    { "seed": 2, "name": "FURIA", "rating": 72 },
+    { "seed": 3, "name": "Aurora", "rating": 73 },
+    { "seed": 4, "name": "Falcons", "rating": 79 },
+    { "seed": 5, "name": "Vitality", "rating": 92 },
+    { "seed": 6, "name": "BetBoom", "rating": 70 },
+    { "seed": 7, "name": "9z", "rating": 66 },
+    { "seed": 8, "name": "G2", "rating": 71 }
   ]
 }

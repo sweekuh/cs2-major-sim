@@ -1,9 +1,9 @@
 # Status
 
-**v3 shipped — the full Cologne Swiss chain (Stages 1–3).** Stage 3 starts 2026-06-11; the
-pipeline and prediction model for it are live and event-ready.
+**v4 shipped — the project is complete: Swiss Stages 1–3 + the Playoffs.** Stage 3 is over;
+its real results are committed and the single-elimination playoff bracket is simulated end-to-end.
 
-Last updated: 2026-06-09
+Last updated: 2026-06-16
 
 ## Working now
 
@@ -33,9 +33,24 @@ Last updated: 2026-06-09
   33 matches, 24/33 favorites, log-loss 0.5785 vs 0.6931 coinflip, S=40 the sweep argmin — the
   shipped spread is measured, not guessed.
 - Conditional re-sim / live mode (lock results, re-sim from here).
-- **220 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
-  Stage-2→Stage-3 chain gate, and revert-proof guards on the new wiring (the `_NEXT_STAGE` entry,
-  the Stage-3 banner, the cross-stage odds refusal, the fetcher's `_meta.stage` stamp).
+- **Playoffs (v4) — the 8-team single-elimination bracket, simulated end-to-end.** The REAL
+  Cologne Stage-3 finish is committed (`data/playoffs.json`, seeds confirmed vs the official
+  bracket 2026-06-16): seeds 1–8 = Spirit, FURIA, Aurora, Falcons, Vitality, BetBoom, 9z, G2,
+  with the standard Major seeding (1v8, 4v5, 2v7, 3v6), Bo3 quarters/semis, Bo5 grand final.
+  `engine/bracket.py` runs the bracket MC (per-team P(reach SF)/P(reach final)/P(champion) with
+  Wilson bands); `engine/seeding.py:seed_playoffs` derives the 8 bracket seeds from a locked
+  Stage-3 finish (the PLAY-03 chain, separate from the Swiss `_NEXT_STAGE`); `engine/probs.py`
+  grew the Bo5 closed form `series_best_of` (the frozen `series` untouched). The app's Playoffs
+  stage renders the bracket forecast and a live lock seam (lock QF/SF/GF winners, re-sim from here).
+- **Playoff Pick'Em optimizer (v4)** — the 7-pick round-weighted ballot (4 QF + 2 SF + 1
+  champion), a DIFFERENT scoring model from the Swiss 2/6/2: `engine/playoff_optimizer.py`
+  enumerates all 128 bracket-consistent ballots and returns both the E[points]-greedy ballot and
+  the P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), sample-only.
+- **277 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
+  Stage-2→Stage-3 chain gate, the playoff bracket-MC invariants / 7-pick optimizer / `seed_playoffs`
+  derivation, the committed-bracket guard, and revert-proof guards on the new wiring (the
+  `_NEXT_STAGE` entry, the Stage-3 banner, the cross-stage odds refusal, the `_meta.stage` stamp,
+  and the Playoffs stage selector + bracket render + live-lock re-sim).
 
 ## Recently fixed
 
@@ -59,9 +74,13 @@ Last updated: 2026-06-09
   in-app — the deterministic chain gate covers the structure meanwhile.
 - Practical N is ~100k–200k (the optimizer retains the full per-sim sample, so memory grows with
   K·N). Probabilities converge well before that.
-- The playoff Pick'Em (7-pick round-weighted) is not built yet — Swiss only.
+- Playoff per-match market odds aren't wired (no live playoff-series provider was reachable from
+  the build host); the bracket runs on the carried-forward Stage-3 ratings until odds post. The
+  playoff Pick'Em point weights / achievement tiers are [INFERRED] editable defaults (QF=1, SF=2,
+  GF=3; tiers 2/1/1) — the relative ordering matches the documented in-game achievements.
 
 ## Next
 
-v4 (Playoffs): the 7-pick round-weighted playoff optimizer + bracket seeding from the Stage-3
-finish. See [ROADMAP.md](ROADMAP.md).
+The project is complete (Swiss Stages 1–3 + Playoffs). Remaining items are optional polish, all
+captured in [TODOS.md](TODOS.md): a live playoff-odds feed, a cron-fed odds cache, a streaming
+high-N sample path, and optional Numba acceleration.

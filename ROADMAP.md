@@ -34,12 +34,26 @@ the one below.
 - **The real Cologne Stage-3 field committed** — invited 8 verified by source in VRS order,
   the 8 real Stage-2 advancers, `seeds_confirmed=false` until reconciled vs the official bracket.
 
-## Next — v4 (Playoffs)
+## Shipped — v4 (Playoffs)
 
-- A **playoff Pick'Em optimizer** — a 7-pick round-weighted ballot (2 Quarterfinal + 1 Semifinal +
-  1 Grand Final), which is a different scoring model from the Swiss 2/6/2 and is not yet built.
-- Playoff bracket seeding from the Stage-3 finish (a bracket, not a Swiss — deliberately NOT
-  another `_NEXT_STAGE` entry).
+The final layer: the 8-team single-elimination Champions bracket, simulated end-to-end on the REAL
+Stage-3 finish (confirmed vs the official bracket 2026-06-16).
+
+- **Playoff bracket simulator** — `engine/bracket.py`: the canonical Major seeding (1v8, 4v5, 2v7,
+  3v6 from ONE structure table, no second matchup copy), Bo3 quarters/semis and a Bo5 grand final
+  via the new closed form `engine.probs.series_best_of` (the frozen Bo1/Bo3 `series` untouched),
+  one Bernoulli per series (never per-map sampling), a `locked` live seam, and a chunked-RNG MC
+  giving per-team P(reach SF)/P(reach final)/P(champion) with Wilson bands.
+- **Playoff bracket seeding from the Stage-3 finish** — `engine/seeding.py:seed_playoffs`: the 8
+  advancers seeded 1–8 by the literal final-standings chain (losses asc, Buchholz desc, prior seed
+  asc), a SEPARATE derivation from the Swiss `seed_next_stage` (a bracket, not a Swiss — deliberately
+  NOT another `_NEXT_STAGE` entry). Wired in-app as the PLAY-03 chain off a locked, complete Stage 3.
+- **Playoff Pick'Em optimizer** — `engine/playoff_optimizer.py`: the 7-pick round-weighted ballot
+  (4 QF + 2 SF + 1 champion), a different scoring model from the Swiss 2/6/2. It enumerates all 128
+  bracket-consistent ballots (no hill-climb needed) and returns the E[points]-greedy ballot AND the
+  P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), sample-only.
+- **App integration** — a Playoffs stage with the bracket forecast, the recommended 7-pick ballot +
+  coin hero, and a live lock seam (lock QF/SF/GF winners, re-sim from here).
 
 ## Deferred
 

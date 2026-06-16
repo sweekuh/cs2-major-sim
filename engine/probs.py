@@ -18,6 +18,7 @@ Load-bearing facts (getting any wrong silently corrupts every probability):
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from math import comb
 
 
 def p_map(ra: float, rb: float, S: float = 40.0) -> float:
@@ -59,6 +60,31 @@ def series_prob(
     if market_series_prob is not None:
         return market_series_prob
     return series(p_map(ra, rb, S=S), bo3)
+
+
+def series_best_of(p: float, n_maps: int) -> float:
+    """Win probability of a best-of-``n_maps`` series given a per-map win prob ``p``.
+
+    Closed form for first-to-(n_maps // 2 + 1) maps with iid maps (NO per-map sampling) — one
+    Bernoulli draw decides the series, exactly like ``series`` (MC-06). ``n_maps`` must be a
+    positive ODD integer:
+      - n_maps == 1 -> the identity ``p`` (a single map);
+      - n_maps == 3 -> ``p^2 (3 - 2p)`` — byte-identical to ``series(p, bo3=True)``;
+      - n_maps == 5 -> the Bo5 closed form ``p^3 (1 + 3q + 6q^2)``, q = 1 - p.
+
+    This is a NEW SIBLING of the frozen ``series``: the Bo1/Bo3 GATE-01 path through ``series`` /
+    ``series_prob`` is untouched. The playoff bracket (Bo3 quarter/semis, Bo5 grand final, PLAY-01)
+    is the only consumer — it needs the Bo5 term ``series`` deliberately never grew.
+    """
+    if n_maps < 1 or n_maps % 2 == 0:
+        raise ValueError(f"n_maps must be a positive odd integer, got {n_maps!r}")
+    need = n_maps // 2 + 1  # maps to clinch the series
+    q = 1.0 - p
+    # P(win) = sum_{k=0}^{need-1} C(need-1+k, k) p^need q^k  (opponent takes k maps before we clinch).
+    total = 0.0
+    for k in range(need):
+        total += comb(need - 1 + k, k) * (p**need) * (q**k)
+    return total
 
 
 def difficulty(t) -> int:

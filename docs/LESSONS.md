@@ -136,9 +136,17 @@ post]`, and every one of them was wrong about the real response shape. Lessons:
 bands, live OddsPapi + Kalshi ensemble, market-anchored ratings, 2/6/2 optimizer with correct
 3-1/3-2 scoring and P(≥5) hill-climb, conditional re-sim live mode, 128 passing tests.
 
-**Deferred (see `TODOS.md`):** the playoff Pick'Em optimizer (a different 7-pick round-weighted
-ballot), a cron-fed odds cache so fetch lives outside the app, and a streaming sample path for
-arbitrarily high N.
+**Shipped since (v4):** the playoffs — an 8-team single-elimination bracket simulated end-to-end on
+the real Stage-3 finish, with the 7-pick round-weighted Pick'Em optimizer (a different scoring model
+from the Swiss 2/6/2: 4 QF + 2 SF + 1 champion, with E[points] and the achievement-coin probability).
+The bracket reused the repo's discipline — a pure functional core (`engine/bracket.py`), one structure
+table for the seeding, the Bo5 closed form as a NEW sibling of the frozen `series` (never editing the
+GATE-01 path), and `seed_playoffs` kept SEPARATE from the Swiss seed chain because a bracket is a
+different shape than another Swiss stage.
+
+**Deferred (see `TODOS.md`):** a live playoff-odds feed (the bracket runs on carried-forward ratings
+until one is wired), a cron-fed odds cache so fetch lives outside the app, and a streaming sample path
+for arbitrarily high N.
 
 The thing I'm proudest of isn't a feature. It's that the two numbers I'd have posted publicly
 (P(advance) and P(≥5)) were both wrong in ways that looked right, and the project's structure

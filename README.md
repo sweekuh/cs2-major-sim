@@ -152,8 +152,11 @@ rating-only at the same N.
 - Practical N is ~100k–200k: the engine retains the full per-sim sample for the optimizer, so
   memory grows with K·N (a 1M odds-fed run needs ~11 GB). Probabilities are converged well before
   that, so this is a non-issue in practice, just don't crank N to 1M.
-- The **playoff** Pick'Em (a 7-pick round-weighted ballot) is not built — only the Swiss 2/6/2
-  optimizer is. See `TODOS.md`.
+- The **playoffs** are built (v4): the 8-team single-elim bracket is simulated end-to-end on the
+  real Stage-3 finish, with a 7-pick round-weighted Pick'Em optimizer (4 QF + 2 SF + 1 champion).
+  Playoff per-match market odds aren't wired yet (no reachable provider), so the bracket runs on the
+  carried-forward Stage-3 ratings until odds post; the Pick'Em point weights / achievement tiers are
+  [INFERRED] editable defaults. See `STATUS.md`.
 
 ## Project layout
 
@@ -162,8 +165,11 @@ app.py              Streamlit UI (controls, run, two-tone bars, ballot, live mod
 engine/             pure compute core (no streamlit/httpx)
   swiss.py            round-by-round pairing + Buchholz + rematch table
   montecarlo.py       MC runner, Wilson CI, epistemic outer loop
-  probs.py            Bo3 closed-form, epistemic Beta draws, variance clamp
+  probs.py            Bo3/Bo5 closed-form, epistemic Beta draws, variance clamp
   optimizer.py        2/6/2 ballot, 3-1/3-2 scoring, P(≥5) hill-climb
+  bracket.py          playoff single-elim sim + bracket MC (Bo3 QF/SF, Bo5 final)
+  playoff_optimizer.py  7-pick round-weighted ballot (4 QF + 2 SF + 1 champion)
+  seeding.py          inter-stage seed chain + seed_playoffs (bracket seeds)
   backsolve.py        market series probs → per-team ratings
   live.py             conditional re-sim + pick status (live/dead/secured)
 odds/               OddsPapi + Kalshi parsers, de-vig, log-opinion pool (pure numpy)
@@ -171,7 +177,8 @@ scripts/            fetch_odds + fetch_results — the ONLY provider contact; bo
                     and stamp _meta.stage so a cache can never feed the wrong stage's run
   fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
   score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
-tests/              210+ tests incl. the Budapest backtest gate + real-data seeding gates
+tests/              270+ tests incl. the Budapest backtest gate + real-data seeding gates
+                    + playoff bracket / 7-pick optimizer / seed_playoffs gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state
 ```
