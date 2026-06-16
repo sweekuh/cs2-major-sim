@@ -1912,16 +1912,26 @@ def _render_playoff_probs(result) -> None:
 
 
 def _render_playoff_ballot(result) -> None:
-    """The recommended 7-pick playoff ballot: coin hero number, the picks, tier odds, and A-vs-B (PLAY-02)."""
+    """The recommended 7-pick playoff ballot: expected-points hero, the picks, coin/tier odds, A-vs-B (PLAY-02).
+
+    The recommendation maximizes round-weighted expected points (the chosen headline objective);
+    the coin-optimal ballot is reported as the alternative. Weights are QF=1/SF=2/GF=3 (editable)."""
     out = optimize_playoffs(result, teams)
     name_of = {t.id: t.name for t in teams}
-    st.markdown(hero_number_html(out.recommended_pcoin), unsafe_allow_html=True)
+    pct_of_max = out.recommended_e_points / out.max_points if out.max_points else 0.0
+    # Hero = the recommended bracket's expected round-weighted score (accent), out of the max.
+    st.markdown(
+        f'<span style="font-size:28px;font-weight:600;font-family:ui-monospace,monospace;'
+        f'color:#7C5CFC">{out.recommended_e_points:.2f}</span>'
+        f'<span style="opacity:0.7;font-size:0.95rem"> / {out.max_points:.0f} expected points</span>',
+        unsafe_allow_html=True,
+    )
     st.caption(
-        "P(achievement coin) — the joint odds of the full playoff Pick'Em: ≥2 quarterfinals + "
-        "≥1 semifinal + the champion correct, on the recommended bracket."
+        f"Round-weighted expected score of the recommended bracket — {fmt_pct(pct_of_max)} of the "
+        f"{out.max_points:.0f}-point perfect bracket (QF=1, SF=2, GF=3 points; editable)."
     )
     picks = out.recommended.picks_by_label()
-    st.markdown("**Recommended bracket (round-weighted optimum)**")
+    st.markdown("**Recommended bracket (max expected points)**")
     st.markdown(
         "- **Quarterfinals:** "
         + ", ".join(name_of[picks[lbl]] for lbl in ("QF1", "QF2", "QF3", "QF4"))
@@ -1929,18 +1939,18 @@ def _render_playoff_ballot(result) -> None:
     st.markdown("- **Finalists:** " + ", ".join(name_of[picks[lbl]] for lbl in ("SF1", "SF2")))
     st.markdown(f"- **Champion:** {name_of[picks['GF']]}  ·  P(title) {fmt_pct(out.p_champion)}")
     st.caption(
-        f"Tier odds — ≥2 QF correct {fmt_pct(out.tier_qf)} · ≥1 SF correct {fmt_pct(out.tier_sf)} "
-        f"· champion {fmt_pct(out.tier_gf)}. Round-weighted E[points] {out.e_points_b:.2f}."
+        f"This bracket's achievement coin odds — P(coin) {fmt_pct(out.recommended_pcoin)} "
+        f"(≥2 QF correct {fmt_pct(out.tier_qf)} · ≥1 SF {fmt_pct(out.tier_sf)} · champion {fmt_pct(out.tier_gf)})."
     )
     if out.diff:
         labels = ", ".join(_PLAYOFF_MATCH_LABELS[d] for d in out.diff)
         st.caption(
-            f"An E[points]-greedy ballot (champion {name_of[out.ballot_points.champion]}) would "
-            f"differ at: {labels}. The recommendation maximizes the coin probability instead "
-            f"(coin {fmt_pct(out.pcoin_b)} vs {fmt_pct(out.pcoin_a)})."
+            f"A coin-optimal ballot (champion {name_of[out.ballot_coin.champion]}) would differ at: "
+            f"{labels} — it trades expected points {out.e_points_points:.2f}→{out.e_points_coin:.2f} for "
+            f"coin odds {fmt_pct(out.recommended_pcoin)}→{fmt_pct(out.pcoin_coin)}."
         )
     else:
-        st.caption("The round-weighted-points and coin-optimal ballots agree on every match.")
+        st.caption("The expected-points and coin-optimal ballots agree on every match.")
 
 
 def _render_playoff_bracket(locks: dict[str, int]) -> None:

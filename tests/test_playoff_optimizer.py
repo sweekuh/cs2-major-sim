@@ -66,7 +66,7 @@ def test_e_points_and_pcoin_on_a_pinned_sample():
 
 # --- optimize_playoffs --------------------------------------------------------------------
 def test_optimizer_picks_the_dominant_favorite_as_champion():
-    # Seed 1 hugely strong -> recommended champion should be id 1 with high coin odds.
+    # Seed 1 hugely strong -> recommended (max-E[points]) champion should be id 1.
     res = run_playoff_mc(_teams({**{i: 50.0 for i in range(1, 9)}, 1: 250.0}), None, 40.0, 8000, seed=2)
     out = optimize_playoffs(res, _teams({**{i: 50.0 for i in range(1, 9)}, 1: 250.0}))
     assert out.recommended.champion == 1
@@ -74,17 +74,20 @@ def test_optimizer_picks_the_dominant_favorite_as_champion():
     assert out.p_champion > 0.5
 
 
-def test_optimizer_outputs_are_self_consistent():
+def test_optimizer_recommends_the_expected_points_ballot():
     teams = _teams({1: 90, 2: 60, 3: 70, 4: 80, 5: 88, 6: 55, 7: 50, 8: 58})
     res = run_playoff_mc(teams, None, 40.0, 8000, seed=11)
     out = optimize_playoffs(res, teams)
-    # Recommended == the P(coin)-optimal ballot; its coin is the hero number.
-    assert out.recommended is out.ballot_coin
-    assert out.recommended_pcoin == pytest.approx(out.pcoin_b)
-    # B maximizes coin, A maximizes E[points] -> each is best at its own objective.
-    assert out.pcoin_b >= out.pcoin_a - 1e-12
-    assert out.e_points_a >= out.e_points_b - 1e-9
-    # Tier probabilities are valid probabilities and the coin <= each tier (joint <= marginals).
+    # Recommendation == the E[points]-optimal ballot; its expected score is the hero number.
+    assert out.recommended is out.ballot_points
+    assert out.recommended_e_points == pytest.approx(out.e_points_points)
+    # The points ballot maximizes E[points]; the coin ballot maximizes P(coin) — each best at its own.
+    assert out.e_points_points >= out.e_points_coin - 1e-9
+    assert out.pcoin_coin >= out.pcoin_points - 1e-12
+    # Hero score is within [0, max_points] (max = 4*1 + 2*2 + 1*3 = 11 with the defaults).
+    assert out.max_points == pytest.approx(11.0)
+    assert 0.0 <= out.recommended_e_points <= out.max_points + 1e-9
+    # The recommended ballot's reported coin/tier odds are valid probabilities, coin <= each tier.
     for t in (out.tier_qf, out.tier_sf, out.tier_gf):
         assert 0.0 <= t <= 1.0
     assert out.recommended_pcoin <= min(out.tier_qf, out.tier_sf, out.tier_gf) + 1e-9

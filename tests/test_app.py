@@ -2105,9 +2105,10 @@ def test_playoffs_stage_selectable_and_renders():
     assert "P(reach Final)" in text
 
 
-def test_playoffs_run_shows_champion_ballot_and_coin_hero():
-    """PLAY-02: a playoff Run renders the recommended 7-pick bracket + champion + the coin hero
-    number, and caches a Result on the playoffs-scoped key (never colliding with a Swiss Result)."""
+def test_playoffs_run_shows_champion_ballot_and_points_hero():
+    """PLAY-02: a playoff Run renders the recommended 7-pick bracket + champion + the expected-points
+    hero (the chosen headline objective), and caches a Result on the playoffs-scoped key (never
+    colliding with a Swiss Result)."""
     at = _apptest().run()
     _go_playoffs(at)
     at.number_input(key="N_input").set_value(3000).run()
@@ -2116,9 +2117,10 @@ def test_playoffs_run_shows_champion_ballot_and_coin_hero():
     text = _all_text(at)
     assert "Recommended bracket" in text
     assert "Champion:" in text
-    assert "achievement coin" in text.lower()
-    # The accent coin hero number carries a percentage (the playoff P(coin), like the Swiss P(>=5)).
-    assert any("#7C5CFC" in m.value and "%" in m.value for m in at.markdown)
+    assert "expected points" in text.lower()         # the headline objective
+    assert "achievement coin" in text.lower()        # the recommended ballot's coin odds (secondary)
+    # The accent hero number renders (the recommended bracket's expected round-weighted score).
+    assert any("#7C5CFC" in m.value for m in at.markdown)
     # A playoff Result is memoized on the playoffs-scoped cache key ("playoffs" leads the tuple).
     assert any(k[0] == "playoffs" for k in at.session_state["mc_cache"])
 

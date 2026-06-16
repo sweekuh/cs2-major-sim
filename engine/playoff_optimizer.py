@@ -15,10 +15,12 @@ Two scored quantities, mirroring the Swiss optimizer's E[correct] / P(>=5) pair:
 
   - **E[points]** — the round-weighted expected score: each correct QF pick is worth
     ``W_QF``, each correct SF pick ``W_SF``, the champion ``W_GF`` (later rounds weigh more).
-    Ballot A maximizes this (the transparent linear baseline).
+    The ``ballot_points`` ballot maximizes this and is the RECOMMENDATION (the headline
+    objective — chosen because it rewards every correct pick, not only an all-or-nothing coin).
   - **P(coin)** — the probability of unlocking the achievement tiers jointly: at least
     ``TIER_QF`` quarterfinal picks correct AND at least ``TIER_SF`` semifinal picks correct AND
-    the champion correct. Ballot B maximizes this and is the recommendation (the playoff coin).
+    the champion correct. The ``ballot_coin`` ballot maximizes this; it is reported as the
+    alternative (and the recommended ballot's own coin/tier odds are reported alongside).
 
 The whole valid-ballot space is tiny — 2^4 QF choices x 2 SF x 2 SF x 2 champion = **128**
 consistent brackets — so we ENUMERATE all of them and take the exact optimum for each objective
@@ -209,23 +211,30 @@ def _tier_probs(
 
 @dataclass(frozen=True)
 class PlayoffOptimizerOutput:
-    """Everything the UI needs from one playoff Run (sample-only; no MC re-run)."""
+    """Everything the UI needs from one playoff Run (sample-only; no MC re-run).
 
-    ballot_points: PlayoffBallot  # E[points]-optimal (the linear baseline, "Ballot A")
-    ballot_coin: PlayoffBallot  # P(coin)-optimal (the recommendation, "Ballot B")
-    e_points_a: float
-    e_points_b: float
-    pcoin_a: float
-    pcoin_b: float
-    recommended: PlayoffBallot  # = ballot_coin
-    recommended_pcoin: float  # the hero number
-    # Tier breakdown for the recommended ballot: P(>=2 QF), P(>=1 SF), P(champion).
+    ``ballot_points`` (E[points]-optimal) is the RECOMMENDATION; ``ballot_coin`` (P(coin)-optimal)
+    is the reported alternative. ``recommended`` aliases ``ballot_points`` and ``recommended_*``
+    carry that ballot's stats (its expected score is the hero number; its coin/tier odds are the
+    secondary line)."""
+
+    ballot_points: PlayoffBallot  # E[points]-optimal — THE RECOMMENDATION
+    ballot_coin: PlayoffBallot  # P(coin)-optimal — the alternative
+    e_points_points: float  # E[points] of the points ballot (the maximum E[points])
+    e_points_coin: float  # E[points] of the coin ballot
+    pcoin_points: float  # P(coin) of the points ballot
+    pcoin_coin: float  # P(coin) of the coin ballot (the maximum P(coin))
+    max_points: float  # 4*w_qf + 2*w_sf + w_gf — the perfect-bracket score (for the % display)
+    recommended: PlayoffBallot  # = ballot_points
+    recommended_e_points: float  # = e_points_points (the hero number)
+    recommended_pcoin: float  # = pcoin_points (the recommended ballot's coin odds, secondary)
+    # Tier breakdown for the RECOMMENDED (points) ballot: P(>=2 QF), P(>=1 SF), P(champion).
     tier_qf: float
     tier_sf: float
     tier_gf: float
     champion: int  # the recommended champion id
     p_champion: float  # P(that champion wins the title)
-    diff: tuple[int, ...]  # match labels where the two ballots disagree
+    diff: tuple[str, ...]  # match labels where the two ballots disagree
 
 
 def _ballot_diff(a: PlayoffBallot, b: PlayoffBallot) -> tuple[str, ...]:
@@ -243,13 +252,14 @@ def optimize_playoffs(
     w_sf: float = W_SF,
     w_gf: float = W_GF,
 ) -> PlayoffOptimizerOutput:
-    """Recommend both playoff ballots + the coin number from a finished ``PlayoffResult``.
+    """Recommend the playoff ballots from a finished ``PlayoffResult``.
 
-    Pure function of (result.sample, teams): enumerates the 128 consistent brackets, scores each
-    for E[points] (Ballot A) and P(coin) (Ballot B), and returns both with the recommended
-    (P(coin)-optimal) ballot's tier breakdown + champion. NEVER re-runs the bracket MC — it reads
-    the retained sample only. Deterministic: ballots are enumerated in a fixed order and only a
-    STRICT improvement displaces the incumbent, so ties break toward the favorites-first ballot.
+    Pure function of (result.sample, teams): enumerates the 128 consistent brackets, scores each for
+    E[points] and P(coin), and returns the E[points]-optimal ballot as the RECOMMENDATION (with its
+    own coin/tier breakdown + champion) plus the P(coin)-optimal ballot as the alternative. NEVER
+    re-runs the bracket MC — it reads the retained sample only. Deterministic: ballots are enumerated
+    in a fixed order and only a STRICT improvement displaces the incumbent, so ties break toward the
+    favorites-first ballot.
     """
     ids = [t.id for t in teams]
     matrices = build_win_matrices(result.sample, ids)
@@ -267,20 +277,25 @@ def optimize_playoffs(
             best_coin, best_coin_val = b, pc
 
     assert best_points is not None and best_coin is not None  # 128 ballots — always non-empty
-    tier_qf, tier_sf, tier_gf = _tier_probs(best_coin, matrices)
+    # The RECOMMENDED ballot is the E[points]-optimal one; report ITS coin/tier odds + champion.
+    pcoin_points = p_coin(best_points, matrices)
+    tier_qf, tier_sf, tier_gf = _tier_probs(best_points, matrices)
+    max_points = 4 * w_qf + 2 * w_sf + w_gf  # perfect bracket: 4 QF + 2 SF + champion
     return PlayoffOptimizerOutput(
         ballot_points=best_points,
         ballot_coin=best_coin,
-        e_points_a=best_points_val,
-        e_points_b=e_points(best_coin, marginals, w_qf=w_qf, w_sf=w_sf, w_gf=w_gf),
-        pcoin_a=p_coin(best_points, matrices),
-        pcoin_b=best_coin_val,
-        recommended=best_coin,
-        recommended_pcoin=best_coin_val,
+        e_points_points=best_points_val,
+        e_points_coin=e_points(best_coin, marginals, w_qf=w_qf, w_sf=w_sf, w_gf=w_gf),
+        pcoin_points=pcoin_points,
+        pcoin_coin=best_coin_val,
+        max_points=max_points,
+        recommended=best_points,
+        recommended_e_points=best_points_val,
+        recommended_pcoin=pcoin_points,
         tier_qf=tier_qf,
         tier_sf=tier_sf,
         tier_gf=tier_gf,
-        champion=best_coin.champion,
-        p_champion=marginals["GF"][best_coin.champion],
+        champion=best_points.champion,
+        p_champion=marginals["GF"][best_points.champion],
         diff=_ballot_diff(best_points, best_coin),
     )
