@@ -135,3 +135,47 @@ def test_locked_full_bracket_forces_champion():
     }
     res = run_playoff_mc(_teams(), None, 40.0, 500, seed=1, locked=locked)
     assert res.counts_champ[1] == res.n
+
+
+# --- market_overrides (the playoff odds seam, PROB-02 — mirrors engine.swiss._play) --------
+def test_market_override_prices_qf_series_directly_not_re_best_of():
+    # Override QF1 (id-bucket "1-8") so the LOWER id (seed 1) wins the SERIES with p=0.90.
+    # Equal ratings, so without the override P(reach SF) would be a coinflip 0.5. The override
+    # must price the series DIRECTLY: P(seed 1 reaches SF) ~= 0.90 — NOT series_best_of(0.90, 3)
+    # ~= 0.972 (which is what a wrong best-of re-application would produce).
+    overrides = {"1-8": 0.90}
+    res = run_playoff_mc(_teams(), None, 40.0, 40000, seed=11, market_overrides=overrides)
+    assert res.p_sf()[1] == pytest.approx(0.90, abs=0.01)
+    assert res.p_sf()[1] < 0.95  # discriminates direct-pricing from best-of re-application
+
+
+def test_market_override_oriented_to_lower_id_regardless_of_arg_order():
+    # Lock QF1->id8 and QF2->id4 so SF1 is played as _play_match(id8, id4): the FIRST arg (id8)
+    # is the HIGHER id. The override bucket "4-8" carries p = P(lower-id=4 wins) = 1.0, so id4
+    # must win SF1 every time even though it is the SECOND arg — proves the id-bucket orientation.
+    locked = {frozenset((1, 8)): 8, frozenset((4, 5)): 4}
+    overrides = {"4-8": 1.0}  # P(lower-id 4 wins the SF series) = 1.0
+    res = run_playoff_mc(_teams(), None, 40.0, 2000, seed=5, locked=locked, market_overrides=overrides)
+    assert res.counts_gf[4] == res.n  # id4 reaches the GF (wins SF1) in every sim
+    assert res.counts_gf[8] == 0
+
+
+def test_market_override_none_or_empty_is_byte_identical():
+    base = run_playoff_mc(_teams(), None, 40.0, 4000, seed=42)
+    none_path = run_playoff_mc(_teams(), None, 40.0, 4000, seed=42, market_overrides=None)
+    empty_path = run_playoff_mc(_teams(), None, 40.0, 4000, seed=42, market_overrides={})
+    assert none_path.counts_champ == base.counts_champ == empty_path.counts_champ
+    assert none_path.counts_sf == base.counts_sf == empty_path.counts_sf
+
+
+def test_market_override_bo5_grand_final_priced_directly():
+    # Fully lock the bracket down to a GF between id1 and id2, then price that GF series at p=0.70.
+    # The champion rate must be ~0.70 (the market series price), NOT series_best_of(0.70, 5) ~= 0.837.
+    locked = {
+        frozenset((1, 8)): 1, frozenset((4, 5)): 4, frozenset((2, 7)): 2, frozenset((3, 6)): 3,
+        frozenset((1, 4)): 1, frozenset((2, 3)): 2,  # SF1->id1, SF2->id2
+    }
+    overrides = {"1-2": 0.70}  # P(lower-id 1 wins the Bo5 final) = 0.70, priced directly
+    res = run_playoff_mc(_teams(), None, 40.0, 40000, seed=7, locked=locked, market_overrides=overrides)
+    assert res.p_champ()[1] == pytest.approx(0.70, abs=0.01)
+    assert res.p_champ()[1] < 0.80  # discriminates direct-pricing from Bo5 best-of re-application

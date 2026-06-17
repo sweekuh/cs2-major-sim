@@ -86,14 +86,25 @@ def _n_maps(label: str, bo: dict[str, int]) -> int:
     return bo["gf"]  # "GF"
 
 
-def _play_match(a: Team, b: Team, ratings, S, rng, locked, n_maps: int) -> Team:
+def _play_match(
+    a: Team, b: Team, ratings, S, rng, locked, n_maps: int, *, market_overrides=None
+) -> Team:
     """Resolve one bracket match, returning the WINNING Team (reads ratings; mutates nothing).
 
     A ``locked`` entry (``frozenset({a.id, b.id}) -> winner_id``) is deterministic and takes
-    precedence over any draw (the live seam, mirroring ``engine.swiss._play``). Otherwise a
-    SINGLE Bernoulli decides it against the closed-form best-of-``n_maps`` series prob — never
-    three/five map samples (MC-06). ``ratings`` is the optional ``{id: rating}`` override
-    (None -> each team's own ``.rating``).
+    precedence over EVERYTHING (the live seam, mirroring ``engine.swiss._play``). Otherwise a
+    SINGLE Bernoulli decides it against the series win prob — never three/five map samples (MC-06).
+    ``ratings`` is the optional ``{id: rating}`` override (None -> each team's own ``.rating``).
+
+    ``market_overrides`` (keyword-only, the playoff odds seam — default None = unchanged; mirrors
+    ``engine.swiss._play``'s PROB-02 seam): ``dict[str, float]`` keyed by the id-bucket
+    ``f"{min(a.id, b.id)}-{max(a.id, b.id)}"`` carrying ``p`` = P(LOWER-id team wins the SERIES).
+    CRITICAL ORIENTATION: a priced matchup is looked up by the id-bucket (NOT an arg-order tuple)
+    and oriented to the FIRST arg via ``p_a = p if a.id < b.id else (1 - p)`` — the bracket can hand
+    ``_play_match`` either seed order (QF1 is seed 1 vs seed 8, so the first arg is the LOWER id, but
+    SF/GF feeders arrive in winner order), so assuming arg order matches id order would silently
+    invert the favorite. The override prices the SERIES directly: the best-of closed form is NOT
+    re-applied (PROB-02 — the market already prices the Bo3/Bo5), exactly like the Swiss seam.
     """
     key = frozenset((a.id, b.id))
     if key in locked:
@@ -106,9 +117,20 @@ def _play_match(a: Team, b: Team, ratings, S, rng, locked, n_maps: int) -> Team:
             f"locked winner {winner_id!r} for {key} is not one of the paired teams "
             f"({a.id}, {b.id})"
         )
-    ra = ratings.get(a.id, a.rating) if ratings else a.rating
-    rb = ratings.get(b.id, b.rating) if ratings else b.rating
-    p_a = series_best_of(p_map(ra, rb, S=S), n_maps)  # P(a wins the series), single draw
+    market_p_a = None
+    if market_overrides:
+        bucket = f"{min(a.id, b.id)}-{max(a.id, b.id)}"
+        p = market_overrides.get(bucket)
+        if p is not None:
+            # `p` = P(lower-id wins the SERIES); orient to the FIRST arg `a` (which may be the
+            # higher id — SF/GF feeders arrive in winner order, not id order).
+            market_p_a = p if a.id < b.id else (1.0 - p)
+    if market_p_a is not None:
+        p_a = market_p_a  # market prices the series DIRECTLY; do NOT re-apply best-of (PROB-02)
+    else:
+        ra = ratings.get(a.id, a.rating) if ratings else a.rating
+        rb = ratings.get(b.id, b.rating) if ratings else b.rating
+        p_a = series_best_of(p_map(ra, rb, S=S), n_maps)  # P(a wins the series), single draw
     return a if rng.random() < p_a else b
 
 
@@ -120,6 +142,7 @@ def simulate_bracket(
     locked: dict | None = None,
     *,
     bo: dict[str, int] | None = None,
+    market_overrides: dict | None = None,
 ) -> dict[str, int]:
     """Simulate one full 8-team single-elim bracket -> ``{match_label: winner_id}``.
 
@@ -127,6 +150,13 @@ def simulate_bracket(
     derived from ``QF_SEEDS`` / ``SF_FEEDERS`` / ``GF_FEEDERS`` (no second matchup table). Returns
     the winner id of every match (``QF1..QF4``, ``SF1``, ``SF2``, ``GF``); ``winners["GF"]`` is the
     champion. ``locked`` deterministically fixes any already-played matchup (the live seam).
+
+    ``market_overrides`` (keyword-only, the playoff odds seam — default None = unchanged): the
+    id-bucket-keyed ``{"lo-hi": P(lower-id wins the series)}`` dict ``_play_match`` consumes. A
+    matchup present here is priced DIRECTLY from the market (best-of NOT re-applied, PROB-02), so
+    market-calibrated QF/SF lines override the champion-fit ratings for the rounds the market prices
+    while ratings still drive the unpriced later rounds — the same orthogonality the Swiss
+    qualify-fit relies on. Mirrors ``engine.swiss.simulate_stage``'s seam.
 
     Unlike the Swiss sim, the bracket does NOT mutate team objects (no wins/losses/opps), so it
     needs no fresh per-sim Team set — ``_play_match`` only reads ``.rating``.
@@ -140,14 +170,17 @@ def simulate_bracket(
     win_obj: dict[str, Team] = {}
     for label, (sa, sb) in QF_SEEDS.items():
         win_obj[label] = _play_match(
-            by_seed[sa], by_seed[sb], ratings, S, rng, locked, _n_maps(label, bo)
+            by_seed[sa], by_seed[sb], ratings, S, rng, locked, _n_maps(label, bo),
+            market_overrides=market_overrides,
         )
     for label, (f1, f2) in SF_FEEDERS.items():
         win_obj[label] = _play_match(
-            win_obj[f1], win_obj[f2], ratings, S, rng, locked, _n_maps(label, bo)
+            win_obj[f1], win_obj[f2], ratings, S, rng, locked, _n_maps(label, bo),
+            market_overrides=market_overrides,
         )
     win_obj["GF"] = _play_match(
-        win_obj[GF_FEEDERS[0]], win_obj[GF_FEEDERS[1]], ratings, S, rng, locked, _n_maps("GF", bo)
+        win_obj[GF_FEEDERS[0]], win_obj[GF_FEEDERS[1]], ratings, S, rng, locked, _n_maps("GF", bo),
+        market_overrides=market_overrides,
     )
     return {label: t.id for label, t in win_obj.items()}
 
@@ -198,6 +231,7 @@ def run_playoff_mc_progressive(
     seed: int,
     n_chunks: int = DEFAULT_N_CHUNKS,
     bo: dict[str, int] | None = None,
+    market_overrides: dict | None = None,
 ) -> Iterator[Partial]:
     """Run N bracket sims generator-first; yield a ``Partial`` per chunk, return ``PlayoffResult``.
 
@@ -205,6 +239,10 @@ def run_playoff_mc_progressive(
     over a PINNED chunk count), so (seed, N) reproduces. The yielded ``Partial.running_p_adv`` carries
     the running P(reach grand final) so the app's progress bar can show a live tally; the returned
     ``PlayoffResult`` holds the marginals, the per-sim sample, and the Wilson bands.
+
+    ``market_overrides`` (keyword-only, the playoff odds seam — default None = unchanged): forwarded
+    to ``simulate_bracket`` so market-priced QF/SF lines override the champion-fit ratings for the
+    rounds the market prices (PROB-02). None reproduces the rating-only path byte-identically.
     """
     if N <= 0:
         raise ValueError(f"N must be a positive integer, got {N!r}")
@@ -225,7 +263,9 @@ def run_playoff_mc_progressive(
             continue
         rng = np.random.default_rng(child_seeds[chunk_idx])
         for _ in range(chunk_n):
-            winners = simulate_bracket(teams, ratings, S, rng, locked, bo=bo)
+            winners = simulate_bracket(
+                teams, ratings, S, rng, locked, bo=bo, market_overrides=market_overrides
+            )
             for label in QF_LABELS:
                 counts_sf[winners[label]] += 1
             for label in SF_LABELS:
@@ -262,10 +302,17 @@ def run_playoff_mc(
     seed: int,
     n_chunks: int = DEFAULT_N_CHUNKS,
     bo: dict[str, int] | None = None,
+    market_overrides: dict | None = None,
 ) -> PlayoffResult:
-    """Drain ``run_playoff_mc_progressive`` and return the final ``PlayoffResult`` (cache-wrapper seam)."""
+    """Drain ``run_playoff_mc_progressive`` and return the final ``PlayoffResult`` (cache-wrapper seam).
+
+    ``market_overrides`` (the playoff odds seam — default None = unchanged) is forwarded so
+    market-priced QF/SF lines override the champion-fit ratings for the rounds the market prices
+    (PROB-02); None is the byte-identical rating-only path.
+    """
     gen = run_playoff_mc_progressive(
-        teams, ratings, S, N, locked, seed=seed, n_chunks=n_chunks, bo=bo
+        teams, ratings, S, N, locked, seed=seed, n_chunks=n_chunks, bo=bo,
+        market_overrides=market_overrides,
     )
     result: PlayoffResult | None = None
     try:
