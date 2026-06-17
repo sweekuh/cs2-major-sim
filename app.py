@@ -1837,18 +1837,57 @@ def _render_playoff_lock_controls(name_of: dict[int, str]) -> None:
             st.rerun()
 
 
+def _playoff_overrides_from_cache():
+    """Build the bracket ``market_overrides`` from the active-stage odds cache — fail-soft.
+
+    Returns ``({"lo-hi": p}, fetched_at)``: the market-priced playoff matchups, where ``p`` =
+    P(lower-id team wins the SERIES) is passed to the bracket seam DIRECTLY (best-of NOT re-applied,
+    PROB-02 — the cache's ``p`` is already a series price). Unlike the Swiss ``_odds_from_cache``,
+    the playoffs do NOT back-solve ratings from these prices: the committed playoff ratings are
+    champion-futures-calibrated (PLAY-04), so the market's KNOWN QF/SF lines override exactly those
+    rounds while the champion-fit ratings still drive the unpriced later rounds — the same
+    orthogonality the Swiss qualify-fit relies on (priced rounds from the market, the rest from the
+    fit). Returns ``({}, None)`` when the cache is absent/empty/cross-stage/invalid — the
+    rating-only bracket path, byte-identical to the pre-wire behavior.
+
+    Reads through ``_odds_cache_for_active_stage`` (STG-06) so a cache fetched for ANOTHER stage —
+    whose id-bucket keys name different teams — is treated as absent, never mis-applied.
+    """
+    cache = _odds_cache_for_active_stage()
+    if not cache:
+        return {}, None
+    blended = cache.get("blended") or {}
+    fetched_at = cache.get("_meta", {}).get("fetched_at")
+    overrides: dict[str, float] = {}
+    for key, b in blended.items():
+        try:
+            lo_s, hi_s = str(key).split("-")
+            int(lo_s), int(hi_s)  # validate the id-bucket shape ("lo-hi")
+            p = float(b["p"])
+        except (ValueError, KeyError, TypeError, AttributeError):
+            continue  # a malformed entry is skipped, never crashes the run (fail-soft)
+        if p != p or not (0.0 < p < 1.0):  # NaN or out of (0, 1) -> skip (fail-soft)
+            continue
+        overrides[key] = p
+    return overrides, fetched_at
+
+
 def _run_playoff_or_serve(locked: dict[frozenset, int]):
     """Validate ratings + dispatch the bracket MC (cache hit/miss). Returns (PlayoffResult, error).
 
     Mirrors ``_run_or_serve``: a bad rating blocks Run and the engine is never called; otherwise the
     bracket MC is memoized on a playoffs-scoped cache key (stage_id 'playoffs' leads it, so it never
-    collides with a Swiss Result) folding in ratings, S, N, the locked bracket, and the per-round bo."""
+    collides with a Swiss Result) folding in ratings, S, N, the locked bracket, the per-round bo, and
+    the market overrides + their fetched_at (so a fresh line re-runs rather than serving stale)."""
     if not run_clicked:
         return None, None
     if validate_ratings(edited):
         return None, BAD_RATING_MSG
     ratings = {r["seed"]: float(r["rating"]) for r in edited}
     bo = bo_from_stage_cfg(_stage_cfg)
+    # Market overrides: price the KNOWN playoff matchups from the cache, leaving the champion-fit
+    # ratings to drive the unpriced rounds (PROB-02 orthogonality). Empty {} is byte-identical.
+    overrides, odds_fetched_at = _playoff_overrides_from_cache()
     cache_key = (
         "playoffs",
         freeze_ratings(ratings),
@@ -1856,12 +1895,16 @@ def _run_playoff_or_serve(locked: dict[frozenset, int]):
         int(N),
         freeze_locked(locked),
         (bo["qf"], bo["sf"], bo["gf"]),
+        tuple(sorted(overrides.items())),
+        odds_fetched_at,
     )
     cache = st.session_state[KEY_MC_CACHE]
     if cache_key in cache:
         return cache[cache_key], None
     bar = st.progress(0.0, text="Simulating playoffs…")
-    gen = run_playoff_mc_progressive(teams, ratings, S, int(N), locked, seed=FIXED_SEED, bo=bo)
+    gen = run_playoff_mc_progressive(
+        teams, ratings, S, int(N), locked, seed=FIXED_SEED, bo=bo, market_overrides=overrides
+    )
     result = None
     try:
         while True:
@@ -1991,7 +2034,9 @@ def _render_playoff_main() -> None:
     locked = _playoff_locked_dict(locks)
     result, error = _run_playoff_or_serve(locked)
     if result is not None:
-        st.caption(f"{int(N) // 1000}k bracket sims · seed {FIXED_SEED}")
+        n_priced = len(_playoff_overrides_from_cache()[0])
+        priced = f" · {n_priced} matchup{'s' if n_priced != 1 else ''} market-priced" if n_priced else ""
+        st.caption(f"{int(N) // 1000}k bracket sims · seed {FIXED_SEED}{priced}")
 
     st.subheader("Recommended ballot")
     if error:
