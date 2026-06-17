@@ -77,6 +77,46 @@ def bo_from_stage_cfg(cfg: dict | None) -> dict[str, int]:
     }
 
 
+def overrides_from_named_lines(
+    teams: list[Team], lines: dict[tuple[str, str], float]
+) -> dict[str, float]:
+    """Build the ``market_overrides`` dict from human-facing named series lines (fail-loud).
+
+    ``lines`` maps a ``(team_a_name, team_b_name)`` tuple (a priced matchup) to ``p`` = P(the
+    FIRST-named team wins the SERIES). Returns the id-bucket-keyed ``{"lo-hi": P(lower-id wins)}``
+    dict that ``simulate_bracket`` / ``run_playoff_mc`` consume — the p is oriented to the lower id
+    here so the engine seam stays orientation-agnostic. The series price is passed through verbatim
+    (best-of NOT re-applied downstream, PROB-02).
+
+    FAIL-LOUD (mirrors the fit-target validators): an unknown team name, a self-pair, a ``p`` not
+    strictly in (0, 1), or the SAME matchup listed twice (even with the names swapped) raises
+    ValueError rather than silently producing a half-specified or self-contradictory override set —
+    a wrong line would quietly mis-price a whole half of the bracket.
+    """
+    id_of = {t.name: t.id for t in teams}
+    out: dict[str, float] = {}
+    for pair, raw_p in lines.items():
+        a_name, b_name = pair
+        for nm in (a_name, b_name):
+            if nm not in id_of:
+                raise ValueError(
+                    f"unknown team name {nm!r} in market line; known teams: {sorted(id_of)}"
+                )
+        a_id, b_id = id_of[a_name], id_of[b_name]
+        if a_id == b_id:
+            raise ValueError(f"market line pairs a team with itself: {a_name!r}")
+        p = float(raw_p)
+        if not (0.0 < p < 1.0) or p != p:
+            raise ValueError(
+                f"series win prob for ({a_name} vs {b_name}) must be strictly in (0, 1), got {raw_p!r}"
+            )
+        bucket = f"{min(a_id, b_id)}-{max(a_id, b_id)}"
+        if bucket in out:
+            raise ValueError(f"matchup {a_name} vs {b_name} (bucket {bucket}) is listed twice")
+        out[bucket] = p if a_id < b_id else (1.0 - p)  # orient to the LOWER id
+    return out
+
+
 def _n_maps(label: str, bo: dict[str, int]) -> int:
     """Series length (odd map count) for a match label, from the per-round bo config."""
     if label in QF_LABELS:

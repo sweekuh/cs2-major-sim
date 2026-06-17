@@ -11,6 +11,7 @@ from engine.bracket import (
     QF_SEEDS,
     SF_FEEDERS,
     bo_from_stage_cfg,
+    overrides_from_named_lines,
     run_playoff_mc,
     simulate_bracket,
 )
@@ -179,3 +180,34 @@ def test_market_override_bo5_grand_final_priced_directly():
     res = run_playoff_mc(_teams(), None, 40.0, 40000, seed=7, locked=locked, market_overrides=overrides)
     assert res.p_champ()[1] == pytest.approx(0.70, abs=0.01)
     assert res.p_champ()[1] < 0.80  # discriminates direct-pricing from Bo5 best-of re-application
+
+
+# --- overrides_from_named_lines (the human-facing builder for the seam) --------------------
+def test_overrides_from_named_lines_buckets_and_orients_to_lower_id():
+    teams = _teams()  # ids == seeds 1..8, names "T1".."T8"
+    # First-named team's win prob; orientation must be invariant to the name order in the tuple.
+    a = overrides_from_named_lines(teams, {("T1", "T8"): 0.90})  # lower id (1) listed first
+    b = overrides_from_named_lines(teams, {("T8", "T1"): 0.10})  # same line, names swapped
+    assert a == {"1-8": 0.90}
+    assert b == {"1-8": 0.90}  # P(T8 wins)=0.10 -> P(lower-id T1 wins)=0.90
+
+
+def test_overrides_from_named_lines_round_trips_through_the_sim():
+    teams = _teams()
+    overrides = overrides_from_named_lines(teams, {("T8", "T1"): 0.75})  # T8 (higher id) favored
+    res = run_playoff_mc(teams, None, 40.0, 40000, seed=4, market_overrides=overrides)
+    assert res.p_sf()[8] == pytest.approx(0.75, abs=0.01)  # T8 reaches SF at its market price
+    assert res.p_sf()[1] == pytest.approx(0.25, abs=0.01)
+
+
+def test_overrides_from_named_lines_fail_loud():
+    teams = _teams()
+    with pytest.raises(ValueError):  # unknown team
+        overrides_from_named_lines(teams, {("T1", "Nope"): 0.6})
+    with pytest.raises(ValueError):  # self-pair
+        overrides_from_named_lines(teams, {("T1", "T1"): 0.6})
+    for bad in (0.0, 1.0, -0.1, 1.4):  # p outside (0, 1)
+        with pytest.raises(ValueError):
+            overrides_from_named_lines(teams, {("T1", "T2"): bad})
+    with pytest.raises(ValueError):  # same matchup listed twice (names swapped)
+        overrides_from_named_lines(teams, {("T1", "T2"): 0.6, ("T2", "T1"): 0.4})
