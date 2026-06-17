@@ -2155,3 +2155,39 @@ def test_playoffs_live_lock_conditions_the_resim():
     pres = next(v for k, v in cache.items() if k[0] == "playoffs")
     assert pres.counts_sf[8] == pres.n   # G2 reaches the SF in every sim (locked)
     assert pres.counts_sf[1] == 0        # Spirit never does
+
+
+def test_playoffs_market_overrides_price_known_matchups(monkeypatch, tmp_path):
+    """PLAY-04 app wiring: a playoffs-stamped odds cache with a QF series line overrides the
+    champion-fit ratings for THAT matchup only (PROB-02). A near-certain line on Spirit (seed/id 1)
+    over G2 (seed/id 8) pushes P(Spirit reaches SF) to ~the market price, far above the rating-only
+    ~0.79 — and the run caption reports the matchup as market-priced. Unlike the Swiss path the
+    ratings are NOT back-solved: only the priced round is overridden, the rest stays champion-fit.
+
+    Revert check: drop ``market_overrides`` from ``_run_playoff_or_serve`` and P(reach SF) falls
+    back to the rating-only value, failing the bound."""
+    from ui.state import KEY_STAGE
+
+    monkeypatch.delenv("ODDSPAPI_KEY", raising=False)
+    cache = {
+        "_meta": {"fetched_at": "2026-06-17T00:00:00+00:00", "version": 1,
+                  "providers_present": ["kalshi"], "round_hint": 1, "stage": 4},  # stage 4 == playoffs
+        "blended": {"1-8": {"p": 0.97, "var": 0.0, "n_sources": 1, "bo3": True}},  # Spirit(1) over G2(8)
+    }
+    cache_file = tmp_path / "odds_cache.json"
+    cache_file.write_text(json.dumps(cache), encoding="utf-8")
+    _patch_odds_cache_path(monkeypatch, cache_file)
+
+    at = _apptest().run()
+    at.session_state[KEY_STAGE] = "playoffs"
+    at.run()
+    at.number_input(key="N_input").set_value(4000).run()
+    at.button(key="run_btn").click().run()
+    assert not at.exception
+    pres = next(v for k, v in at.session_state["mc_cache"].items() if k[0] == "playoffs")
+    # Spirit (id 1) reaches the SF at ~the market series price 0.97, NOT the rating-only ~0.79.
+    assert pres.counts_sf[1] / pres.n > 0.93
+    # The override is folded into the playoffs cache key (a fresh line re-runs, never serves stale).
+    pkey = next(k for k in at.session_state["mc_cache"] if k[0] == "playoffs")
+    assert ("1-8", 0.97) in pkey[6]
+    assert "market-priced" in _all_text(at)
