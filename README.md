@@ -75,7 +75,7 @@ seeds + ratings ──► Swiss engine ──► Monte Carlo ──► optimizer
 - **Backtest gate:** the engine reproduces StarLadder Budapest 2025 Stage 1's actual R1–R5
   pairings exactly (`tests/test_backtest_budapest_2025.py`). If that ever goes red, the pairing
   logic is broken. Seeds for the backtest come from the authoritative Valve VRS snapshot.
-- **190+ passing tests**, including regression guards that *distinguish the right rule from the
+- **268 passing tests**, including regression guards that *distinguish the right rule from the
   wrong one* (a test that still passes when you revert the fix is theater, not a guard).
 - **Cologne seeds confirmed:** the seed order is verified against Liquipedia + the live Kalshi
   bracket + the R1 pairing rule, so the trust badge reads *validated*, not *inferred*.
@@ -85,54 +85,111 @@ inflation and the advance-pick scoring rule above). The full story is in
 **[docs/LESSONS.md](docs/LESSONS.md)** — worth reading if you care about how subtle simulation
 math goes wrong.
 
-## Predictions — call-my-shot (Stage 3, all-Bo3, live market odds)
+## Predictions & results — per stage
 
-Snapshot 2026-06-09 evening (2026-06-10 02:07 UTC), ahead of Stage 3 (June 11–15, every match
-Bo3), from **live Kalshi markets**: the eight KXCS2GAME R1 series prices (Bo3-stamped, priced
-directly in-sim) plus the sixteen KXCS2QUALIFIERS playoff-qualify mids — logit-renormalized to
-sum exactly 8, then back-solved into rounds-2-5 ratings by the qualify fit (converged, max err
-0.7%) — over 200k sims. Single-provider, so no epistemic spread band; OddsPapi posted no Cologne
-Stage-3 markets at fetch time. This supersedes the earlier websearch-ensemble snapshot (which
-warned: "re-fetch real odds before trusting the mid-table order" — the market indeed reordered
-the mid-table: FUT Esports 57.5%→38.7%, FURIA 53.0%→65.9%, Falcons 77.4%→89.8%). These are a
-model's odds, not a guarantee.
+Predictions for **all four stages**, graded against what actually happened. These are a model's
+odds, not a guarantee — and we grade ourselves honestly (an honest dashboard is the whole point).
 
-| Team | P(advance) | P(3-0) | P(0-3) |
-|---|---:|---:|---:|
-| Vitality | 94.7% | 51.5% | 0.4% |
-| Falcons | 89.8% | 36.2% | 0.8% |
-| Spirit | 82.4% | 20.9% | 2.3% |
-| Natus Vincere | 81.3% | 21.9% | 2.3% |
-| FURIA | 65.9% | 15.4% | 3.4% |
-| Aurora | 59.3% | 13.2% | 4.4% |
-| MOUZ | 54.8% | 9.1% | 6.4% |
-| PARIVISION | 43.0% | 7.2% | 8.8% |
-| The MongolZ | 42.0% | 6.7% | 9.0% |
-| G2 | 41.8% | 4.4% | 13.9% |
-| FUT Esports | 38.7% | 3.6% | 14.6% |
-| BetBoom | 31.9% | 3.7% | 14.9% |
-| Legacy | 31.2% | 2.7% | 19.9% |
-| 9z | 23.5% | 2.2% | 20.5% |
-| B8 | 10.1% | 0.6% | 40.1% |
-| Monte | 9.8% | 0.6% | 38.3% |
+**How to read these.** The Stage-1/2 tables are the engine on the committed fixture priors
+(rating-only, 200k sims, `seed=20260617` — reproducible: `uv run python -m engine ...`), so the
+"prediction" is exactly what the shipped priors imply. The Stage-3 block keeps the **live-market
+call-my-shot** that was actually published *ahead* of the stage (its provenance is in the caption).
+**✓** = the team actually advanced; the model's "pick" is its top-8 by P(advance). Calibration is
+cited per stage from `python -m scripts.score_stage` and the Budapest 2025 backtest gate.
 
-**Recommended ballot** (E[correct] and P(≥5) agree exactly, no correlated-pick warning):
-- **3-0:** Vitality, Falcons
-- **Advance:** Spirit, Natus Vincere, FURIA, Aurora, MOUZ, G2
-- **0-3:** B8, Monte
-- **True coin odds: P(≥5/10) ≈ 54%** — the live market is more top-heavy than the websearch
-  ensemble was (its flatter field priced the coin at ~42%), and a sharper favorite hierarchy
-  makes the parlay easier. E[correct] = 4.7, so ≥5 is still slightly better than a coin flip,
-  not a lock.
+### Stage 1 — 16→8, settled · model top-8 **6/8**
 
-### Stage-1 scorecard (the previous call, settled)
+The eight predicted advancers (top-8 by P(advance)) and whether they made it:
 
-The Stage-1 ballot above this section in earlier revisions scored **exactly 5/10** — the coin hit
-(≥5 needed) on a predicted P(≥5) of ~59%. Match-level calibration over the 33 real Stage-1
-matches: log-loss 0.579 vs 0.693 coinflip, 73% favorite accuracy, and the shipped spread S=40 was
-the sweep argmin (`python -m scripts.score_stage`). One instructive miss: the B8 *advance* pick
-failed because B8 went **3-0** — an advance pick scores only on 3-1/3-2, the exact rule documented
-above. The model knew (it gave B8 22.9% to 3-0); the parlay just rolled that branch.
+| # | Predicted to advance | P(advance) | Result |
+|--:|---|---:|:--:|
+| 1 | GamerLegion | 99.8% | ✓ |
+| 2 | B8 | 97.2% | ✓ |
+| 3 | BetBoom | 92.4% | ✓ |
+| 4 | MIBR | 86.8% | ✓ |
+| 5 | M80 | 66.2% | ✓ |
+| 6 | HEROIC | 62.0% | — |
+| 7 | Liquid | 53.0% | — |
+| 8 | BIG | 50.1% | ✓ |
+
+Missed: HEROIC, Liquid. Bubble surprises that advanced: **TYLOO** (model 27.7%), **FlyQuest**
+(8.4%). History: the live 2/6/2 Pick'Em scored **5/10** (coin hit; predicted P(≥5)≈59%), with the
+one instructive miss being the **B8 *advance* pick failing because B8 went 3-0** — an advance pick
+scores only on a 3-1/3-2 finish (the rule above). Match-level calibration over the 33 real matches:
+**log-loss 0.5785 vs 0.6931 coinflip, 24/33 (73%) favorites, S=40 the sweep argmin**. Pairing logic
+is backtest-gated exact vs StarLadder Budapest 2025.
+
+### Stage 2 — 16→8, settled · model top-8 **6/8**
+
+| # | Predicted to advance | P(advance) | Result |
+|--:|---|---:|:--:|
+| 1 | GamerLegion | 95.4% | — |
+| 2 | Spirit | 95.2% | ✓ |
+| 3 | Legacy | 87.9% | ✓ |
+| 4 | Astralis | 78.3% | — |
+| 5 | B8 | 74.0% | ✓ |
+| 6 | FUT Esports | 73.5% | ✓ |
+| 7 | G2 | 59.6% | ✓ |
+| 8 | BetBoom | 51.8% | ✓ |
+
+Missed: GamerLegion, Astralis. Bubble surprises that advanced: **9z** (model 38.2%), **Monte**
+(23.0%). The two misses are the classic Swiss bubble: both were >75% to advance and both lost the
+3-2 / 2-3 coinflips.
+
+### Stage 3 — 16→8 (playoff qualifiers), all-Bo3, settled · live-market call **5/8**
+
+Snapshot 2026-06-10 02:07 UTC, published *ahead* of Stage 3 (June 11–15, every match Bo3), from
+**live Kalshi markets**: the eight KXCS2GAME R1 series prices (priced directly in-sim) plus the
+sixteen KXCS2QUALIFIERS playoff-qualify mids — back-solved into rounds-2-5 ratings by the qualify
+fit (converged, max err 0.7%) — over 200k sims. Single-provider, so no epistemic band. **✓** = the
+team actually reached the playoffs.
+
+| Team | P(advance) | P(3-0) | P(0-3) | Result |
+|---|---:|---:|---:|:--:|
+| Vitality | 94.7% | 51.5% | 0.4% | ✓ |
+| Falcons | 89.8% | 36.2% | 0.8% | ✓ |
+| Spirit | 82.4% | 20.9% | 2.3% | ✓ |
+| Natus Vincere | 81.3% | 21.9% | 2.3% | — |
+| FURIA | 65.9% | 15.4% | 3.4% | ✓ |
+| Aurora | 59.3% | 13.2% | 4.4% | ✓ |
+| MOUZ | 54.8% | 9.1% | 6.4% | — |
+| PARIVISION | 43.0% | 7.2% | 8.8% | — |
+| The MongolZ | 42.0% | 6.7% | 9.0% | — |
+| G2 | 41.8% | 4.4% | 13.9% | ✓ |
+| FUT Esports | 38.7% | 3.6% | 14.6% | — |
+| BetBoom | 31.9% | 3.7% | 14.9% | ✓ |
+| Legacy | 31.2% | 2.7% | 19.9% | — |
+| 9z | 23.5% | 2.2% | 20.5% | ✓ |
+| B8 | 10.1% | 0.6% | 40.1% | — |
+| Monte | 9.8% | 0.6% | 38.3% | — |
+
+The chalk held at the top (all five of the model's favorites — Vitality, Falcons, Spirit, FURIA,
+Aurora — went through), but the **3-2 bubble was chaos**: G2 (41.8%), BetBoom (31.9%) and 9z
+(23.5%) all squeaked in over NaVi, MOUZ and PARIVISION. Rating-only priors land the same **5/8**.
+That bubble noise is exactly why the playoff title race is anchored to the market, not to priors.
+
+### Playoffs — 8-team single-elim bracket, **live (pending)**
+
+Champion odds, **live-market-anchored** (Polymarket ~$21M + Kalshi `KXCS2-IEMCOL26`, read
+2026-06-16; the bracket sim is fit so P(champion) reproduces this book through the real draw —
+`scripts/fit_champion.py`), 200k sims:
+
+| Team | P(champion) | P(reach SF) | Quarterfinal |
+|---|---:|---:|---|
+| Vitality | 44.8% | 74.8% | vs Falcons |
+| Spirit | 29.6% | 78.6% | vs G2 |
+| FURIA | 9.4% | 69.8% | vs 9z |
+| Falcons | 7.2% | 25.2% | vs Vitality |
+| Aurora | 3.9% | 56.6% | vs BetBoom |
+| G2 | 2.0% | 21.4% | vs Spirit |
+| BetBoom | 2.0% | 43.4% | vs Aurora |
+| 9z | 1.1% | 30.2% | vs FURIA |
+
+**Path beats raw strength here:** FURIA's title odds (9.4%) outrank Falcons' (7.2%) despite a
+*lower* rating (70.0 vs 73.9) — FURIA draws 9z in its quarterfinal while Falcons must beat Vitality.
+Quarterfinals are June 18–19 (Bo3), the grand final June 21 (Bo5) — **result pending.** Now that
+playoff per-match odds are wired (below), fetching `--stage playoffs` anchors the bracket's known
+QF/SF lines to the live series markets too, on top of the champion-futures fit.
 
 ## Live odds setup (optional)
 
@@ -154,9 +211,12 @@ rating-only at the same N.
   that, so this is a non-issue in practice, just don't crank N to 1M.
 - The **playoffs** are built (v4): the 8-team single-elim bracket is simulated end-to-end on the
   real Stage-3 finish, with a 7-pick round-weighted Pick'Em optimizer (4 QF + 2 SF + 1 champion).
-  Playoff per-match market odds aren't wired yet (no reachable provider), so the bracket runs on the
-  carried-forward Stage-3 ratings until odds post; the Pick'Em point weights / achievement tiers are
-  [INFERRED] editable defaults. See `STATUS.md`.
+  The bracket ratings are **live-champion-market-calibrated** (`scripts/fit_champion.py` fits them so
+  P(champion) reproduces the tournament-winner book), and **playoff per-match odds are now wired**: a
+  `--stage playoffs` odds cache prices the known QF/SF series lines directly while the champion-fit
+  ratings drive the unpriced later rounds (the same orthogonality as the Swiss qualify-fit). With no
+  line posted it falls back to the champion-fit ratings, byte-identical. The Pick'Em point weights /
+  achievement tiers are [INFERRED] editable defaults. See `STATUS.md`.
 
 ## Project layout
 
@@ -177,10 +237,11 @@ scripts/            fetch_odds + fetch_results — the ONLY provider contact; bo
                     and stamp _meta.stage so a cache can never feed the wrong stage's run
   fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
   score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
-tests/              250+ tests incl. the Budapest backtest gate + real-data seeding gates
-                    + playoff bracket / 7-pick optimizer / seed_playoffs gates
+tests/              268 tests incl. the Budapest backtest gate + real-data seeding gates
+                    + playoff bracket / 7-pick optimizer / seed_playoffs / market-overrides gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state
+CHANGELOG.md        release history (v1.0 → v4.0), per the git tags
 ```
 
 ## Stack

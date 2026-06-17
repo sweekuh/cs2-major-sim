@@ -3,7 +3,7 @@
 **v4 shipped — the project is complete: Swiss Stages 1–3 + the Playoffs.** Stage 3 is over;
 its real results are committed and the single-elimination playoff bracket is simulated end-to-end.
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 ## Working now
 
@@ -56,11 +56,18 @@ Last updated: 2026-06-16
   title odds are higher: FURIA draws 9z, Falcons must beat Vitality). Forecast: **Vitality ~45%,
   Spirit ~29%, FURIA ~9%, Falcons ~7%**, then the field. Re-run `scripts/fit_champion.py` (the
   `_LIVE_FUTURES` dict) whenever the market moves.
-- **260 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
+- **Playoff per-match market odds wired (v4.0)** — the bracket now has the same `market_overrides`
+  seam as the Swiss `_play` (PROB-02): `engine/bracket.py` prices a known QF/SF matchup directly from
+  the market (best-of NOT re-applied) while the champion-fit ratings drive the unpriced later rounds,
+  plus `overrides_from_named_lines` to build the seam from human lines. The app's Playoffs stage reads
+  a `--stage playoffs` odds cache through the cross-stage guard and feeds those lines in (caption shows
+  "N matchups market-priced"); no line posted → champion-fit-ratings-only, byte-identical.
+- **268 tests passing**, including the real-data Stage-1→Stage-2 seeding backtest, a deterministic
   Stage-2→Stage-3 chain gate, the playoff bracket-MC invariants / 7-pick optimizer / `seed_playoffs`
-  derivation, the committed-bracket guard, and revert-proof guards on the new wiring (the
-  `_NEXT_STAGE` entry, the Stage-3 banner, the cross-stage odds refusal, the `_meta.stage` stamp,
-  and the Playoffs stage selector + bracket render + live-lock re-sim).
+  derivation, the committed-bracket guard, the playoff market-overrides seam (direct series pricing,
+  id-bucket orientation, byte-identical empty path, Bo5 direct pricing) + app wiring, and revert-proof
+  guards on the rest of the wiring (the `_NEXT_STAGE` entry, the Stage-3 banner, the cross-stage odds
+  refusal, the `_meta.stage` stamp, and the Playoffs stage selector + bracket render + live-lock re-sim).
 
 ## Recently fixed
 
@@ -84,10 +91,12 @@ Last updated: 2026-06-16
   in-app — the deterministic chain gate covers the structure meanwhile.
 - Practical N is ~100k–200k (the optimizer retains the full per-sim sample, so memory grows with
   K·N). Probabilities converge well before that.
-- Playoff per-match market odds aren't wired (no live playoff-series provider was reachable from
-  the build host); the bracket runs on the carried-forward Stage-3 ratings until odds post. The
-  playoff Pick'Em point weights / achievement tiers are [INFERRED] editable defaults (QF=1, SF=2,
-  GF=3; tiers 2/1/1) — the relative ordering matches the documented in-game achievements.
+- Playoff per-match market odds are **wired** (the bracket `market_overrides` seam + app), but the
+  live *feed* is still manual: no playoff-series provider was auto-reachable from the build host, so
+  a `--stage playoffs` cache is hand-entered (or fetched when a provider posts) — until then the
+  bracket runs on the live-champion-market-calibrated ratings. The playoff Pick'Em point weights /
+  achievement tiers are [INFERRED] editable defaults (QF=1, SF=2, GF=3; tiers 2/1/1) — the relative
+  ordering matches the documented in-game achievements.
 
 ## Next
 

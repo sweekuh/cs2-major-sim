@@ -54,6 +54,14 @@ Stage-3 finish (confirmed vs the official bracket 2026-06-16).
   P(achievement-coin)-optimal recommendation (≥2 QF + ≥1 SF + champion correct), sample-only.
 - **App integration** — a Playoffs stage with the bracket forecast, the recommended 7-pick ballot +
   coin hero, and a live lock seam (lock QF/SF/GF winners, re-sim from here).
+- **Live-champion-market calibration (PLAY-04)** — `engine/playoff_fit.py` + `scripts/fit_champion.py`
+  fit the 8 bracket ratings so P(champion) reproduces the live tournament-winner book through the real
+  draw (the playoffs' QFIT analog); re-run on market moves via the `_LIVE_FUTURES` dict.
+- **Playoff per-match market odds (v4.0)** — the bracket grew the same `market_overrides` PROB-02 seam
+  as the Swiss `_play`: known QF/SF series lines are priced directly (best-of not re-applied), the
+  champion-fit ratings drive the unpriced later rounds, and the app's Playoffs stage feeds a
+  `--stage playoffs` odds cache through the cross-stage guard. Empty/absent → champion-fit-ratings-only,
+  byte-identical. `overrides_from_named_lines` builds the seam from human-entered lines.
 
 ## Deferred
 
