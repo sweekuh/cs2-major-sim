@@ -1,0 +1,1586 @@
+[
+ {
+  "slug": "cs2-gl1-nrg-2026-06-02",
+  "title": "Counter-Strike: GamerLegion vs NRG (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "GamerLegion",
+   "NRG"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 12:00:00+00",
+  "vol": 1010588.0378269985,
+  "close": 0.675,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-b8-tyloo-2026-06-02",
+  "title": "Counter-Strike: B8 vs TYLOO (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "B8",
+   "TYLOO"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 12:00:00+00",
+  "vol": 745600.09648,
+  "close": 0.595,
+  "close_lag": -51
+ },
+ {
+  "slug": "cs2-bb3-gg5-2026-06-02",
+  "title": "Counter-Strike: BetBoom Team vs Gaimin Gladiators (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "BetBoom Team",
+   "Gaimin Gladiators"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 12:00:00+00",
+  "vol": 490220.7770769991,
+  "close": 0.745,
+  "close_lag": -53
+ },
+ {
+  "slug": "cs2-big5-tl1-2026-06-02",
+  "title": "Counter-Strike: BIG vs Liquid (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "BIG",
+   "Liquid"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 10:30:00+00",
+  "vol": 1169227.7153290005,
+  "close": 0.535,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-m80-lvg-2026-06-02",
+  "title": "Counter-Strike: M80 vs Lynn Vision (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "M80",
+   "Lynn Vision"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 10:30:00+00",
+  "vol": 584862.4133759991,
+  "close": 0.57,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-sin2-fly-2026-06-02",
+  "title": "Counter-Strike: Sinners vs FlyQuest (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Sinners",
+   "FlyQuest"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 10:30:00+00",
+  "vol": 720838.6253180015,
+  "close": 0.575,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-mibr-thunde-2026-06-02",
+  "title": "Counter-Strike: MIBR vs THUNDER dOWNUNDER (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "MIBR",
+   "THUNDER dOWNUNDER"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 10:30:00+00",
+  "vol": 574156.6190950009,
+  "close": 0.785,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-hero-shk-2026-06-02",
+  "title": "Counter-Strike: Heroic vs Sharks (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Heroic",
+   "Sharks"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 10:30:00+00",
+  "vol": 675517.5503549998,
+  "close": 0.625,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-hero-lvg-2026-06-02",
+  "title": "Counter-Strike: Heroic vs Lynn Vision (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Heroic",
+   "Lynn Vision"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 15:30:00+00",
+  "vol": 271103.1568890004,
+  "close": null,
+  "close_lag": null
+ },
+ {
+  "slug": "cs2-b8-thunde-2026-06-02",
+  "title": "Counter-Strike: B8 vs THUNDER dOWNUNDER (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "B8",
+   "THUNDER dOWNUNDER"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 15:40:00+00",
+  "vol": 329693.0323269992,
+  "close": 0.76,
+  "close_lag": -53
+ },
+ {
+  "slug": "cs2-mibr-tyloo-2026-06-02",
+  "title": "Counter-Strike: MIBR vs TYLOO (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "MIBR",
+   "TYLOO"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 16:50:00+00",
+  "vol": 959722.0584029988,
+  "close": 0.61,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-sin2-nrg-2026-06-02",
+  "title": "Counter-Strike: Sinners vs NRG (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Sinners",
+   "NRG"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-02 16:45:00+00",
+  "vol": 338631.41280099907,
+  "close": 0.555,
+  "close_lag": -54
+ },
+ {
+  "slug": "cs2-m80-shk-2026-06-02",
+  "title": "Counter-Strike: M80 vs Sharks (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "M80",
+   "Sharks"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 17:45:00+00",
+  "vol": 470909.19872600073,
+  "close": 0.565,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-gl1-fly-2026-06-02",
+  "title": "Counter-Strike: GamerLegion vs FlyQuest (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "GamerLegion",
+   "FlyQuest"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 18:10:00+00",
+  "vol": 1116385.421630995,
+  "close": 0.695,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-bb3-tl1-2026-06-02",
+  "title": "Counter-Strike: BetBoom Team vs Liquid (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "BetBoom Team",
+   "Liquid"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 19:30:00+00",
+  "vol": 834648.1433539992,
+  "close": 0.585,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-big5-gg5-2026-06-02",
+  "title": "Counter-Strike: BIG vs Gaimin Gladiators (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "BIG",
+   "Gaimin Gladiators"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-02 18:50:00+00",
+  "vol": 188734.3257389999,
+  "close": 0.735,
+  "close_lag": -54
+ },
+ {
+  "slug": "cs2-nrg-fly-2026-06-03",
+  "title": "Counter-Strike: NRG vs FlyQuest (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "NRG",
+   "FlyQuest"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-03 12:30:00+00",
+  "vol": 760191.3993339982,
+  "close": 0.515,
+  "close_lag": -957
+ },
+ {
+  "slug": "cs2-shk-lvg-2026-06-03",
+  "title": "Counter-Strike: Sharks vs Lynn Vision (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Sharks",
+   "Lynn Vision"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 12:30:00+00",
+  "vol": 387283.65971000044,
+  "close": 0.505,
+  "close_lag": -957
+ },
+ {
+  "slug": "cs2-tl1-mibr-2026-06-03",
+  "title": "Counter-Strike: Liquid vs MIBR (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Liquid",
+   "MIBR"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 13:40:00+00",
+  "vol": 1067010.8567750023,
+  "close": 0.505,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-thunde-big5-2026-06-03",
+  "title": "Counter-Strike: THUNDER dOWNUNDER vs BIG (BO1) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "THUNDER dOWNUNDER",
+   "BIG"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 13:30:00+00",
+  "vol": 1046408.194924047,
+  "close": 0.255,
+  "close_lag": -58
+ },
+ {
+  "slug": "cs2-gl1-bb3-2026-06-03",
+  "title": "Counter-Strike: GamerLegion vs BetBoom Team (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "GamerLegion",
+   "BetBoom Team"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 14:50:00+00",
+  "vol": 776655.0391060006,
+  "close": 0.465,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-tyloo-sin2-2026-06-03",
+  "title": "Counter-Strike: TYLOO vs Sinners (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "TYLOO",
+   "Sinners"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-03 14:40:00+00",
+  "vol": 982241.8402090003,
+  "close": 0.535,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-m80-b8-2026-06-03",
+  "title": "Counter-Strike: M80 vs B8 (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "M80",
+   "B8"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 17:00:00+00",
+  "vol": 1342880.1900860027,
+  "close": 0.395,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-gg5-hero-2026-06-03",
+  "title": "Counter-Strike: Gaimin Gladiators vs Heroic (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Gaimin Gladiators",
+   "Heroic"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-03 17:00:00+00",
+  "vol": 498484.9479180005,
+  "close": 0.155,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-tyloo-shk-2026-06-04",
+  "title": "Counter-Strike: TYLOO vs Sharks (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "TYLOO",
+   "Sharks"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-04 12:00:00+00",
+  "vol": 1871330.0001429976,
+  "close": 0.605,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-thunde-fly-2026-06-04",
+  "title": "Counter-Strike: THUNDER dOWNUNDER vs FlyQuest (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "THUNDER dOWNUNDER",
+   "FlyQuest"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-04 12:00:00+00",
+  "vol": 1204648.7949079997,
+  "close": 0.255,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-gl1-big5-2026-06-04",
+  "title": "Counter-Strike: GamerLegion vs BIG (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "GamerLegion",
+   "BIG"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-04 14:30:00+00",
+  "vol": 744376.7460090006,
+  "close": 0.535,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mibr-lvg-2026-06-04",
+  "title": "Counter-Strike: MIBR vs Lynn Vision (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "MIBR",
+   "Lynn Vision"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-04 15:00:00+00",
+  "vol": 568936.9934230001,
+  "close": 0.625,
+  "close_lag": -54
+ },
+ {
+  "slug": "cs2-tl1-hero-2026-06-04",
+  "title": "Counter-Strike: Liquid vs Heroic (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Liquid",
+   "Heroic"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-04 17:05:00+00",
+  "vol": 1096420.0172930036,
+  "close": 0.485,
+  "close_lag": -45
+ },
+ {
+  "slug": "cs2-m80-nrg-2026-06-04",
+  "title": "Counter-Strike: M80 vs NRG (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "M80",
+   "NRG"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-04 17:00:00+00",
+  "vol": 1387738.7128189977,
+  "close": 0.595,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-tyloo-lvg-2026-06-05",
+  "title": "Counter-Strike: TYLOO vs Lynn Vision (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "TYLOO",
+   "Lynn Vision"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-05 12:00:00+00",
+  "vol": 764948.7396610011,
+  "close": 0.635,
+  "close_lag": -42
+ },
+ {
+  "slug": "cs2-tl1-fly-2026-06-05",
+  "title": "Counter-Strike: Liquid vs FlyQuest (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "Liquid",
+   "FlyQuest"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-05 14:30:00+00",
+  "vol": 1590793.1533930008,
+  "close": 0.605,
+  "close_lag": -53
+ },
+ {
+  "slug": "cs2-nrg-big5-2026-06-05",
+  "title": "Counter-Strike: NRG vs BIG (BO3) - IEM Cologne Major Stage 1",
+  "outcomes": [
+   "NRG",
+   "BIG"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-05 17:10:00+00",
+  "vol": 2217998.746487999,
+  "close": 0.335,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-ts7-bb3-2026-06-06",
+  "title": "Counter-Strike: Spirit vs BetBoom Team (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Spirit",
+   "BetBoom Team"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 13:50:00+00",
+  "vol": 922042.4436749963,
+  "close": 0.745,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-fut-b8-2026-06-06",
+  "title": "Counter-Strike: FUT Esports vs B8 (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "FUT Esports",
+   "B8"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 11:30:00+00",
+  "vol": 670576.1903320011,
+  "close": 0.61,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-ast10-gl1-2026-06-06",
+  "title": "Counter-Strike: Astralis vs GamerLegion (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Astralis",
+   "GamerLegion"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 10:30:00+00",
+  "vol": 557912.6170380004,
+  "close": 0.545,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-g2-m80-2026-06-06",
+  "title": "Counter-Strike: G2 vs M80 (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "G2",
+   "M80"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 12:45:00+00",
+  "vol": 1235614.7034590002,
+  "close": 0.78,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-lgc-mibr-2026-06-06",
+  "title": "Counter-Strike: Legacy vs MIBR (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Legacy",
+   "MIBR"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-06 14:00:00+00",
+  "vol": 1204014.4660550016,
+  "close": 0.565,
+  "close_lag": -43
+ },
+ {
+  "slug": "cs2-9z-fly-2026-06-06",
+  "title": "Counter-Strike: 9z vs FlyQuest (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "9z",
+   "FlyQuest"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 10:30:00+00",
+  "vol": 905089.306590995,
+  "close": 0.555,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-pain-tyloo-2026-06-06",
+  "title": "Counter-Strike: paiN vs TYLOO (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "paiN",
+   "TYLOO"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-06 11:40:00+00",
+  "vol": 729716.2626769993,
+  "close": 0.535,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-mnte-big5-2026-06-06",
+  "title": "Counter-Strike: Monte vs BIG (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Monte",
+   "BIG"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 12:45:00+00",
+  "vol": 700716.3250279987,
+  "close": 0.45,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-fut-tyloo-2026-06-06",
+  "title": "Counter-Strike: FUT Esports vs TYLOO (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "FUT Esports",
+   "TYLOO"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 15:30:00+00",
+  "vol": 570737.4085479998,
+  "close": 0.705,
+  "close_lag": -42
+ },
+ {
+  "slug": "cs2-ast10-9z-2026-06-06",
+  "title": "Counter-Strike: Astralis vs 9z (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Astralis",
+   "9z"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-06 15:50:00+00",
+  "vol": 631057.7095730004,
+  "close": 0.575,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-g2-mnte-2026-06-06",
+  "title": "Counter-Strike: G2 vs Monte (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "G2",
+   "Monte"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 16:40:00+00",
+  "vol": 1563483.7173830015,
+  "close": 0.715,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-pain-big5-2026-06-06",
+  "title": "Counter-Strike: paiN vs BIG (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "paiN",
+   "BIG"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-06 16:55:00+00",
+  "vol": 928387.6841509995,
+  "close": 0.505,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-lgc-fly-2026-06-06",
+  "title": "Counter-Strike: Legacy vs FlyQuest (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Legacy",
+   "FlyQuest"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 18:10:00+00",
+  "vol": 646963.9903940011,
+  "close": 0.71,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-bb3-gl1-2026-06-06",
+  "title": "Counter-Strike: BetBoom Team vs GamerLegion (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "BetBoom Team",
+   "GamerLegion"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 18:30:00+00",
+  "vol": 1131309.7294169988,
+  "close": 0.605,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-b8-m80-2026-06-06",
+  "title": "Counter-Strike: B8 vs M80 (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "B8",
+   "M80"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-06 19:15:00+00",
+  "vol": 850344.8756340002,
+  "close": 0.58,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-ts7-mibr-2026-06-06",
+  "title": "Counter-Strike: Spirit vs MIBR (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Spirit",
+   "MIBR"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-06 19:40:00+00",
+  "vol": 461504.1071120004,
+  "close": 0.84,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-mnte-lgc-2026-06-07",
+  "title": "Counter-Strike: Monte vs Legacy (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Monte",
+   "Legacy"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-07 12:30:00+00",
+  "vol": 1000530.8150779982,
+  "close": 0.355,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-ast10-tyloo-2026-06-07",
+  "title": "Counter-Strike: Astralis vs TYLOO (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Astralis",
+   "TYLOO"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-07 12:30:00+00",
+  "vol": 794391.4043880001,
+  "close": 0.605,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-bb3-m80-2026-06-07",
+  "title": "Counter-Strike: BetBoom Team vs M80 (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "BetBoom Team",
+   "M80"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-07 14:20:00+00",
+  "vol": 763275.4897689987,
+  "close": 0.675,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mibr-big5-2026-06-07",
+  "title": "Counter-Strike: MIBR vs BIG (BO1) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "MIBR",
+   "BIG"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-07 13:30:00+00",
+  "vol": 951829.7340439998,
+  "close": 0.495,
+  "close_lag": -43
+ },
+ {
+  "slug": "cs2-fly-pain-2026-06-07",
+  "title": "Counter-Strike: FlyQuest vs paiN (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "FlyQuest",
+   "paiN"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-07 14:45:00+00",
+  "vol": 1042667.076253998,
+  "close": 0.395,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-ts7-9z-2026-06-07",
+  "title": "Counter-Strike: Spirit vs 9z (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Spirit",
+   "9z"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-07 17:00:00+00",
+  "vol": 586409.1959460009,
+  "close": 0.905,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-b8-gl1-2026-06-07",
+  "title": "Counter-Strike: B8 vs GamerLegion (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "B8",
+   "GamerLegion"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-07 15:20:00+00",
+  "vol": 1670191.0040790017,
+  "close": 0.525,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-g2-fut-2026-06-07",
+  "title": "Counter-Strike: G2 vs FUT Esports (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "G2",
+   "FUT Esports"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-07 18:50:00+00",
+  "vol": 2592628.4752910133,
+  "close": 0.515,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mnte-bb3-2026-06-08",
+  "title": "Counter-Strike: Monte vs BetBoom Team (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Monte",
+   "BetBoom Team"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-08 14:30:00+00",
+  "vol": 2142875.837298999,
+  "close": 0.325,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-tyloo-9z-2026-06-08",
+  "title": "Counter-Strike: TYLOO vs 9z (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "TYLOO",
+   "9z"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-08 15:00:00+00",
+  "vol": 1427967.3830029988,
+  "close": 0.435,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-ast10-pain-2026-06-08",
+  "title": "Counter-Strike: Astralis vs paiN (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Astralis",
+   "paiN"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-08 12:00:00+00",
+  "vol": 833362.221705998,
+  "close": 0.605,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mibr-b8-2026-06-08",
+  "title": "Counter-Strike: MIBR vs B8 (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "MIBR",
+   "B8"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-08 12:00:00+00",
+  "vol": 2350529.087157005,
+  "close": 0.44,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-g2-big5-2026-06-08",
+  "title": "Counter-Strike: G2 vs BIG (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "G2",
+   "BIG"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-08 17:25:00+00",
+  "vol": 1320523.66648,
+  "close": 0.745,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-m80-lgc-2026-06-08",
+  "title": "Counter-Strike: M80 vs Legacy (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "M80",
+   "Legacy"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-08 17:15:00+00",
+  "vol": 861413.9076009977,
+  "close": 0.265,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mnte-pain-2026-06-09",
+  "title": "Counter-Strike: Monte vs paiN (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "Monte",
+   "paiN"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-09 12:00:00+00",
+  "vol": 1477782.6007030031,
+  "close": 0.545,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-tyloo-lgc-2026-06-09",
+  "title": "Counter-Strike: TYLOO vs Legacy (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "TYLOO",
+   "Legacy"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-09 14:30:00+00",
+  "vol": 1133614.176916994,
+  "close": 0.265,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-big5-b8-2026-06-09",
+  "title": "Counter-Strike: BIG vs B8 (BO3) - IEM Cologne Major Stage 2",
+  "outcomes": [
+   "BIG",
+   "B8"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-09 17:00:00+00",
+  "vol": 3641006.282530987,
+  "close": 0.435,
+  "close_lag": -46
+ },
+ {
+  "slug": "cs2-prv-9z-2026-06-11",
+  "title": "Counter-Strike: PARIVISION vs 9z (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "PARIVISION",
+   "9z"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-11 09:00:00+00",
+  "vol": 1835871.2090440078,
+  "close": 0.555,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-mglz-bb3-2026-06-11",
+  "title": "Counter-Strike: TheMongolz vs BetBoom Team (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "TheMongolz",
+   "BetBoom Team"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-11 09:00:00+00",
+  "vol": 1996566.993763995,
+  "close": 0.525,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-vit-fut-2026-06-11",
+  "title": "Counter-Strike: Vitality vs FUT Esports (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Vitality",
+   "FUT Esports"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-11 12:10:00+00",
+  "vol": 2785972.037478003,
+  "close": 0.815,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-mouz-lgc-2026-06-11",
+  "title": "Counter-Strike: MOUZ vs Legacy (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "MOUZ",
+   "Legacy"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-11 12:10:00+00",
+  "vol": 1098581.8848269943,
+  "close": 0.56,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-fal2-g2-2026-06-11",
+  "title": "Counter-Strike: Team Falcons vs G2 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Team Falcons",
+   "G2"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-11 15:05:00+00",
+  "vol": 3380032.6138280067,
+  "close": 0.635,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-furia-b8-2026-06-11",
+  "title": "Counter-Strike: FURIA vs B8 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "FURIA",
+   "B8"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-11 14:10:00+00",
+  "vol": 797719.9352500049,
+  "close": 0.755,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-aur1-mnte-2026-06-11",
+  "title": "Counter-Strike: Aurora Gaming vs Monte (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Aurora Gaming",
+   "Monte"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-11 16:30:00+00",
+  "vol": 655922.1575980005,
+  "close": 0.635,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-navi-ts7-2026-06-11",
+  "title": "Counter-Strike: Natus Vincere vs Spirit (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Natus Vincere",
+   "Spirit"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-11 18:45:00+00",
+  "vol": 1660720.281570008,
+  "close": 0.365,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-furia-mouz-2026-06-12",
+  "title": "Counter-Strike: FURIA vs MOUZ (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "FURIA",
+   "MOUZ"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-12 09:00:00+00",
+  "vol": 1533963.699297002,
+  "close": 0.59,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mglz-b8-2026-06-12",
+  "title": "Counter-Strike: TheMongolz vs B8 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "TheMongolz",
+   "B8"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-12 09:00:00+00",
+  "vol": 561387.2043530011,
+  "close": 0.655,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-fut-g2-2026-06-12",
+  "title": "Counter-Strike: FUT Esports vs G2 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "FUT Esports",
+   "G2"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-12 12:10:00+00",
+  "vol": 2445103.3896910017,
+  "close": 0.535,
+  "close_lag": -54
+ },
+ {
+  "slug": "cs2-prv-mnte-2026-06-12",
+  "title": "Counter-Strike: PARIVISION vs Monte (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "PARIVISION",
+   "Monte"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-12 11:30:00+00",
+  "vol": 1914639.139877003,
+  "close": 0.575,
+  "close_lag": -54
+ },
+ {
+  "slug": "cs2-navi-lgc-2026-06-12",
+  "title": "Counter-Strike: Natus Vincere vs Legacy (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Natus Vincere",
+   "Legacy"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-12 14:45:00+00",
+  "vol": 1236111.5557019964,
+  "close": 0.745,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-fal2-bb3-2026-06-12",
+  "title": "Counter-Strike: Team Falcons vs BetBoom Team (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Team Falcons",
+   "BetBoom Team"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-12 15:10:00+00",
+  "vol": 2314535.615906006,
+  "close": 0.705,
+  "close_lag": -51
+ },
+ {
+  "slug": "cs2-aur1-ts7-2026-06-12",
+  "title": "Counter-Strike: Aurora Gaming vs Spirit (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Aurora Gaming",
+   "Spirit"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-12 17:25:00+00",
+  "vol": 2992295.900678986,
+  "close": 0.135,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-vit-9z-2026-06-12",
+  "title": "Counter-Strike: Vitality vs 9z (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Vitality",
+   "9z"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-12 16:45:00+00",
+  "vol": 2029010.3408250057,
+  "close": 0.925,
+  "close_lag": -42
+ },
+ {
+  "slug": "cs2-navi-mglz-2026-06-13",
+  "title": "Counter-Strike: Natus Vincere vs TheMongolz (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Natus Vincere",
+   "TheMongolz"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-13 09:00:00+00",
+  "vol": 1804253.6013659975,
+  "close": 0.705,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-b8-fut-2026-06-13",
+  "title": "Counter-Strike: B8 vs FUT Esports (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "B8",
+   "FUT Esports"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-13 09:00:00+00",
+  "vol": 1134942.3191190027,
+  "close": 0.265,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-aur1-g2-2026-06-13",
+  "title": "Counter-Strike: Aurora Gaming vs G2 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Aurora Gaming",
+   "G2"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-13 12:20:00+00",
+  "vol": 1009778.6623700002,
+  "close": 0.425,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-fal2-mnte-2026-06-13",
+  "title": "Counter-Strike: Team Falcons vs Monte (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Team Falcons",
+   "Monte"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-13 12:15:00+00",
+  "vol": 1710182.3892689997,
+  "close": 0.785,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-vit-mouz-2026-06-13",
+  "title": "Counter-Strike: Vitality vs MOUZ (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Vitality",
+   "MOUZ"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-13 14:35:00+00",
+  "vol": 2249513.8070360073,
+  "close": 0.785,
+  "close_lag": -50
+ },
+ {
+  "slug": "cs2-prv-lgc-2026-06-13",
+  "title": "Counter-Strike: PARIVISION vs Legacy (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "PARIVISION",
+   "Legacy"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-13 15:45:00+00",
+  "vol": 1208577.9107689979,
+  "close": 0.395,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-bb3-furia-2026-06-13",
+  "title": "Counter-Strike: BetBoom Team vs FURIA (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "BetBoom Team",
+   "FURIA"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-13 17:45:00+00",
+  "vol": 1520613.8453310025,
+  "close": 0.375,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-ts7-9z-2026-06-13",
+  "title": "Counter-Strike: Spirit vs 9z (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Spirit",
+   "9z"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-13 19:00:00+00",
+  "vol": 3329985.3060249817,
+  "close": 0.885,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-mouz-fut-2026-06-14",
+  "title": "Counter-Strike: MOUZ vs FUT Esports (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "MOUZ",
+   "FUT Esports"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-14 12:00:00+00",
+  "vol": 1672900.9571719973,
+  "close": 0.575,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-mglz-mnte-2026-06-14",
+  "title": "Counter-Strike: TheMongolz vs Monte (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "TheMongolz",
+   "Monte"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-14 12:00:00+00",
+  "vol": 2077949.8500600047,
+  "close": 0.665,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-bb3-vit-2026-06-14",
+  "title": "Counter-Strike: BetBoom Team vs Vitality (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "BetBoom Team",
+   "Vitality"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-14 15:15:00+00",
+  "vol": 1037250.2368070044,
+  "close": 0.195,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-aur1-9z-2026-06-14",
+  "title": "Counter-Strike: Aurora Gaming vs 9z (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Aurora Gaming",
+   "9z"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-14 15:20:00+00",
+  "vol": 1433180.4406759983,
+  "close": 0.525,
+  "close_lag": -39
+ },
+ {
+  "slug": "cs2-navi-fal2-2026-06-14",
+  "title": "Counter-Strike: Natus Vincere vs Team Falcons (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Natus Vincere",
+   "Team Falcons"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-14 17:40:00+00",
+  "vol": 3262107.3619479793,
+  "close": 0.545,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-g2-lgc-2026-06-14",
+  "title": "Counter-Strike: G2 vs Legacy (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "G2",
+   "Legacy"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-14 17:00:00+00",
+  "vol": 819086.9667710008,
+  "close": 0.625,
+  "close_lag": -55
+ },
+ {
+  "slug": "cs2-9z-mglz-2026-06-15",
+  "title": "Counter-Strike: 9z vs TheMongolz (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "9z",
+   "TheMongolz"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-15 12:00:00+00",
+  "vol": 2026169.9710829977,
+  "close": 0.395,
+  "close_lag": -56
+ },
+ {
+  "slug": "cs2-bb3-fut-2026-06-15",
+  "title": "Counter-Strike: BetBoom Team vs FUT Esports (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "BetBoom Team",
+   "FUT Esports"
+  ],
+  "result": [
+   "1",
+   "0"
+  ],
+  "start": "2026-06-15 14:30:00+00",
+  "vol": 1796986.0987620035,
+  "close": 0.425,
+  "close_lag": -57
+ },
+ {
+  "slug": "cs2-navi-g2-2026-06-15",
+  "title": "Counter-Strike: Natus Vincere vs G2 (BO3) - IEM Cologne Major Stage 3",
+  "outcomes": [
+   "Natus Vincere",
+   "G2"
+  ],
+  "result": [
+   "0",
+   "1"
+  ],
+  "start": "2026-06-15 17:00:00+00",
+  "vol": 4019747.7482809746,
+  "close": 0.645,
+  "close_lag": -56
+ }
+]
