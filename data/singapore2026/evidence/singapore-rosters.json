@@ -1,0 +1,138 @@
+{
+  "source": "https://news.pglesports.com/api/articles/1794219566606",
+  "source_updated": "2026-11-09T15:48:10.245Z",
+  "tournament_id": 6269,
+  "registered_starting_five": {
+    "NIP": [
+      "Krimbo",
+      "adamb",
+      "stavn",
+      "sjuush",
+      "xKacpersky"
+    ],
+    "PVISION": [
+      "Jame",
+      "zweih",
+      "xiELO",
+      "FL1T",
+      "HObbit"
+    ],
+    "HEROIC": [
+      "nilo",
+      "MartinezSa",
+      "Chr1zN",
+      "susp",
+      "Brollan"
+    ],
+    "FaZe": [
+      "Twistzz",
+      "frozen",
+      "jcobbb",
+      "Neityu",
+      "JBOEN"
+    ],
+    "Eternal Fire": [
+      "MisteM",
+      "soulfly",
+      "jottAAA",
+      "Kvem",
+      "regali"
+    ],
+    "100 Thieves": [
+      "dev1ce",
+      "poiii",
+      "Gizmy",
+      "rain",
+      "sirah"
+    ],
+    "Liquid": [
+      "NAF-FLY",
+      "EliGE",
+      "JT",
+      "Jorko",
+      "malbsMd"
+    ],
+    "9z": [
+      "max",
+      "HUASOPEEK",
+      "luchov",
+      "history",
+      "dgt"
+    ],
+    "M80": [
+      "JBa",
+      "s1n",
+      "Lake",
+      "Swisher",
+      "slaxz-"
+    ],
+    "DENDELE": [
+      "koala",
+      "doc",
+      "gafolo",
+      "rdnzao",
+      "maxxkor"
+    ],
+    "Imperial": [
+      "VINI",
+      "chelo",
+      "noway",
+      "decenty",
+      "saadzin"
+    ],
+    "Wildcard": [
+      "HexT",
+      "reck",
+      "Cxzi",
+      "nEMANHA",
+      "fr3nd"
+    ],
+    "GOSH": [
+      "s1mple",
+      "asap",
+      "Senzu",
+      "Magisk",
+      "mzinho"
+    ],
+    "FlyQuest": [
+      "INS",
+      "jks",
+      "Vexite",
+      "aliStair",
+      "nettik"
+    ],
+    "Chinggis Warriors": [
+      "ROUX",
+      "sk0R",
+      "cool4st",
+      "fury5k",
+      "tikuak"
+    ],
+    "Lynn Vision": [
+      "westmelon",
+      "z4KR",
+      "Starry",
+      "EmiliaQAQ",
+      "C4LLM3SU3"
+    ]
+  },
+  "substitution": "PGL specifies history in place of meyern for 9z.",
+  "team_ids": {
+    "9z": 324,
+    "Lynn Vision": 476,
+    "HEROIC": 759,
+    "Imperial": 1430,
+    "100 Thieves": 464,
+    "Chinggis Warriors": 9974,
+    "NIP": 785,
+    "M80": 7430,
+    "PVISION": 8171,
+    "DENDELE": 24956,
+    "Liquid": 790,
+    "GOSH": 10844,
+    "FaZe": 791,
+    "Wildcard": 6062,
+    "Eternal Fire": 1527,
+    "FlyQuest": 10398
+  }
+}

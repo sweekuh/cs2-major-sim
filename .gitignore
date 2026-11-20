@@ -38,6 +38,8 @@ Thumbs.db
 scripts/_*.py
 _*.png
 _*.md
+# Local forecast runs, including the pre-lock Singapore refresh.
+data/_*.json
 
 # Internal planning / spec / agent docs — kept LOCAL, not published. The public doc surface is
 # README.md + ROADMAP.md + STATUS.md + docs/. These hold the detailed GSD process trail and the

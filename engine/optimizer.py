@@ -159,20 +159,22 @@ def marginals_from_matrices(
     return p_30, p_adv, p_03
 
 
+def correct_counts(ballot: Ballot, matrices: Matrices) -> np.ndarray:
+    """Number of correct picks per simulated tournament, retaining shared outcomes."""
+    sweeps, advances, winless = matrices
+    rows = ([sweeps[t] for t in ballot.picks_30]
+            + [advances[t] for t in ballot.picks_adv]
+            + [winless[t] for t in ballot.picks_03])
+    return np.sum(rows, axis=0, dtype=np.uint8)
+
+
 def p_ge5(ballot: Ballot, matrices: Matrices) -> float:
     """P(>=5/10) for ``ballot`` against the stored sample (OPT-04).
 
     Sum the 10 selected boolean rows per sim and return the fraction with >= COIN_THRESHOLD
     correct. Sample-only — never re-runs the MC.
     """
-    is_30, is_adv, is_03 = matrices
-    rows = (
-        [is_30[t] for t in ballot.picks_30]
-        + [is_adv[t] for t in ballot.picks_adv]
-        + [is_03[t] for t in ballot.picks_03]
-    )
-    correct = np.sum(rows, axis=0)  # per-sim count of correct picks (0..10)
-    return float(np.mean(correct >= COIN_THRESHOLD))
+    return float(np.mean(correct_counts(ballot, matrices) >= COIN_THRESHOLD))
 
 
 def e_correct(
@@ -206,6 +208,16 @@ def _rebucket(ballot: Ballot, b1: str, t1: int, b2: str, t2: int) -> Ballot:
     return Ballot(new["picks_30"], new["picks_adv"], new["picks_03"])
 
 
+def single_replacements(ballot: Ballot, candidate_ids: list[int]) -> Iterator[Ballot]:
+    """Each legal substitution of one reserve into an occupied slot."""
+    chosen = set(ballot.all_ids)
+    cands = sorted(t for t in candidate_ids if t not in chosen)
+    for bucket in _BUCKETS:
+        for out_id in sorted(getattr(ballot, bucket)):
+            for in_id in cands:
+                yield _swap(ballot, bucket, out_id, in_id)
+
+
 def _neighbors(ballot: Ballot, candidate_ids: list[int]) -> Iterator[Ballot]:
     """Deterministically yield the hill-climb neighborhood of ``ballot`` (OPT-02).
 
@@ -216,12 +228,7 @@ def _neighbors(ballot: Ballot, candidate_ids: list[int]) -> Iterator[Ballot]:
           blind spot (Phase 3 V&V Finding 1/2) — e.g. demote a high-Padv advance pick that was
           forced into the 3-0 slot. Sorted iteration keeps the climb reproducible.
     """
-    chosen = set(ballot.all_ids)
-    cands = sorted(t for t in candidate_ids if t not in chosen)
-    for bucket in _BUCKETS:  # (a) picked <-> unpicked, same bucket
-        for out_id in sorted(getattr(ballot, bucket)):
-            for in_id in cands:
-                yield _swap(ballot, bucket, out_id, in_id)
+    yield from single_replacements(ballot, candidate_ids)
     for i in range(len(_BUCKETS)):  # (b) re-bucket two picked teams
         for j in range(i + 1, len(_BUCKETS)):
             b1, b2 = _BUCKETS[i], _BUCKETS[j]
