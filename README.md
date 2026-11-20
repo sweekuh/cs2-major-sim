@@ -19,21 +19,30 @@ in the sidebar to open the historical Swiss and playoff simulator.
 | Pick’Em slot | November 19 card |
 |---|---|
 | 3–0 | 100 Thieves, PVISION |
-| 3–1 or 3–2 | HEROIC, Liquid, NIP, FaZe, Eternal Fire, DENDELE |
+| 3–1 or 3–2 | HEROIC, FaZe, NIP, Liquid, Eternal Fire, 9z |
 | 0–3 | Chinggis Warriors, Lynn Vision |
 
-The card passed in **88,253 of 200,000** fresh simulated tournaments (**44.13%**) after
-selection on a separate 100,000. It averaged 4.28 correct. Replacing DENDELE with M80
-passed in 43.70% of the same tournaments. Keep DENDELE at the frozen prices. If M80’s
-win probability against NIP rises from 42.5% to 47.5% with other prices steady, M80 wins
-the comparison by 0.84 percentage points. Both prices use two-sided bid/ask midpoints.
+The card's chance of five or more correct is **above 40%**: it passed in **81,792 of 200,000**
+fresh simulated tournaments (**40.9%**) after selection on a separate 100,000, and averaged
+4.16 correct. Three previous Majors leave the rating spread loosely identified, so both samples
+mix spreads from 400 to 3,000 Valve points per tenfold change in map odds, weighted by fit to
+earlier later-round results. Scored at one spread at a time, the card ranges from 39.7% (3,000)
+to 41.9% (400), and stays at or above 40% up to 2,000.
+
+9z replaced DENDELE in the sixth advance slot. DENDELE scores higher only at spreads of about
+700 or below; across the mix the 9z card leads the earlier card by 1.34 percentage points
+(paired 95% simulation interval 1.18 to 1.50) and leads its closest alternative, M80 for 9z,
+by 0.61 (0.45 to 0.77). 9z is fielding a stand-in, and its 61.5% opening price is a thin quote
+taken four days before play. Re-check that price near lock: if it falls well below about 58%,
+re-run the forecast before entering the card.
 
 The simulator reproduced all 99 pairings from Austin, Budapest and Cologne Stage 1.
 The later-round forecast uses the full strength difference implied by each Singapore
 opener while preserving the two teams’ average November 19 Valve rating. A time-ordered
 comparison against those three Majors favored this adjustment. The 95% interval from
-Monte Carlo sampling alone is 43.91–44.34%. Forecast uncertainty across strength models
-is considerably larger. [Historical scores, sources and limitations](data/singapore2026/evidence/README.md)
+Monte Carlo sampling alone is 40.7–41.1%. Uncertainty across strength models is much larger:
+the same card scores 35.6% with half of the opener adjustment, 29.7% with none, and 25.6% on
+ratings alone. [Historical scores, sources and limitations](data/singapore2026/evidence/README.md)
 
 Reproduce the historical checks, forecast and standalone card offline with the frozen inputs.
 
@@ -47,10 +56,6 @@ November 19 at 9:08 p.m. Pacific. The [forecast](data/singapore2026/forecast.jso
 all team probabilities, the paired swap and the price scenarios. Before lock, tick
 **Refresh Round 1 prices from Polymarket** and re-run, or add `--refresh-openers` to the
 forecast command. The CLI saves a refreshed snapshot in `data/_singapore_stage1_latest.json`.
-
-## Singapore match-winner markets
-
-The Kalshi paper analysis prices each side of a match independently, then checks what ten contracts would cost at the displayed depth after fees. At the November 20, 08:23 UTC snapshot, all eight openers were unlisted and the ledger had zero paper entries. The published sheet gives both teams’ buy ceilings for each match. [Decision sheet](analysis/singapore_kalshi/published/decisions.md) · [Calibration and paper-trading rules](analysis/singapore_kalshi/README.md)
 
 ## Cologne 2026 archive
 
@@ -109,7 +114,7 @@ seeds + ratings ──► Swiss engine ──► Monte Carlo ──► optimizer
 - **Backtest gate:** the engine reproduces StarLadder Budapest 2025 Stage 1's actual R1–R5
   pairings exactly (`tests/test_backtest_budapest_2025.py`). If that ever goes red, the pairing
   logic is broken. Seeds for the backtest come from the authoritative Valve VRS snapshot.
-- **268 passing tests**, including regression guards that *distinguish the right rule from the
+- **276 passing tests**, including regression guards that *distinguish the right rule from the
   wrong one* (a test that still passes when you revert the fix is theater, not a guard).
 - **Cologne seeds confirmed:** the seed order is verified against Liquipedia + the live Kalshi
   bracket + the R1 pairing rule, so the trust badge reads *validated*, not *inferred*.
@@ -271,7 +276,7 @@ scripts/            fetch_odds + fetch_results — the ONLY provider contact; bo
                     and stamp _meta.stage so a cache can never feed the wrong stage's run
   fit_qualify.py      offline qualify-market calibration → fitted_ratings in the odds cache
   score_stage.py      post-stage calibration audit (log-loss/Brier/fav-acc + S-sweep)
-tests/              268 tests incl. the Budapest backtest gate + real-data seeding gates
+tests/              276 tests incl. the Budapest backtest gate + real-data seeding gates
                     + playoff bracket / 7-pick optimizer / seed_playoffs / market-overrides gates
 docs/LESSONS.md     what we learned and would do differently
 ROADMAP.md          shipped vs next   ·   STATUS.md  current state

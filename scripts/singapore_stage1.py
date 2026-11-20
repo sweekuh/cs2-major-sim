@@ -19,11 +19,14 @@ from engine.teams import build_round1_pairs, load_stage
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "data/singapore2026/stage1.json"
 FORECAST = ROOT / "data/singapore2026/forecast.json"
-SPREAD = 60.0  # 600 raw VRS points per tenfold change in map win odds
+SPREAD = 60.0  # 600 raw VRS points per tenfold change in map win odds; the reference scale
+# The historical matches cannot pin the spread down, so the card is chosen and scored on a mix of
+# spreads. scripts.validate_singapore weights each one by its likelihood on past later-round matches.
+SPREAD_GRID = (40.0, 50.0, 60.0, 70.0, 80.0, 100.0, 120.0, 140.0, 170.0, 200.0, 250.0, 300.0)
 SEED = 20261121
 
 
-def market_inputs(teams, openers, carry):
+def market_inputs(teams, openers, carry, spread=SPREAD):
     """Keep each pair's mean rating and carry a fraction of its market log-odds gap forward."""
     pairs = {(a.name, b.name): (a, b) for a, b in build_round1_pairs(teams)}
     if len(openers) != len(pairs) or {tuple(row["teams"]) for row in openers} != set(pairs):
@@ -36,7 +39,7 @@ def market_inputs(teams, openers, carry):
             raise ValueError(f"Invalid two-sided quote for {a.name} vs {b.name}")
         p = (row["bid"] + row["ask"]) / 2
         prices[f"{a.id}-{b.id}"] = (p, 0.0)
-        market_gap = SPREAD * math.log10(p / (1 - p))
+        market_gap = spread * math.log10(p / (1 - p))
         shift = carry * (market_gap - (a.rating - b.rating)) / 2
         ratings[a.id] += shift
         ratings[b.id] -= shift
@@ -69,15 +72,35 @@ def paired(matrices, first, second):
                 card_minus_alternative=delta, ci95_delta=[delta - half, delta + half])
 
 
-def model_inputs(teams, openers, model, form):
+def model_inputs(teams, openers, model, form, spread=SPREAD):
     if model == "Ratings only":
         return None, None
-    ratings, prices = market_inputs(teams, openers, CARRIES.get(model, 0))
+    ratings, prices = market_inputs(teams, openers, CARRIES.get(model, 0), spread)
     if model == "Recent maps":
-        ratings = {t.id: form[t.name] for t in teams}
+        # Form strengths are stored on the reference scale; rescaling keeps their win odds fixed.
+        ratings = {t.id: form[t.name] * spread / SPREAD for t in teams}
     elif model not in CARRIES:
         raise ValueError(f"Unknown strength model {model}")
     return ratings, prices
+
+
+def allocate(n, weights):
+    """Split n tournaments across spreads in proportion to weight (largest remainders)."""
+    exact = {s: n * w for s, w in weights.items()}
+    counts = {s: int(x) for s, x in exact.items()}
+    for s in sorted(exact, key=lambda s: exact[s] - counts[s], reverse=True)[: n - sum(counts.values())]:
+        counts[s] += 1
+    return counts
+
+
+def mixture(teams, openers, model, form, weights, n, seed):
+    """Pooled tournaments drawn across spreads in proportion to their weights."""
+    sample = []
+    for k, (spread, count) in enumerate(sorted(allocate(n, weights).items())):
+        if count:
+            ratings, prices = model_inputs(teams, openers, model, form, spread)
+            sample += run_mc(teams, ratings, spread, count, seed=seed + 1000 * k, market_blend=prices).sample
+    return build_outcome_matrices(sample, [t.id for t in teams])
 
 
 def forecast(n_select=100_000, n_evaluate=200_000, n_sensitivity=25_000, seed=SEED, *, refresh_openers=False):
@@ -93,10 +116,8 @@ def forecast(n_select=100_000, n_evaluate=200_000, n_sensitivity=25_000, seed=SE
     name_ids = {t.name: t.id for t in teams}
     model = audit["chosen"]
     form = audit["singapore_form"]
-    ratings, prices = model_inputs(teams, data["openers"], model, form)
-    selection = run_mc(teams, ratings, SPREAD, n_select, seed=seed, market_blend=prices)
-    matrices = build_outcome_matrices(selection.sample, ids)
-    del selection
+    weights = {float(s) / 10: w for s, w in audit["spread_weights"].items()}
+    matrices = mixture(teams, data["openers"], model, form, weights, n_select, seed)
     card = ballot_b(ballot_a(*marginals_from_matrices(matrices)), matrices, ids)
     alternate_card = max(single_replacements(card, ids), key=lambda c: p_ge5(c, matrices))
     bucket = next(label for label, f in BUCKETS if getattr(card, f) != getattr(alternate_card, f))
@@ -105,29 +126,31 @@ def forecast(n_select=100_000, n_evaluate=200_000, n_sensitivity=25_000, seed=SE
     old_card = Ballot(*(tuple(name_ids[name] for name in group) for group in OLD_CARD))
     del matrices
 
-    held_out = run_mc(teams, ratings, SPREAD, n_evaluate, seed=seed + 1, market_blend=prices)
-    matrices = build_outcome_matrices(held_out.sample, ids)
-    evaluation = score(matrices, card, held_out.n)
+    matrices = mixture(teams, data["openers"], model, form, weights, n_evaluate, seed + 1)
+    evaluation = score(matrices, card, n_evaluate)
     swap = {"out": names[replaced], "bucket": bucket, "in": names[reserve], **paired(matrices, card, alternate_card)}
     prior = paired(matrices, card, old_card)
+    sweep, advance, winless = marginals_from_matrices(matrices)
+    rows = [dict(seed=t.seed, team=t.name, sweep=sweep[t.id], advance_pick=advance[t.id],
+                 qualify=sweep[t.id] + advance[t.id], winless=winless[t.id]) for t in teams]
     del matrices
-    rows = []
-    for t in teams:
-        sweep = held_out.counts_30[t.id]
-        qualify = held_out.counts_advance[t.id]
-        rows.append(dict(seed=t.seed, team=t.name, sweep=sweep / held_out.n,
-                         advance_pick=(qualify - sweep) / held_out.n, qualify=qualify / held_out.n,
-                         winless=held_out.counts_03[t.id] / held_out.n))
-    del held_out
+
+    # The same card at each single spread: how far the headline moves with the one parameter
+    # the historical matches leave open.
+    by_spread = {}
+    for spread in SPREAD_GRID:
+        ratings, prices = model_inputs(teams, data["openers"], model, form, spread)
+        sample = run_mc(teams, ratings, spread, n_sensitivity, seed=seed + 4, market_blend=prices)
+        by_spread[str(round(spread * 10))] = {
+            **score(build_outcome_matrices(sample.sample, ids), card, sample.n), "weight": weights[spread]}
+        del sample
 
     sensitivity = {}
     for label in ["Ratings only", *CARRIES, "Recent maps"]:
         if label == model:
             continue
-        alternate, overrides = model_inputs(teams, data["openers"], label, form)
-        sample = run_mc(teams, alternate, SPREAD, n_sensitivity, seed=seed + 2, market_blend=overrides)
-        sensitivity[label] = score(build_outcome_matrices(sample.sample, ids), card, sample.n)
-        del sample
+        sensitivity[label] = score(
+            mixture(teams, data["openers"], label, form, weights, n_sensitivity, seed + 2), card, n_sensitivity)
 
     line_tests = []
     for change in (0.05, 0.10):
@@ -138,19 +161,17 @@ def forecast(n_select=100_000, n_evaluate=200_000, n_sensitivity=25_000, seed=SE
         direction = -1 if bucket == "0-3" else 1
         changed = np.clip(midpoint + direction * (1 if reserve_first else -1) * change, 0.001, 0.999)
         row.update(bid=changed, ask=changed)
-        alt, overrides = model_inputs(teams, openers, model, form)
-        sample = run_mc(teams, alt, SPREAD, n_sensitivity, seed=seed + 3, market_blend=overrides)
-        result = paired(build_outcome_matrices(sample.sample, ids), card, alternate_card)
+        result = paired(mixture(teams, openers, model, form, weights, n_sensitivity, seed + 3), card, alternate_card)
         line_tests.append(dict(team=names[reserve], opponent=next(n for n in row["teams"] if n != names[reserve]),
                                current=midpoint if reserve_first else 1-midpoint,
                                tested=float(changed if reserve_first else 1-changed), **result))
-        del sample
     return {
         "event": data["event"], "stage": 1, "starts_at": data["starts_at"],
         "quotes_observed_at": data["quotes_observed_at"], "seed": seed, "n_select": n_select,
         **({"updated_openers": data["openers"]} if refresh_openers else {}),
         "card": {label: [names[i] for i in getattr(card, field)] for label, field in BUCKETS},
-        "model": model, "evaluation": evaluation, "teams": rows, "sensitivity": sensitivity,
+        "model": model, "evaluation": evaluation, "by_spread": by_spread, "teams": rows,
+        "sensitivity": sensitivity,
         "closest_swap": swap, "previous_card": prior, "line_tests": line_tests,
     }
 

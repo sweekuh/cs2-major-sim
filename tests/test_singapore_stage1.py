@@ -89,6 +89,22 @@ def test_replay_and_time_ordered_model_selection():
     assert "history" in rosters["9z"] and "meyern" not in rosters["9z"]
 
 
+def test_card_is_chosen_and_scored_across_weighted_spreads():
+    from scripts.singapore_stage1 import SPREAD_GRID, allocate
+
+    weights = read(AUDIT)["spread_weights"]
+    assert [int(s) for s in weights] == [round(s * 10) for s in SPREAD_GRID]
+    assert sum(weights.values()) == pytest.approx(1) and min(weights.values()) > 0
+    counts = allocate(1000, {float(s) / 10: w for s, w in weights.items()})
+    assert sum(counts.values()) == 1000
+    assert max(counts, key=counts.get) * 10 == float(max(weights, key=weights.get))
+    data = read(FORECAST)
+    assert list(data["by_spread"]) == list(weights)
+    mixed = sum(s["weight"] * s["p_ge5"] for s in data["by_spread"].values())
+    # The pooled evaluation and the weighted single-spread runs are separate samples of one mixture.
+    assert data["evaluation"]["p_ge5"] == pytest.approx(mixed, abs=0.01)
+
+
 def test_paired_card_and_price_scenarios():
     data = read(FORECAST)
     swap = data["closest_swap"]

@@ -36,6 +36,10 @@ def render(forecast, fixture):
                 f'{escape(line["opponent"])} (observed {line["current"]:.1%}),')
     edge = -100 * line["card_minus_alternative"]
     timestamp = datetime.fromisoformat(forecast["quotes_observed_at"]).astimezone(timezone.utc)
+    spreads = forecast["by_spread"]
+    low, high = (f(s["p_ge5"] for s in spreads.values()) for f in (min, max))
+    spread_note = (f'The tournaments mix spreads between {min(map(int, spreads)):,} and {max(map(int, spreads)):,} '
+                   f'Valve points. Scored at one spread at a time, the card ranges from {low:.1%} to {high:.1%}.')
     return template.substitute(
         card=card, team_rows="".join(team_rows), openers="".join(openers),
         chance=f'{assess["p_ge5"]:.1%}', expected=f'{assess["expected_correct"]:.2f}',
@@ -48,6 +52,7 @@ def render(forecast, fixture):
         scenarios="".join(f'<li>{escape(label)} · {s["p_ge5"]:.1%} over {s["n"]:,} runs</li>'
                           for label, s in sensitivity.items()),
         as_of=timestamp.strftime("%d %b %Y, %H:%M UTC"),
+        spread_note=spread_note, spread_min=f'{min(map(int, spreads)):,}', spread_max=f'{max(map(int, spreads)):,}',
         **{key: escape(url, quote=True) for key, url in fixture["sources"].items()},
     )
 
