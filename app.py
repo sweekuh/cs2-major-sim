@@ -135,7 +135,9 @@ if event == "Singapore 2026":
                 )
             except (ValueError, KeyError, OSError) as exc:
                 st.sidebar.error(f"Run failed. Showing the previous card. {exc}")
-    card = st.session_state.get("singapore_card") or json.loads(FORECAST.read_text(encoding="utf-8"))
+    card = st.session_state.get("singapore_card")
+    if not card or "line_tests" not in card:
+        card = json.loads(FORECAST.read_text(encoding="utf-8"))
     st.html(render(card, fixture))
     st.stop()
 

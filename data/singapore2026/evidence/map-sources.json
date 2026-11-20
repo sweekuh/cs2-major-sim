@@ -1,0 +1,69 @@
+{
+  "endpoint": "https://api.bo3.gg/api/v1/matches",
+  "observed_at": "2026-11-20T05:05:20.633458+00:00",
+  "windows": {
+    "austin": {
+      "query": {
+        "filter[matches.start_date][gt]": "2025-04-04",
+        "filter[matches.start_date][lt]": "2025-06-03",
+        "filter[matches.status][eq]": "finished",
+        "sort": "id",
+        "with": "games",
+        "page[limit]": 100
+      },
+      "from_utc": "2025-04-04T00:00:00+00:00",
+      "before_utc": "2025-06-03T00:00:00+00:00",
+      "series_received": 2209,
+      "played_maps": 3711,
+      "unverified_maps": 702
+    },
+    "budapest": {
+      "query": {
+        "filter[matches.start_date][gt]": "2025-09-25",
+        "filter[matches.start_date][lt]": "2025-11-24",
+        "filter[matches.status][eq]": "finished",
+        "sort": "id",
+        "with": "games",
+        "page[limit]": 100
+      },
+      "from_utc": "2025-09-25T00:00:00+00:00",
+      "before_utc": "2025-11-24T00:00:00+00:00",
+      "series_received": 2914,
+      "played_maps": 5651,
+      "unverified_maps": 624,
+      "missing_or_late_series_end": 2
+    },
+    "cologne": {
+      "query": {
+        "filter[matches.start_date][gt]": "2026-04-03",
+        "filter[matches.start_date][lt]": "2026-06-02",
+        "filter[matches.status][eq]": "finished",
+        "sort": "id",
+        "with": "games",
+        "page[limit]": 100
+      },
+      "from_utc": "2026-04-03T00:00:00+00:00",
+      "before_utc": "2026-06-02T00:00:00+00:00",
+      "series_received": 2668,
+      "played_maps": 5383,
+      "unverified_maps": 449,
+      "missing_or_late_series_end": 1
+    },
+    "singapore": {
+      "query": {
+        "filter[matches.start_date][gt]": "2026-09-21",
+        "filter[matches.start_date][lt]": "2026-11-20",
+        "filter[matches.status][eq]": "finished",
+        "sort": "id",
+        "with": "games",
+        "page[limit]": 100
+      },
+      "from_utc": "2026-09-21T00:00:00+00:00",
+      "before_utc": "2026-11-20T00:00:00+00:00",
+      "series_received": 2760,
+      "played_maps": 5356,
+      "unverified_maps": 502,
+      "missing_or_late_series_end": 3
+    }
+  }
+}

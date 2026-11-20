@@ -21,7 +21,8 @@
 <div class="sg-card">$card</div>
 <p><span class="sg-odds">$chance</span> chance of five or more correct · $expected expected points out of ten.</p>
 <p>$select_n tournaments selected the card. Another $eval_n scored it. The 95% interval from simulation noise alone is $lo–$hi.</p>
-<p>Swapping $reserve in for $replaced in the advance slots scored $alternate on those same tournaments.</p>
+<p>Swapping $reserve in for $replaced in the $bucket slots scored $alternate on the same tournaments. The recommended card’s difference was $delta percentage points (paired 95% simulation interval $delta_lo to $delta_hi).</p>
+<p>$line_test</p>
 <h2>How each team can finish</h2>
 <p>The six middle slots score on a 3–1 or 3–2 finish. The qualification column includes the teams that go 3–0.</p>
 <div class="sg-scroll"><table><thead><tr><th scope="col">Team</th><th scope="col">3–0</th><th scope="col">3–1 or 3–2</th><th scope="col">0–3</th><th scope="col">Qualify</th></tr></thead>
@@ -29,7 +30,7 @@
 <details><summary>Round 1 win probabilities and price sources</summary>
 <p>Polymarket bid/ask midpoints recorded $as_of. Each percentage is the first team’s chance to win its best-of-one opener.</p><ul>$openers</ul></details>
 <details><summary>Model assumptions and sensitivity</summary>
-<p>Seeds follow Valve’s November 2 invitation order. Team strength starts from HLTV’s November 19 Valve points. The model uses a 600-point spread for map win odds, then uses independent maps for best-of-three deciders. Opening matches use market prices directly. For later rounds, each pair keeps its average rating and carries forward half the difference between the market and ranking estimates in log-odds. Map vetoes and individual stand-in effects are implicit.</p>
-<p>These estimates score the same card under three alternate assumptions.</p><ul>$scenarios</ul>
-<p><a href="$bracket">PGL bracket and schedule</a> · <a href="$invitation">Valve invitation standings</a> · <a href="$strengths">November 19 ratings</a> · <a href="$rules">Valve Swiss rules</a></p></details>
+<p>Seeds follow Valve’s November 2 invitation order. Team strength starts from HLTV’s November 19 Valve points. The model uses a 600-point spread for map win odds, then uses independent maps for best-of-three deciders. Opening matches use market prices directly. $model_detail Individual vetoes and substitutions are reflected only through the input ratings and prices.</p>
+<p>These estimates score the same card under alternate strength assumptions.</p><ul>$scenarios</ul>
+<p><a href="$bracket">PGL bracket and schedule</a> · <a href="$invitation">Valve invitation standings</a> · <a href="$strengths">November 19 ratings</a> · <a href="$rules">Valve Swiss rules</a> · <a href="$rosters">PGL roster sheet</a> · <a href="$pickem">Singapore in-game challenge</a></p></details>
 </article>

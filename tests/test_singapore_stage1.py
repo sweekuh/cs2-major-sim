@@ -7,6 +7,7 @@ from engine.montecarlo import run_mc_progressive
 from engine.teams import build_round1_pairs, load_stage
 from odds.singapore_openers import parse_book
 from scripts.singapore_stage1 import FIXTURE, FORECAST, ROOT, market_inputs
+from scripts.validate_singapore import AUDIT, EVIDENCE, read, validate
 from ui.singapore_report import render, static_page
 
 
@@ -69,3 +70,31 @@ def test_app_opens_singapore_and_reruns_without_cologne_caches():
     at.radio(key="major_event").set_value("Cologne 2026").run()
     assert not at.exception
     assert at.button(key="run_btn")
+
+
+def test_replay_and_time_ordered_model_selection():
+    regenerated = validate()
+    stored = read(AUDIT)
+    assert regenerated["chosen"] == stored["chosen"]
+    assert regenerated["development_candidate"] == stored["development_candidate"]
+    assert regenerated["singapore_form"] == pytest.approx(stored["singapore_form"])
+    for event, result in regenerated["events"].items():
+        assert result["replayed"] == [8, 8, 8, 6, 3]
+        for model, scores in result["scores"].items():
+            for subset, metrics in scores.items():
+                assert metrics == pytest.approx(stored["events"][event]["scores"][model][subset])
+    rosters = read(EVIDENCE / "singapore-rosters.json")["registered_starting_five"]
+    assert set(rosters) == {t.name for t in load_stage(FIXTURE)[0]}
+    assert all(len(set(five)) == 5 for five in rosters.values())
+    assert "history" in rosters["9z"] and "meyern" not in rosters["9z"]
+
+
+def test_paired_card_and_price_scenarios():
+    data = read(FORECAST)
+    swap = data["closest_swap"]
+    assert swap["card_minus_alternative"] == pytest.approx(
+        (swap["card_only"] - swap["alternative_only"]) / swap["n"])
+    assert data["evaluation"]["p_ge5"] - swap["p_ge5"] == pytest.approx(swap["card_minus_alternative"])
+    assert swap["out"] in data["card"][swap["bucket"]]
+    assert swap["in"] not in [name for group in data["card"].values() for name in group]
+    assert all(row["team"] == swap["in"] and row["current"] != row["tested"] for row in data["line_tests"])

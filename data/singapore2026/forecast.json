@@ -2,8 +2,8 @@
   "event": "PGL Major Singapore 2026",
   "stage": 1,
   "starts_at": "2026-11-24T04:00:00Z",
-  "quotes_observed_at": "2026-11-20T02:06:49+00:00",
-  "seed": 20261119,
+  "quotes_observed_at": "2026-11-20T05:08:57+00:00",
+  "seed": 20261121,
   "n_select": 100000,
   "card": {
     "3-0": [
@@ -12,9 +12,9 @@
     ],
     "3-1 or 3-2": [
       "HEROIC",
-      "Liquid",
       "NIP",
       "FaZe",
+      "Liquid",
       "Eternal Fire",
       "DENDELE"
     ],
@@ -23,177 +23,239 @@
       "Lynn Vision"
     ]
   },
+  "model": "Full carry",
   "evaluation": {
-    "n": 100000,
-    "p_ge5": 0.43024,
+    "n": 200000,
+    "p_ge5": 0.441265,
     "ci95_sampling": [
-      0.42717401631050583,
-      0.43331134328392
+      0.4390899740875975,
+      0.44344228223282306
     ],
-    "expected_correct": 4.254230000000001
+    "expected_correct": 4.28144
   },
   "teams": [
     {
       "seed": 1,
       "team": "NIP",
-      "sweep": 0.20394,
-      "advance_pick": 0.49881,
-      "qualify": 0.70275,
-      "winless": 0.03811
+      "sweep": 0.20872,
+      "advance_pick": 0.51087,
+      "qualify": 0.71959,
+      "winless": 0.035035
     },
     {
       "seed": 2,
       "team": "PVISION",
-      "sweep": 0.30828,
-      "advance_pick": 0.53977,
-      "qualify": 0.84805,
-      "winless": 0.01724
+      "sweep": 0.307575,
+      "advance_pick": 0.5437,
+      "qualify": 0.851275,
+      "winless": 0.016685
     },
     {
       "seed": 3,
       "team": "HEROIC",
-      "sweep": 0.23987,
-      "advance_pick": 0.51849,
-      "qualify": 0.75836,
-      "winless": 0.02774
+      "sweep": 0.25052,
+      "advance_pick": 0.530655,
+      "qualify": 0.781175,
+      "winless": 0.02404
     },
     {
       "seed": 4,
       "team": "FaZe",
-      "sweep": 0.18037,
-      "advance_pick": 0.48485,
-      "qualify": 0.66522,
-      "winless": 0.04109
+      "sweep": 0.18784,
+      "advance_pick": 0.49917,
+      "qualify": 0.68701,
+      "winless": 0.037505
     },
     {
       "seed": 5,
       "team": "Liquid",
-      "sweep": 0.16616,
-      "advance_pick": 0.51024,
-      "qualify": 0.6764,
-      "winless": 0.04592
+      "sweep": 0.133,
+      "advance_pick": 0.465005,
+      "qualify": 0.598005,
+      "winless": 0.058155
     },
     {
       "seed": 6,
       "team": "Eternal Fire",
-      "sweep": 0.11528,
-      "advance_pick": 0.43072,
-      "qualify": 0.546,
-      "winless": 0.07229
+      "sweep": 0.11139,
+      "advance_pick": 0.426065,
+      "qualify": 0.537455,
+      "winless": 0.07097
     },
     {
       "seed": 7,
       "team": "100 Thieves",
-      "sweep": 0.31254,
-      "advance_pick": 0.51809,
-      "qualify": 0.83063,
-      "winless": 0.01651
+      "sweep": 0.343175,
+      "advance_pick": 0.52109,
+      "qualify": 0.864265,
+      "winless": 0.013495
     },
     {
       "seed": 8,
       "team": "9z",
-      "sweep": 0.08792,
-      "advance_pick": 0.35782,
-      "qualify": 0.44574,
-      "winless": 0.09396
+      "sweep": 0.077615,
+      "advance_pick": 0.33495,
+      "qualify": 0.412565,
+      "winless": 0.099905
     },
     {
       "seed": 9,
       "team": "M80",
-      "sweep": 0.09376,
-      "advance_pick": 0.42419,
-      "qualify": 0.51795,
-      "winless": 0.08585
+      "sweep": 0.08551,
+      "advance_pick": 0.41207,
+      "qualify": 0.49758,
+      "winless": 0.091595
     },
     {
       "seed": 10,
       "team": "DENDELE",
-      "sweep": 0.08264,
-      "advance_pick": 0.42398,
-      "qualify": 0.50662,
-      "winless": 0.09843
+      "sweep": 0.078525,
+      "advance_pick": 0.42321,
+      "qualify": 0.501735,
+      "winless": 0.100415
     },
     {
       "seed": 11,
       "team": "Imperial",
-      "sweep": 0.04707,
-      "advance_pick": 0.29477,
-      "qualify": 0.34184,
-      "winless": 0.16441
+      "sweep": 0.04201,
+      "advance_pick": 0.27778,
+      "qualify": 0.31979,
+      "winless": 0.1754
     },
     {
       "seed": 12,
       "team": "Wildcard",
-      "sweep": 0.03826,
-      "advance_pick": 0.2466,
-      "qualify": 0.28486,
-      "winless": 0.19556
+      "sweep": 0.035375,
+      "advance_pick": 0.236255,
+      "qualify": 0.27163,
+      "winless": 0.1999
     },
     {
       "seed": 13,
       "team": "GOSH",
-      "sweep": 0.05346,
-      "advance_pick": 0.29205,
-      "qualify": 0.34551,
-      "winless": 0.15304
+      "sweep": 0.067595,
+      "advance_pick": 0.360075,
+      "qualify": 0.42767,
+      "winless": 0.122055
     },
     {
       "seed": 14,
       "team": "FlyQuest",
-      "sweep": 0.04304,
-      "advance_pick": 0.25507,
-      "qualify": 0.29811,
-      "winless": 0.18353
+      "sweep": 0.043255,
+      "advance_pick": 0.26097,
+      "qualify": 0.304225,
+      "winless": 0.17913
     },
     {
       "seed": 15,
       "team": "Chinggis Warriors",
-      "sweep": 0.00848,
-      "advance_pick": 0.08286,
-      "qualify": 0.09134,
-      "winless": 0.44262
+      "sweep": 0.006845,
+      "advance_pick": 0.065635,
+      "qualify": 0.07248,
+      "winless": 0.47266
     },
     {
       "seed": 16,
       "team": "Lynn Vision",
-      "sweep": 0.01893,
-      "advance_pick": 0.12169,
-      "qualify": 0.14062,
-      "winless": 0.3237
+      "sweep": 0.02105,
+      "advance_pick": 0.1325,
+      "qualify": 0.15355,
+      "winless": 0.303055
     }
   ],
   "sensitivity": {
-    "VRS only": {
+    "Ratings only": {
       "n": 25000,
-      "p_ge5": 0.4068,
+      "p_ge5": 0.40632,
       "ci95_sampling": [
-        0.4007253336971125,
-        0.4129033048717705
+        0.4002465390841438,
+        0.41242224697951463
       ],
-      "expected_correct": 4.17972
+      "expected_correct": 4.17896
     },
-    "Market in round one only": {
+    "Opener only": {
       "n": 25000,
-      "p_ge5": 0.4184,
+      "p_ge5": 0.4212,
       "ci95_sampling": [
-        0.4122980271682212,
-        0.4245270469435905
+        0.41509195788281417,
+        0.427332255842808
       ],
-      "expected_correct": 4.22092
+      "expected_correct": 4.2293199999999995
     },
-    "Full market adjustment": {
+    "Half carry": {
       "n": 25000,
-      "p_ge5": 0.43336,
+      "p_ge5": 0.43392,
       "ci95_sampling": [
-        0.4272279342589246,
-        0.4395125429323884
+        0.4277869188925805,
+        0.44007338622149444
       ],
-      "expected_correct": 4.25828
+      "expected_correct": 4.26668
+    },
+    "Recent maps": {
+      "n": 25000,
+      "p_ge5": 0.14984,
+      "ci95_sampling": [
+        0.14546945328771693,
+        0.15431814415091027
+      ],
+      "expected_correct": 3.07484
     }
   },
-  "advance_swap": {
+  "closest_swap": {
     "out": "DENDELE",
+    "bucket": "3-1 or 3-2",
     "in": "M80",
-    "p_ge5": 0.43117
-  }
+    "p_ge5": 0.436965,
+    "card_only": 14487,
+    "alternative_only": 13627,
+    "n": 200000,
+    "card_minus_alternative": 0.0043,
+    "ci95_delta": [
+      0.0026569195381601057,
+      0.005943080461839894
+    ]
+  },
+  "previous_card": {
+    "p_ge5": 0.441265,
+    "card_only": 0,
+    "alternative_only": 0,
+    "n": 200000,
+    "card_minus_alternative": 0.0,
+    "ci95_delta": [
+      0.0,
+      0.0
+    ]
+  },
+  "line_tests": [
+    {
+      "team": "M80",
+      "opponent": "NIP",
+      "current": 0.42500000000000004,
+      "tested": 0.4750000000000001,
+      "p_ge5": 0.44196,
+      "card_only": 1680,
+      "alternative_only": 1891,
+      "n": 25000,
+      "card_minus_alternative": -0.00844,
+      "ci95_delta": [
+        -0.01312384667982307,
+        -0.00375615332017693
+      ]
+    },
+    {
+      "team": "M80",
+      "opponent": "NIP",
+      "current": 0.42500000000000004,
+      "tested": 0.525,
+      "p_ge5": 0.44256,
+      "card_only": 1559,
+      "alternative_only": 1970,
+      "n": 25000,
+      "card_minus_alternative": -0.01644,
+      "ci95_delta": [
+        -0.02109292154646192,
+        -0.011787078453538078
+      ]
+    }
+  ]
 }

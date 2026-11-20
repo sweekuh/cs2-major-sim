@@ -13,7 +13,9 @@
     "bracket": "https://www.pglesports.com/cs2/pgl-major-singapore-2026/",
     "invitation": "https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md",
     "strengths": "https://www.hltv.org/valve-ranking/teams/2026/november/19",
-    "rules": "https://github.com/ValveSoftware/counter-strike_rules_and_regs/blob/main/major-supplemental-rulebook.md"
+    "rules": "https://github.com/ValveSoftware/counter-strike_rules_and_regs/blob/main/major-supplemental-rulebook.md",
+    "rosters": "https://news.pglesports.com/api/articles/1794219566606",
+    "pickem": "https://github.com/SteamTracking/GameTracking-CS2/blob/83fe83d4fbbd17614ff66e429309d2dacf230b81/game/csgo/pak01_dir/resource/csgo_english.txt#L32100"
   },
   "teams": [
     {
@@ -97,37 +99,37 @@
       "rating": 120.1
     }
   ],
-  "quotes_observed_at": "2026-11-20T02:06:49+00:00",
+  "quotes_observed_at": "2026-11-20T05:08:57+00:00",
   "openers": [
     {
       "teams": [
         "NIP",
         "M80"
       ],
-      "bid": 0.56,
-      "ask": 0.57,
+      "bid": 0.57,
+      "ask": 0.58,
       "slug": "cs2-nip-m80-2026-11-24",
-      "updated_at": "2026-11-20T02:05:02.626803Z"
+      "updated_at": "2026-11-20T05:07:01.310841Z"
     },
     {
       "teams": [
         "PVISION",
         "DENDELE"
       ],
-      "bid": 0.63,
-      "ask": 0.64,
+      "bid": 0.64,
+      "ask": 0.65,
       "slug": "cs2-pv-dendel-2026-11-24",
-      "updated_at": "2026-11-20T02:01:02.475738Z"
+      "updated_at": "2026-11-20T05:01:01.647085Z"
     },
     {
       "teams": [
         "HEROIC",
         "Imperial"
       ],
-      "bid": 0.66,
-      "ask": 0.67,
+      "bid": 0.67,
+      "ask": 0.68,
       "slug": "cs2-hero-imp11-2026-11-24",
-      "updated_at": "2026-11-20T02:05:02.626803Z"
+      "updated_at": "2026-11-20T05:07:01.310841Z"
     },
     {
       "teams": [
@@ -137,7 +139,7 @@
       "bid": 0.65,
       "ask": 0.66,
       "slug": "cs2-faze-wc1-2026-11-24",
-      "updated_at": "2026-11-20T02:01:02.475738Z"
+      "updated_at": "2026-11-20T05:01:01.647085Z"
     },
     {
       "teams": [
@@ -147,17 +149,17 @@
       "bid": 0.55,
       "ask": 0.56,
       "slug": "cs2-tl1-gosh-2026-11-24",
-      "updated_at": "2026-11-20T01:43:02.061103Z"
+      "updated_at": "2026-11-20T04:59:01.413807Z"
     },
     {
       "teams": [
         "Eternal Fire",
         "FlyQuest"
       ],
-      "bid": 0.56,
-      "ask": 0.57,
+      "bid": 0.58,
+      "ask": 0.59,
       "slug": "cs2-ef1-fly-2026-11-24",
-      "updated_at": "2026-11-20T01:55:01.975063Z"
+      "updated_at": "2026-11-20T05:05:01.397749Z"
     },
     {
       "teams": [
@@ -167,7 +169,7 @@
       "bid": 0.82,
       "ask": 0.83,
       "slug": "cs2-100t-cw-2026-11-24",
-      "updated_at": "2026-11-20T01:51:02.721237Z"
+      "updated_at": "2026-11-20T04:57:01.454701Z"
     },
     {
       "teams": [
@@ -175,9 +177,9 @@
         "Lynn Vision"
       ],
       "bid": 0.61,
-      "ask": 0.63,
+      "ask": 0.62,
       "slug": "cs2-9z-lvg-2026-11-24",
-      "updated_at": "2026-11-20T01:39:01.642208Z"
+      "updated_at": "2026-11-20T05:07:01.310841Z"
     }
   ]
 }
