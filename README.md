@@ -48,6 +48,10 @@ all team probabilities, the paired swap and the price scenarios. Before lock, ti
 **Refresh Round 1 prices from Polymarket** and re-run, or add `--refresh-openers` to the
 forecast command. The CLI saves a refreshed snapshot in `data/_singapore_stage1_latest.json`.
 
+## Singapore match-winner markets
+
+The Kalshi paper analysis prices each side of a match independently, then checks what ten contracts would cost at the displayed depth after fees. At the November 20, 08:23 UTC snapshot, all eight openers were unlisted and the ledger had zero paper entries. The published sheet gives both teams’ buy ceilings for each match. [Decision sheet](analysis/singapore_kalshi/published/decisions.md) · [Calibration and paper-trading rules](analysis/singapore_kalshi/README.md)
+
 ## Cologne 2026 archive
 
 The sections below describe the Cologne simulator, its historical predictions and its live
