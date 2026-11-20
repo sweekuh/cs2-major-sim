@@ -28,3 +28,9 @@ For a conservative range, evaluate both rating dates at both bootstrap endpoints
 ## Run
 
 From the project root, run `uv run --frozen python -m analysis.singapore_kalshi.paper`. Repeated runs add dated observations to `paper.sqlite3` and regenerate the local files `latest.md` and `performance.json`. The files in `published/` preserve the observation cited in the pull request. The script only reads public endpoints. It neither accesses a trading account nor submits orders. Run `uv run --frozen python -m pytest -q tests/test_singapore_kalshi.py` to exercise pricing, match identity, deduplication, closing marks and settlement.
+
+## Review backtest
+
+`review/kalshi_rule_backtest.py` applies the entry rule to the 98 Cologne 2026 Swiss matches, with Polymarket closing prices (`review/cologne_joined.json`) standing in for an executable price. On that sample the published rule opened 3 entries in 196 sides, all on market underdogs near 18 cents. Buying whenever the unstressed model beat cost by two cents lost 17 cents per contract (± 5) over 60 entries, and the model added no information once the market price was known. Run it from the project root:
+
+`uv run --frozen python analysis/singapore_kalshi/review/kalshi_rule_backtest.py analysis/singapore_kalshi/review/cologne_joined.json`
