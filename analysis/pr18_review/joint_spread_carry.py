@@ -14,8 +14,7 @@ def winner_probs(stage, S_pts, carry):
     for q in stage["openers"]:
         a, b = sorted(q["teams"], key=lambda n: by[n].seed); p = q["p"] if a == q["teams"][0] else 1 - q["p"]
         ops.append(dict(teams=[a, b], bid=p, ask=p))
-    sg.SPREAD = S_pts / 10
-    ratings = {t.id: t.rating for t in teams} if carry is None else sg.market_inputs(teams, ops, carry)[0]
+    ratings = {t.id: t.rating for t in teams} if carry is None else sg.market_inputs(teams, ops, carry, S_pts / 10)[0]
     out = []
     for m in stage["matches"]:
         if m["round"] == 1: continue

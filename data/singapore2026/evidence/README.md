@@ -27,16 +27,22 @@ The map challenger fits one Bradley–Terry log strength per organization, using
 
 ## Singapore decision
 
-The optimizer hill-climbed the probability of at least five correct on 100,000 joint tournament draws. It considered substitutions and exchanges between buckets. On the same selection sample it scored all 60 legal one-team replacements for the final card. The best replacement was M80 for DENDELE. Both ballots were fixed before evaluating 200,000 fresh tournaments. The selected card has the same ten picks and assignments as the prior forecast.
+Three events and 75 later matches cannot pin down the rating spread. With the full adjustment, the best-fitting spread is near 1,000 Valve points per tenfold change in map odds, and the fit is nearly flat from 500 to beyond 3,000. The forecast therefore draws tournaments across twelve spreads from 400 to 3,000. Each spread is weighted by its likelihood on those 75 matches under a prior that is flat in log-spread. The 600 spread used earlier carries 7% of the weight. [Spread weights](validation.json)
+
+The optimizer hill-climbed the probability of at least five correct on 100,000 joint tournament draws from that mix. It considered substitutions and exchanges between buckets. On the same selection sample it scored all 60 legal one-team replacements for the final card. The best replacement was M80 for 9z. Both ballots were fixed before evaluating 200,000 fresh tournaments. The selected card differs from the prior forecast in one slot: 9z replaces DENDELE among the 3–1 or 3–2 picks.
 
 | Frozen comparison | Result |
 |---|---:|
-| Current card passes | 88,253 / 200,000 (44.13%) |
-| M80 replacement passes | 87,393 / 200,000 (43.70%) |
-| Only the DENDELE card passes | 14,487 |
-| Only the M80 card passes | 13,627 |
-| DENDELE advantage, paired 95% Monte Carlo interval | +0.43 pp (+0.27 to +0.59) |
+| Current card passes | 81,792 / 200,000 (40.90%) |
+| M80 replacement passes | 80,567 / 200,000 (40.28%) |
+| Only the 9z card passes | 13,999 |
+| Only the M80 card passes | 12,774 |
+| 9z advantage over M80, paired 95% Monte Carlo interval | +0.61 pp (+0.45 to +0.77) |
+| Prior card (DENDELE) passes | 79,119 / 200,000 (39.56%) |
+| 9z advantage over the prior card, paired 95% interval | +1.34 pp (+1.18 to +1.50) |
 
-With the other seven markets fixed, raising M80’s opening win probability against NIP from 42.5% to 47.5% favored M80 by 0.84 pp (paired 95% interval +0.38 to +1.31). At 52.5%, M80 led by 1.64 pp. These are two tested prices. An exact crossover was not estimated. The full adjustment changes both the opener and later-round strength in these scenarios.
+Scored at a single spread with 25,000 tournaments each, the card passed 41.9% at 400, 41.1% at 600, 40.6% at 1,000, 40.2% at 1,400, 40.1% at 2,000 and 39.7% at 3,000. DENDELE is the better sixth pick only at spreads of about 700 or below, because a wider spread turns each opener price into a larger strength gap and DENDELE opens as a 35.5% underdog. 9z opens as a 61.5% favorite. That price is a thin quote four days before play, and 9z fields a stand-in. A price well below about 58% near lock is a reason to re-run the forecast.
 
-Under VRS alone the fixed card passed 40.63% of trials, under priced openers alone 42.12%, and under half carry 43.39%. The recent-map challenger put it at 14.98% and had the worst later-round scores on all three historical events. These scenarios expose model risk. The sampling intervals reflect repeat draws from a fixed model. Actual Singapore results will determine the card’s score. [Forecast and paired trial counts](../forecast.json)
+With the other seven markets fixed, raising M80’s opening win probability against NIP from 42.5% to 47.5% moved the comparison toward M80 by an amount inside simulation noise (M80 ahead by 0.41 pp, paired 95% interval −0.05 to +0.87). At 52.5%, M80 led by 1.46 pp (+1.00 to +1.92). These are two tested prices. An exact crossover was not estimated. The full adjustment changes both the opener and later-round strength in these scenarios.
+
+Across the same spread mix, the fixed card passed 25.6% of trials under VRS alone, 29.7% under priced openers alone, and 35.6% under half carry. The recent-map challenger put it at 10.8% and had the worst later-round scores on all three historical events. The headline therefore depends on the full adjustment, which three events favored by margins inside noise. These scenarios expose model risk. The sampling intervals reflect repeat draws from a fixed model. Actual Singapore results will determine the card’s score. [Forecast and paired trial counts](../forecast.json)

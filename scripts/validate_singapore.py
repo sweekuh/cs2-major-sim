@@ -12,7 +12,7 @@ from engine.probs import series_prob
 from engine.swiss import simulate_stage
 from engine.teams import ADVANCE_AT_WINS, ELIMINATE_AT_LOSSES, Team
 from odds.base import devig_fixed_two_way
-from scripts.singapore_stage1 import CARRIES, FIXTURE, SPREAD, model_inputs
+from scripts.singapore_stage1 import CARRIES, FIXTURE, SPREAD, SPREAD_GRID, model_inputs
 
 EVIDENCE = FIXTURE.parent / "evidence"
 AUDIT = EVIDENCE / "validation.json"
@@ -87,10 +87,36 @@ def metrics(winner_probs):
     return dict(n=len(p), log_loss=float(-np.log(p).mean()), brier=float(np.mean((1 - p) ** 2)))
 
 
+def spread_weights(prepared, model):
+    """Weight each candidate spread by its likelihood on the later-round matches of all events.
+
+    The prior is flat in log-spread, so each grid point also counts for the log-width it covers.
+    Three events leave the spread weakly identified; the weights say how weakly.
+    """
+    losses = []
+    for spread in SPREAD_GRID:
+        total = 0.0
+        for teams, by_name, openers, matches, form in prepared:
+            ratings, _ = model_inputs(teams, openers, model, form, spread)
+            ratings = ratings or {t.id: t.rating for t in teams}
+            for match in matches:
+                if match["round"] == 1:
+                    continue
+                a, b = sorted([by_name[n] for n in match["teams"]], key=lambda t: t.seed)
+                p = series_prob(ra=ratings[a.id], rb=ratings[b.id], bo3=match["bo"] == 3, S=spread)
+                total -= math.log(p if a.name == match["winner"] else 1 - p)
+        losses.append(total)
+    losses = np.array(losses)
+    weight = np.exp(losses.min() - losses) * np.gradient(np.log(SPREAD_GRID))
+    weight /= weight.sum()
+    return {str(round(s * 10)): float(w) for s, w in zip(SPREAD_GRID, weight)}
+
+
 def validate():
     stages = read(EVIDENCE / "historical-stages.json")
     windows = read(EVIDENCE / "map-sources.json")["windows"]
     summary = {}
+    prepared = []
     for label, stage in stages.items():
         teams = [Team(t["seed"], t["name"], t["seed"], t["vrs"] / 10) for t in stage["teams"]]
         by_name = {t.name: t for t in teams}
@@ -108,6 +134,7 @@ def validate():
             observed = q.get("observed") or stage["price_source"]["edition_time"]
             if datetime.fromisoformat(observed) >= datetime.fromisoformat(stage["lock_schedule"]):
                 raise ValueError(f"Post-start price: {label}, {a}")
+        prepared.append((teams, by_name, openers, stage["matches"], form))
         result = {}
         for model in MODELS:
             ratings, prices = model_inputs(teams, openers, model, form)
@@ -137,6 +164,7 @@ def validate():
     rosters = read(EVIDENCE / "singapore-rosters.json")
     strengths, counts = fit_form("singapore", datetime.fromisoformat(windows["singapore"]["before_utc"]))
     return dict(events=summary, development_candidate=candidate, chosen=chosen,
+                spread_weights=spread_weights(prepared, chosen),
                 singapore_form={name: strengths.get(i, 0.0) for name, i in rosters["team_ids"].items()},
                 singapore_map_counts={name: counts.get(i, 0) for name, i in rosters["team_ids"].items()})
 

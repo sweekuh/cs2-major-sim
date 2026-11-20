@@ -22,10 +22,7 @@ ids = [t.id for t in teams]; names = {t.id: t.name for t in teams}; byname = {t.
 CARD = Ballot(*[tuple(byname[n] for n in pub["card"][k]) for k in ("3-0", "3-1 or 3-2", "0-3")])
 base = json.load(open(os.path.join(SP, "baselines.json"))); CHALK = Ballot(*base["chalk_seed"]); CHALKV = Ballot(*base["chalk_vrs"])
 def model(S_pts, carry=0.5):
-    old = sg.SPREAD; sg.SPREAD = S_pts / 10
-    try: return market_inputs_safe(carry)
-    finally: sg.SPREAD = old
-def market_inputs_safe(carry): return sg.market_inputs(teams, data["openers"], carry)
+    return sg.market_inputs(teams, data["openers"], carry, S_pts / 10)
 def show(c): return " | ".join(",".join(names[i] for i in g) for g in (c.picks_30, c.picks_adv, c.picks_03))
 print("== A1. Published card at fixed spreads (PR structure: market round 1, carry 0.5); 40k select + 40k fresh eval")
 for S_pts in (600, 1000, 1170, 1410, 2000):

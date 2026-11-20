@@ -3,7 +3,8 @@
 ## PGL Singapore 2026 · November 19
 
 Stage 1 is ready. The default app and [standalone forecast](public/index.html) show the
-ten picks, independent evaluation, price sources and sensitivity runs. The field, ratings,
+ten picks, independent evaluation, price sources and sensitivity runs. The card is chosen
+and scored across a weighted mix of rating spreads; its chance of five correct is above 40%. The field, ratings,
 and opener quotes are frozen under [data/singapore2026](data/singapore2026/).
 The first match is November 24 at 04:00 UTC.
 

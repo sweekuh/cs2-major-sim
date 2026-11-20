@@ -11,7 +11,7 @@ Independent test of one claim: "this card has a 43.0% chance of five or more cor
 | `replay.py` | Engine pairing replay on all 9 stages |
 | `enumerate.py` | Exhaustive search of all 10,090,080 ballots |
 | `propagate.py` | Spread and rating-noise propagation, plus the 9-stage P(>=5) backtest |
-| `forecast_pr18_spread600.json`, `forecast_spread1170.json` | The two forecasts frozen on 2026-11-20 |
+| `forecast_published_spread_mix_9z.json`, `forecast_spread600_dendele.json` | The two forecasts frozen on 2026-11-20 for scoring: the published spread-mix forecast (9z card) and the earlier spread-600 forecast (DENDELE card) |
 | `score_singapore.py` | Post-event scorer with the pre-registered reading rule |
 
 ## Correction after commit 254e0f9 (2026-11-20)
@@ -33,11 +33,13 @@ What still holds: the headline depends on the spread. Under full carry the publi
 Run these three from the repo root with `uv run python analysis/pr18_review/<file>`; `joint_spread_carry.py`
 takes `analysis/pr18_review/dl/cologne_market.json` as its argument.
 
-## Kalshi entry rule (commit f76e48b)
+## Kalshi entry rule
 
-`kalshi_rule_backtest.py` applies the entry rule in `analysis/singapore_kalshi/` to the 98 Cologne 2026
-Swiss matches, with Polymarket closing prices (`cologne_joined.json`) standing in for an executable price.
-Run from the repo root: `uv run python analysis/pr18_review/kalshi_rule_backtest.py analysis/pr18_review/cologne_joined.json`.
+The backtest of the Kalshi entry rule moved with that analysis to its own pull request.
+
+The first-pass scripts (`enumerate.py`, `propagate.py`, and the two frozen-forecast comparisons in
+the correction note) describe earlier commits of #18. Their published numbers came from the half-carry,
+spread-600 forecast at 8f72c94 and will differ if re-run against the current forecast.
 
 ## Reproduce
 
@@ -55,7 +57,7 @@ uv run python analysis/pr18_review/propagate.py
 
 ```bash
 python analysis/pr18_review/score_singapore.py results.json \
-  analysis/pr18_review/forecast_pr18_spread600.json analysis/pr18_review/forecast_spread1170.json
+  analysis/pr18_review/forecast_published_spread_mix_9z.json analysis/pr18_review/forecast_spread600_dendele.json
 ```
 
 `results.json` maps each team to its final record, for example `{"NIP": "3-1"}`.
