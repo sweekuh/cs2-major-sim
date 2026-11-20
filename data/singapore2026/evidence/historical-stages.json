@@ -1,0 +1,2035 @@
+{
+  "austin": {
+    "seed_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/invitation/2025/standings_global_2025_05_05.md",
+    "vrs_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/live/2025/standings_global_2025_06_02.md",
+    "tournament_id": 3567,
+    "results_source": "https://api.bo3.gg/api/v1/matches",
+    "lock_schedule": "2025-06-03T15:15:00.000+00:00",
+    "teams": [
+      {
+        "name": "Complexity",
+        "id": 703,
+        "seed": 1,
+        "vrs": 1433,
+        "vrs_five": [
+          "Cxzi",
+          "Grim",
+          "hallzerk",
+          "JT",
+          "nicx"
+        ]
+      },
+      {
+        "name": "HEROIC",
+        "id": 759,
+        "seed": 2,
+        "vrs": 1552,
+        "vrs_five": [
+          "LNZ",
+          "SunPayus",
+          "tN1R",
+          "xfl0ud",
+          "yxngstxr"
+        ]
+      },
+      {
+        "name": "B8",
+        "id": 1539,
+        "seed": 3,
+        "vrs": 1275,
+        "vrs_five": [
+          "alex666",
+          "esenthial",
+          "headtr1ck",
+          "kensizor",
+          "npl"
+        ]
+      },
+      {
+        "name": "BetBoom",
+        "id": 7498,
+        "seed": 4,
+        "vrs": 1102,
+        "vrs_five": [
+          "Ax1Le",
+          "Boombl4",
+          "Magnojez",
+          "S1ren",
+          "zorte"
+        ]
+      },
+      {
+        "name": "TYLOO",
+        "id": 757,
+        "seed": 5,
+        "vrs": 1358,
+        "vrs_five": [
+          "Attacker",
+          "JamYoung",
+          "Jee",
+          "Mercury",
+          "Moseyuh"
+        ]
+      },
+      {
+        "name": "Lynn Vision",
+        "id": 476,
+        "seed": 6,
+        "vrs": 1212,
+        "vrs_five": [
+          "C4LLM3SU3",
+          "EmiliaQAQ",
+          "Starry",
+          "Westmelon",
+          "z4kr"
+        ]
+      },
+      {
+        "name": "Wildcard",
+        "id": 6062,
+        "seed": 7,
+        "vrs": 1037,
+        "vrs_five": [
+          "JBa",
+          "phzy",
+          "Sonic",
+          "stanislaw",
+          "susp"
+        ]
+      },
+      {
+        "name": "FlyQuest",
+        "id": 10398,
+        "seed": 8,
+        "vrs": 1213,
+        "vrs_five": [
+          "INS",
+          "Liazz",
+          "nettik",
+          "regali",
+          "Vexite"
+        ]
+      },
+      {
+        "name": "OG",
+        "id": 395,
+        "seed": 9,
+        "vrs": 1097,
+        "vrs_five": [
+          "Buzz",
+          "Chr1zN",
+          "F1KU",
+          "nicoodoz",
+          "spooke"
+        ]
+      },
+      {
+        "name": "Chinggis Warriors",
+        "id": 9974,
+        "seed": 10,
+        "vrs": 1087,
+        "vrs_five": [
+          "ariucle",
+          "controlez",
+          "cool4st",
+          "Efire",
+          "ROUX"
+        ]
+      },
+      {
+        "name": "Imperial",
+        "id": 1430,
+        "seed": 11,
+        "vrs": 1074,
+        "vrs_five": [
+          "chayJESUS",
+          "decenty",
+          "noway",
+          "try",
+          "VINI"
+        ]
+      },
+      {
+        "name": "Nemiga",
+        "id": 655,
+        "seed": 12,
+        "vrs": 1045,
+        "vrs_five": [
+          "1eeR",
+          "khaN",
+          "riskyb0b",
+          "Xant3r",
+          "zweih"
+        ]
+      },
+      {
+        "name": "NRG",
+        "id": 751,
+        "seed": 13,
+        "vrs": 1121,
+        "vrs_five": [
+          "br0",
+          "HexT",
+          "Jeorge",
+          "nitr0",
+          "oSee"
+        ]
+      },
+      {
+        "name": "Legacy",
+        "id": 8118,
+        "seed": 14,
+        "vrs": 1035,
+        "vrs_five": [
+          "dumau",
+          "latto",
+          "lux",
+          "n1ssim",
+          "saadzin"
+        ]
+      },
+      {
+        "name": "Metizport",
+        "id": 1578,
+        "seed": 15,
+        "vrs": 959,
+        "vrs_five": [
+          "adamb",
+          "hampus",
+          "isak",
+          "L00m1",
+          "Plopski"
+        ]
+      },
+      {
+        "name": "Fluxo",
+        "id": 3661,
+        "seed": 16,
+        "vrs": 999,
+        "vrs_five": [
+          "arT",
+          "kye",
+          "mlhzin",
+          "piriajr",
+          "zevy"
+        ]
+      }
+    ],
+    "matches": [
+      {
+        "match": 88490,
+        "round": 1,
+        "teams": [
+          "Complexity",
+          "OG"
+        ],
+        "winner": "OG",
+        "bo": 1,
+        "start": "2025-06-03T15:15:00.000+00:00"
+      },
+      {
+        "match": 88489,
+        "round": 1,
+        "teams": [
+          "HEROIC",
+          "Chinggis Warriors"
+        ],
+        "winner": "HEROIC",
+        "bo": 1,
+        "start": "2025-06-03T15:30:00.000+00:00"
+      },
+      {
+        "match": 88488,
+        "round": 1,
+        "teams": [
+          "B8",
+          "Imperial"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2025-06-03T16:15:00.000+00:00"
+      },
+      {
+        "match": 88487,
+        "round": 1,
+        "teams": [
+          "BetBoom",
+          "Nemiga"
+        ],
+        "winner": "BetBoom",
+        "bo": 1,
+        "start": "2025-06-03T16:30:00.000+00:00"
+      },
+      {
+        "match": 88486,
+        "round": 1,
+        "teams": [
+          "TYLOO",
+          "NRG"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2025-06-03T17:40:00.000+00:00"
+      },
+      {
+        "match": 89909,
+        "round": 1,
+        "teams": [
+          "Lynn Vision",
+          "Legacy"
+        ],
+        "winner": "Lynn Vision",
+        "bo": 1,
+        "start": "2025-06-03T17:45:00.000+00:00"
+      },
+      {
+        "match": 89911,
+        "round": 1,
+        "teams": [
+          "Wildcard",
+          "Metizport"
+        ],
+        "winner": "Wildcard",
+        "bo": 1,
+        "start": "2025-06-03T18:35:00.000+00:00"
+      },
+      {
+        "match": 89910,
+        "round": 1,
+        "teams": [
+          "FlyQuest",
+          "Fluxo"
+        ],
+        "winner": "FlyQuest",
+        "bo": 1,
+        "start": "2025-06-03T18:54:24.000+00:00"
+      },
+      {
+        "match": 88538,
+        "round": 2,
+        "teams": [
+          "HEROIC",
+          "NRG"
+        ],
+        "winner": "HEROIC",
+        "bo": 1,
+        "start": "2025-06-03T20:30:00.000+00:00"
+      },
+      {
+        "match": 88537,
+        "round": 2,
+        "teams": [
+          "B8",
+          "OG"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2025-06-03T20:35:00.000+00:00"
+      },
+      {
+        "match": 88542,
+        "round": 2,
+        "teams": [
+          "Lynn Vision",
+          "Wildcard"
+        ],
+        "winner": "Wildcard",
+        "bo": 1,
+        "start": "2025-06-03T21:25:00.000+00:00"
+      },
+      {
+        "match": 88539,
+        "round": 2,
+        "teams": [
+          "BetBoom",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 1,
+        "start": "2025-06-03T21:41:35.000+00:00"
+      },
+      {
+        "match": 88540,
+        "round": 2,
+        "teams": [
+          "Complexity",
+          "Fluxo"
+        ],
+        "winner": "Complexity",
+        "bo": 1,
+        "start": "2025-06-03T22:35:00.000+00:00"
+      },
+      {
+        "match": 88544,
+        "round": 2,
+        "teams": [
+          "Chinggis Warriors",
+          "Legacy"
+        ],
+        "winner": "Legacy",
+        "bo": 1,
+        "start": "2025-06-03T22:54:36.000+00:00"
+      },
+      {
+        "match": 88543,
+        "round": 2,
+        "teams": [
+          "Imperial",
+          "Nemiga"
+        ],
+        "winner": "Nemiga",
+        "bo": 1,
+        "start": "2025-06-03T23:40:00.000+00:00"
+      },
+      {
+        "match": 88541,
+        "round": 2,
+        "teams": [
+          "TYLOO",
+          "Metizport"
+        ],
+        "winner": "TYLOO",
+        "bo": 1,
+        "start": "2025-06-04T00:15:00.000+00:00"
+      },
+      {
+        "match": 88546,
+        "round": 3,
+        "teams": [
+          "NRG",
+          "Complexity"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2025-06-04T15:00:00.000+00:00"
+      },
+      {
+        "match": 88545,
+        "round": 3,
+        "teams": [
+          "BetBoom",
+          "Legacy"
+        ],
+        "winner": "BetBoom",
+        "bo": 1,
+        "start": "2025-06-04T15:00:00.000+00:00"
+      },
+      {
+        "match": 88548,
+        "round": 3,
+        "teams": [
+          "OG",
+          "TYLOO"
+        ],
+        "winner": "OG",
+        "bo": 1,
+        "start": "2025-06-04T15:55:00.000+00:00"
+      },
+      {
+        "match": 88547,
+        "round": 3,
+        "teams": [
+          "Lynn Vision",
+          "Nemiga"
+        ],
+        "winner": "Nemiga",
+        "bo": 1,
+        "start": "2025-06-04T16:00:00.000+00:00"
+      },
+      {
+        "match": 88550,
+        "round": 3,
+        "teams": [
+          "HEROIC",
+          "FlyQuest"
+        ],
+        "winner": "HEROIC",
+        "bo": 3,
+        "start": "2025-06-04T16:45:00.000+00:00"
+      },
+      {
+        "match": 88549,
+        "round": 3,
+        "teams": [
+          "B8",
+          "Wildcard"
+        ],
+        "winner": "B8",
+        "bo": 3,
+        "start": "2025-06-04T17:00:00.000+00:00"
+      },
+      {
+        "match": 88551,
+        "round": 3,
+        "teams": [
+          "Imperial",
+          "Metizport"
+        ],
+        "winner": "Imperial",
+        "bo": 3,
+        "start": "2025-06-04T19:40:00.000+00:00"
+      },
+      {
+        "match": 88552,
+        "round": 3,
+        "teams": [
+          "Chinggis Warriors",
+          "Fluxo"
+        ],
+        "winner": "Chinggis Warriors",
+        "bo": 3,
+        "start": "2025-06-04T19:59:57.000+00:00"
+      },
+      {
+        "match": 88553,
+        "round": 4,
+        "teams": [
+          "Imperial",
+          "Legacy"
+        ],
+        "winner": "Legacy",
+        "bo": 3,
+        "start": "2025-06-05T15:00:00.000+00:00"
+      },
+      {
+        "match": 88554,
+        "round": 4,
+        "teams": [
+          "Complexity",
+          "TYLOO"
+        ],
+        "winner": "TYLOO",
+        "bo": 3,
+        "start": "2025-06-05T15:00:00.000+00:00"
+      },
+      {
+        "match": 88556,
+        "round": 4,
+        "teams": [
+          "OG",
+          "NRG"
+        ],
+        "winner": "OG",
+        "bo": 3,
+        "start": "2025-06-05T17:10:00.000+00:00"
+      },
+      {
+        "match": 88555,
+        "round": 4,
+        "teams": [
+          "Lynn Vision",
+          "Chinggis Warriors"
+        ],
+        "winner": "Lynn Vision",
+        "bo": 3,
+        "start": "2025-06-05T17:30:00.000+00:00"
+      },
+      {
+        "match": 88558,
+        "round": 4,
+        "teams": [
+          "BetBoom",
+          "Wildcard"
+        ],
+        "winner": "BetBoom",
+        "bo": 3,
+        "start": "2025-06-05T18:50:00.000+00:00"
+      },
+      {
+        "match": 88557,
+        "round": 4,
+        "teams": [
+          "FlyQuest",
+          "Nemiga"
+        ],
+        "winner": "Nemiga",
+        "bo": 3,
+        "start": "2025-06-05T21:00:00.000+00:00"
+      },
+      {
+        "match": 88559,
+        "round": 5,
+        "teams": [
+          "NRG",
+          "Lynn Vision"
+        ],
+        "winner": "Lynn Vision",
+        "bo": 3,
+        "start": "2025-06-06T15:00:00.000+00:00"
+      },
+      {
+        "match": 88560,
+        "round": 5,
+        "teams": [
+          "Wildcard",
+          "Legacy"
+        ],
+        "winner": "Legacy",
+        "bo": 3,
+        "start": "2025-06-06T18:05:00.000+00:00"
+      },
+      {
+        "match": 88561,
+        "round": 5,
+        "teams": [
+          "FlyQuest",
+          "TYLOO"
+        ],
+        "winner": "TYLOO",
+        "bo": 3,
+        "start": "2025-06-06T20:20:00.000+00:00"
+      }
+    ],
+    "price_source": {
+      "url": "https://sansabet.com/content/Documents/%C5%A0ansabet%20-%202025-06-03T094312.205.pdf",
+      "page": 8,
+      "edition_time": "2025-06-03T09:43:12+02:00",
+      "sha256": "dce87e137c7db7c282eb64517b16b30e1ffff4cfc7a8694d027dc2662320f4b2"
+    },
+    "openers": [
+      {
+        "teams": [
+          "Complexity",
+          "OG"
+        ],
+        "decimal": [
+          1.85,
+          1.9
+        ],
+        "p": 0.5066666666666666
+      },
+      {
+        "teams": [
+          "HEROIC",
+          "Chinggis Warriors"
+        ],
+        "decimal": [
+          1.09,
+          6.55
+        ],
+        "p": 0.8573298429319373
+      },
+      {
+        "teams": [
+          "B8",
+          "Imperial"
+        ],
+        "decimal": [
+          1.7,
+          2.1
+        ],
+        "p": 0.5526315789473685
+      },
+      {
+        "teams": [
+          "BetBoom",
+          "Nemiga"
+        ],
+        "decimal": [
+          1.65,
+          2.15
+        ],
+        "p": 0.5657894736842105
+      },
+      {
+        "teams": [
+          "Lynn Vision",
+          "Legacy"
+        ],
+        "decimal": [
+          2.65,
+          1.45
+        ],
+        "p": 0.3536585365853659
+      },
+      {
+        "teams": [
+          "TYLOO",
+          "NRG"
+        ],
+        "decimal": [
+          1.85,
+          1.9
+        ],
+        "p": 0.5066666666666666
+      },
+      {
+        "teams": [
+          "FlyQuest",
+          "Fluxo"
+        ],
+        "decimal": [
+          1.8,
+          1.95
+        ],
+        "p": 0.5199999999999999
+      },
+      {
+        "teams": [
+          "Wildcard",
+          "Metizport"
+        ],
+        "decimal": [
+          1.8,
+          1.95
+        ],
+        "p": 0.5199999999999999
+      }
+    ]
+  },
+  "budapest": {
+    "seed_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/invitation/2025/standings_global_2025_11_03.md",
+    "vrs_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/live/2025/standings_global_2025_11_03.md",
+    "tournament_id": 4473,
+    "results_source": "https://api.bo3.gg/api/v1/matches",
+    "lock_schedule": "2025-11-24T12:00:00.000+00:00",
+    "teams": [
+      {
+        "name": "Legacy",
+        "id": 8118,
+        "seed": 1,
+        "vrs": 1748,
+        "vrs_five": [
+          "dumau",
+          "latto",
+          "lux",
+          "n1ssim",
+          "saadzin"
+        ]
+      },
+      {
+        "name": "FaZe",
+        "id": 791,
+        "seed": 2,
+        "vrs": 1659,
+        "vrs_five": [
+          "broky",
+          "frozen",
+          "karrigan",
+          "rain",
+          "Twistzz"
+        ]
+      },
+      {
+        "name": "B8",
+        "id": 1539,
+        "seed": 3,
+        "vrs": 1571,
+        "vrs_five": [
+          "alex666",
+          "esenthial",
+          "headtr1ck",
+          "kensizor",
+          "npl"
+        ]
+      },
+      {
+        "name": "GamerLegion",
+        "id": 594,
+        "seed": 4,
+        "vrs": 1561,
+        "vrs_five": [
+          "hypex",
+          "PR",
+          "REZ",
+          "Tauson",
+          "ztr"
+        ]
+      },
+      {
+        "name": "fnatic",
+        "id": 786,
+        "seed": 5,
+        "vrs": 1424,
+        "vrs_five": [
+          "blameF",
+          "fear",
+          "jackasmo",
+          "jambo",
+          "KRIMZ"
+        ]
+      },
+      {
+        "name": "PARIVISION",
+        "id": 8171,
+        "seed": 6,
+        "vrs": 1420,
+        "vrs_five": [
+          "AW",
+          "BELCHONOKK",
+          "Jame",
+          "nota",
+          "xiELO"
+        ]
+      },
+      {
+        "name": "Ninjas in Pyjamas",
+        "id": 785,
+        "seed": 7,
+        "vrs": 1336,
+        "vrs_five": [
+          "ewjerkz",
+          "r1nkle",
+          "sjuush",
+          "Snappi",
+          "xKacpersky"
+        ]
+      },
+      {
+        "name": "Imperial",
+        "id": 1430,
+        "seed": 8,
+        "vrs": 1336,
+        "vrs_five": [
+          "chelo",
+          "noway",
+          "skullz",
+          "try",
+          "VINI"
+        ]
+      },
+      {
+        "name": "FlyQuest",
+        "id": 10398,
+        "seed": 9,
+        "vrs": 1327,
+        "vrs_five": [
+          "INS",
+          "jks",
+          "nettik",
+          "regali",
+          "Vexite"
+        ]
+      },
+      {
+        "name": "Lynn Vision",
+        "id": 476,
+        "seed": 10,
+        "vrs": 1269,
+        "vrs_five": [
+          "C4LLM3SU3",
+          "EmiliaQAQ",
+          "Starry",
+          "Westmelon",
+          "z4kr"
+        ]
+      },
+      {
+        "name": "M80",
+        "id": 7430,
+        "seed": 11,
+        "vrs": 1252,
+        "vrs_five": [
+          "HexT",
+          "Lake",
+          "s1n",
+          "slaxz-",
+          "Swisher"
+        ]
+      },
+      {
+        "name": "Fluxo",
+        "id": 3661,
+        "seed": 12,
+        "vrs": 1164,
+        "vrs_five": [
+          "arT",
+          "decenty",
+          "kye",
+          "Lucaozy",
+          "zevy"
+        ]
+      },
+      {
+        "name": "RED Canids",
+        "id": 554,
+        "seed": 13,
+        "vrs": 1141,
+        "vrs_five": [
+          "chayJESUS",
+          "drop",
+          "history",
+          "kauez",
+          "venomzera"
+        ]
+      },
+      {
+        "name": "The Huns",
+        "id": 9127,
+        "seed": 14,
+        "vrs": 1136,
+        "vrs_five": [
+          "Bart4k",
+          "cobrazera",
+          "nin9",
+          "sk0R",
+          "xerolte"
+        ]
+      },
+      {
+        "name": "NRG",
+        "id": 751,
+        "seed": 15,
+        "vrs": 1129,
+        "vrs_five": [
+          "br0",
+          "Jeorge",
+          "nitr0",
+          "Sonic",
+          "XotiC"
+        ]
+      },
+      {
+        "name": "Rare Atom",
+        "id": 2506,
+        "seed": 16,
+        "vrs": 1071,
+        "vrs_five": [
+          "ChildKing",
+          "L1haNg",
+          "Marek",
+          "Summer",
+          "Tiger"
+        ]
+      }
+    ],
+    "matches": [
+      {
+        "match": 103902,
+        "round": 1,
+        "teams": [
+          "B8",
+          "M80"
+        ],
+        "winner": "M80",
+        "bo": 1,
+        "start": "2025-11-24T12:00:00.000+00:00"
+      },
+      {
+        "match": 103899,
+        "round": 1,
+        "teams": [
+          "Imperial",
+          "Rare Atom"
+        ],
+        "winner": "Imperial",
+        "bo": 1,
+        "start": "2025-11-24T12:00:00.000+00:00"
+      },
+      {
+        "match": 103906,
+        "round": 1,
+        "teams": [
+          "Legacy",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 1,
+        "start": "2025-11-24T13:10:00.000+00:00"
+      },
+      {
+        "match": 103903,
+        "round": 1,
+        "teams": [
+          "PARIVISION",
+          "The Huns"
+        ],
+        "winner": "PARIVISION",
+        "bo": 1,
+        "start": "2025-11-24T13:20:00.000+00:00"
+      },
+      {
+        "match": 103901,
+        "round": 1,
+        "teams": [
+          "Ninjas in Pyjamas",
+          "NRG"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2025-11-24T14:15:00.000+00:00"
+      },
+      {
+        "match": 103900,
+        "round": 1,
+        "teams": [
+          "GamerLegion",
+          "Fluxo"
+        ],
+        "winner": "Fluxo",
+        "bo": 1,
+        "start": "2025-11-24T14:20:00.000+00:00"
+      },
+      {
+        "match": 103904,
+        "round": 1,
+        "teams": [
+          "FaZe",
+          "Lynn Vision"
+        ],
+        "winner": "FaZe",
+        "bo": 1,
+        "start": "2025-11-24T15:20:00.000+00:00"
+      },
+      {
+        "match": 103905,
+        "round": 1,
+        "teams": [
+          "fnatic",
+          "RED Canids"
+        ],
+        "winner": "fnatic",
+        "bo": 1,
+        "start": "2025-11-24T17:10:00.000+00:00"
+      },
+      {
+        "match": 104301,
+        "round": 2,
+        "teams": [
+          "Legacy",
+          "Rare Atom"
+        ],
+        "winner": "Legacy",
+        "bo": 1,
+        "start": "2025-11-24T19:00:00.000+00:00"
+      },
+      {
+        "match": 104300,
+        "round": 2,
+        "teams": [
+          "Imperial",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 1,
+        "start": "2025-11-24T19:20:00.000+00:00"
+      },
+      {
+        "match": 104303,
+        "round": 2,
+        "teams": [
+          "B8",
+          "The Huns"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2025-11-24T20:00:00.000+00:00"
+      },
+      {
+        "match": 104302,
+        "round": 2,
+        "teams": [
+          "PARIVISION",
+          "M80"
+        ],
+        "winner": "M80",
+        "bo": 1,
+        "start": "2025-11-24T20:40:00.000+00:00"
+      },
+      {
+        "match": 104304,
+        "round": 2,
+        "teams": [
+          "GamerLegion",
+          "RED Canids"
+        ],
+        "winner": "RED Canids",
+        "bo": 1,
+        "start": "2025-11-24T21:10:26.000+00:00"
+      },
+      {
+        "match": 104306,
+        "round": 2,
+        "teams": [
+          "Ninjas in Pyjamas",
+          "Lynn Vision"
+        ],
+        "winner": "Ninjas in Pyjamas",
+        "bo": 1,
+        "start": "2025-11-24T22:15:00.000+00:00"
+      },
+      {
+        "match": 104305,
+        "round": 2,
+        "teams": [
+          "fnatic",
+          "Fluxo"
+        ],
+        "winner": "Fluxo",
+        "bo": 1,
+        "start": "2025-11-24T22:28:27.000+00:00"
+      },
+      {
+        "match": 104307,
+        "round": 2,
+        "teams": [
+          "FaZe",
+          "NRG"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2025-11-24T23:30:00.000+00:00"
+      },
+      {
+        "match": 104309,
+        "round": 3,
+        "teams": [
+          "B8",
+          "PARIVISION"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2025-11-25T14:00:00.000+00:00"
+      },
+      {
+        "match": 104308,
+        "round": 3,
+        "teams": [
+          "Legacy",
+          "RED Canids"
+        ],
+        "winner": "Legacy",
+        "bo": 1,
+        "start": "2025-11-25T14:05:00.000+00:00"
+      },
+      {
+        "match": 104310,
+        "round": 3,
+        "teams": [
+          "fnatic",
+          "Imperial"
+        ],
+        "winner": "fnatic",
+        "bo": 1,
+        "start": "2025-11-25T15:13:49.000+00:00"
+      },
+      {
+        "match": 104311,
+        "round": 3,
+        "teams": [
+          "FaZe",
+          "Ninjas in Pyjamas"
+        ],
+        "winner": "Ninjas in Pyjamas",
+        "bo": 1,
+        "start": "2025-11-25T15:14:04.000+00:00"
+      },
+      {
+        "match": 104313,
+        "round": 3,
+        "teams": [
+          "GamerLegion",
+          "Rare Atom"
+        ],
+        "winner": "GamerLegion",
+        "bo": 3,
+        "start": "2025-11-25T16:10:00.000+00:00"
+      },
+      {
+        "match": 104312,
+        "round": 3,
+        "teams": [
+          "FlyQuest",
+          "Fluxo"
+        ],
+        "winner": "FlyQuest",
+        "bo": 3,
+        "start": "2025-11-25T16:25:00.000+00:00"
+      },
+      {
+        "match": 104314,
+        "round": 3,
+        "teams": [
+          "M80",
+          "NRG"
+        ],
+        "winner": "M80",
+        "bo": 3,
+        "start": "2025-11-25T18:05:00.000+00:00"
+      },
+      {
+        "match": 104315,
+        "round": 3,
+        "teams": [
+          "The Huns",
+          "Lynn Vision"
+        ],
+        "winner": "The Huns",
+        "bo": 3,
+        "start": "2025-11-25T18:38:02.000+00:00"
+      },
+      {
+        "match": 104316,
+        "round": 4,
+        "teams": [
+          "Fluxo",
+          "Ninjas in Pyjamas"
+        ],
+        "winner": "Ninjas in Pyjamas",
+        "bo": 3,
+        "start": "2025-11-26T14:00:00.000+00:00"
+      },
+      {
+        "match": 104317,
+        "round": 4,
+        "teams": [
+          "B8",
+          "Legacy"
+        ],
+        "winner": "B8",
+        "bo": 3,
+        "start": "2025-11-26T14:05:00.000+00:00"
+      },
+      {
+        "match": 104319,
+        "round": 4,
+        "teams": [
+          "RED Canids",
+          "FaZe"
+        ],
+        "winner": "FaZe",
+        "bo": 3,
+        "start": "2025-11-26T15:58:13.000+00:00"
+      },
+      {
+        "match": 104318,
+        "round": 4,
+        "teams": [
+          "NRG",
+          "fnatic"
+        ],
+        "winner": "fnatic",
+        "bo": 3,
+        "start": "2025-11-26T16:20:00.000+00:00"
+      },
+      {
+        "match": 104321,
+        "round": 4,
+        "teams": [
+          "Imperial",
+          "The Huns"
+        ],
+        "winner": "Imperial",
+        "bo": 3,
+        "start": "2025-11-26T19:25:00.000+00:00"
+      },
+      {
+        "match": 104320,
+        "round": 4,
+        "teams": [
+          "PARIVISION",
+          "GamerLegion"
+        ],
+        "winner": "PARIVISION",
+        "bo": 3,
+        "start": "2025-11-26T19:37:43.000+00:00"
+      },
+      {
+        "match": 104322,
+        "round": 5,
+        "teams": [
+          "Fluxo",
+          "FaZe"
+        ],
+        "winner": "FaZe",
+        "bo": 3,
+        "start": "2025-11-27T14:00:00.000+00:00"
+      },
+      {
+        "match": 104323,
+        "round": 5,
+        "teams": [
+          "NRG",
+          "Imperial"
+        ],
+        "winner": "Imperial",
+        "bo": 3,
+        "start": "2025-11-27T17:05:00.000+00:00"
+      },
+      {
+        "match": 104324,
+        "round": 5,
+        "teams": [
+          "PARIVISION",
+          "Legacy"
+        ],
+        "winner": "PARIVISION",
+        "bo": 3,
+        "start": "2025-11-27T19:10:00.000+00:00"
+      }
+    ],
+    "price_source": {
+      "url": "https://sansabet.com/content/Documents/%C5%A0ansabet%20-%202025-11-24T091549.264.pdf",
+      "page": 11,
+      "edition_time": "2025-11-24T09:15:49+01:00",
+      "sha256": "cf46ae687f95c4614bf43b157f34571f4a2356661730e82f6717363000357eaa"
+    },
+    "openers": [
+      {
+        "teams": [
+          "Imperial",
+          "Rare Atom"
+        ],
+        "decimal": [
+          1.4,
+          2.8
+        ],
+        "p": 0.6666666666666667
+      },
+      {
+        "teams": [
+          "B8",
+          "M80"
+        ],
+        "decimal": [
+          1.65,
+          2.15
+        ],
+        "p": 0.5657894736842105
+      },
+      {
+        "teams": [
+          "Legacy",
+          "FlyQuest"
+        ],
+        "decimal": [
+          1.35,
+          3
+        ],
+        "p": 0.6896551724137931
+      },
+      {
+        "teams": [
+          "PARIVISION",
+          "The Huns"
+        ],
+        "decimal": [
+          1.15,
+          5
+        ],
+        "p": 0.8130081300813009
+      },
+      {
+        "teams": [
+          "GamerLegion",
+          "Fluxo"
+        ],
+        "decimal": [
+          1.35,
+          3
+        ],
+        "p": 0.6896551724137931
+      },
+      {
+        "teams": [
+          "Ninjas in Pyjamas",
+          "NRG"
+        ],
+        "decimal": [
+          1.35,
+          3
+        ],
+        "p": 0.6896551724137931
+      },
+      {
+        "teams": [
+          "FaZe",
+          "Lynn Vision"
+        ],
+        "decimal": [
+          1.35,
+          3
+        ],
+        "p": 0.6896551724137931
+      },
+      {
+        "teams": [
+          "fnatic",
+          "RED Canids"
+        ],
+        "decimal": [
+          1.35,
+          3
+        ],
+        "p": 0.6896551724137931
+      }
+    ]
+  },
+  "cologne": {
+    "seed_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/invitation/2026/standings_global_2026_05_04.md",
+    "vrs_source": "https://raw.githubusercontent.com/ValveSoftware/counter-strike_regional_standings/main/live/2026/standings_global_2026_06_01.md",
+    "tournament_id": 5641,
+    "results_source": "https://api.bo3.gg/api/v1/matches",
+    "lock_schedule": "2026-06-02T10:30:00.000+00:00",
+    "teams": [
+      {
+        "name": "GamerLegion",
+        "id": 594,
+        "seed": 1,
+        "vrs": 1724,
+        "vrs_five": [
+          "hypex",
+          "PR",
+          "REZ",
+          "Snax",
+          "Tauson"
+        ]
+      },
+      {
+        "name": "B8",
+        "id": 1539,
+        "seed": 2,
+        "vrs": 1582,
+        "vrs_five": [
+          "alex666",
+          "esenthial",
+          "kensizor",
+          "npl",
+          "s1zzi"
+        ]
+      },
+      {
+        "name": "HEROIC",
+        "id": 759,
+        "seed": 3,
+        "vrs": 1420,
+        "vrs_five": [
+          "Chr1zN",
+          "nilo",
+          "susp",
+          "xfl0ud",
+          "yxngstxr"
+        ]
+      },
+      {
+        "name": "BetBoom",
+        "id": 7498,
+        "seed": 4,
+        "vrs": 1562,
+        "vrs_five": [
+          "Boombl4",
+          "FL4MUS",
+          "Magnojez",
+          "S1ren",
+          "zorte"
+        ]
+      },
+      {
+        "name": "BIG",
+        "id": 756,
+        "seed": 5,
+        "vrs": 1416,
+        "vrs_five": [
+          "blameF",
+          "faveN",
+          "gr1ks",
+          "JDC",
+          "tabseN"
+        ]
+      },
+      {
+        "name": "M80",
+        "id": 7430,
+        "seed": 6,
+        "vrs": 1385,
+        "vrs_five": [
+          "JBa",
+          "Lake",
+          "s1n",
+          "slaxz-",
+          "Swisher"
+        ]
+      },
+      {
+        "name": "MIBR",
+        "id": 755,
+        "seed": 7,
+        "vrs": 1535,
+        "vrs_five": [
+          "brnz4n",
+          "insani",
+          "kl1m",
+          "LNZ",
+          "venomzera"
+        ]
+      },
+      {
+        "name": "SINNERS",
+        "id": 200,
+        "seed": 8,
+        "vrs": 1378,
+        "vrs_five": [
+          "beastik",
+          "kisserek",
+          "MoDo",
+          "SHOCK",
+          "stressarN"
+        ]
+      },
+      {
+        "name": "NRG",
+        "id": 751,
+        "seed": 9,
+        "vrs": 1247,
+        "vrs_five": [
+          "br0",
+          "Grim",
+          "nitr0",
+          "oSee",
+          "Sonic"
+        ]
+      },
+      {
+        "name": "TYLOO",
+        "id": 757,
+        "seed": 10,
+        "vrs": 1395,
+        "vrs_five": [
+          "JamYoung",
+          "Jee",
+          "Mercury",
+          "Moseyuh",
+          "Zero"
+        ]
+      },
+      {
+        "name": "Sharks",
+        "id": 747,
+        "seed": 11,
+        "vrs": 1354,
+        "vrs_five": [
+          "doc",
+          "gafolo",
+          "koala",
+          "maxxkor",
+          "rdnzao"
+        ]
+      },
+      {
+        "name": "Gaimin Gladiators",
+        "id": 2698,
+        "seed": 12,
+        "vrs": 1233,
+        "vrs_five": [
+          "felps",
+          "HEN1",
+          "JOTA",
+          "Luken",
+          "NEKIZ"
+        ]
+      },
+      {
+        "name": "Liquid",
+        "id": 790,
+        "seed": 13,
+        "vrs": 1304,
+        "vrs_five": [
+          "EliGE",
+          "malbsMd",
+          "NAF",
+          "siuhy",
+          "ultimate"
+        ]
+      },
+      {
+        "name": "Lynn Vision",
+        "id": 476,
+        "seed": 14,
+        "vrs": 1443,
+        "vrs_five": [
+          "C4LLM3SU3",
+          "EmiliaQAQ",
+          "Starry",
+          "Westmelon",
+          "z4KR"
+        ]
+      },
+      {
+        "name": "THUNDER dOWNUNDER",
+        "id": 22032,
+        "seed": 15,
+        "vrs": 1181,
+        "vrs_five": [
+          "aliStair",
+          "asap",
+          "dexter",
+          "Liazz",
+          "TjP"
+        ]
+      },
+      {
+        "name": "FlyQuest",
+        "id": 10398,
+        "seed": 16,
+        "vrs": 1112,
+        "vrs_five": [
+          "INS",
+          "jks",
+          "nettik",
+          "story",
+          "Vexite"
+        ]
+      }
+    ],
+    "matches": [
+      {
+        "match": 120601,
+        "round": 1,
+        "teams": [
+          "M80",
+          "Lynn Vision"
+        ],
+        "winner": "M80",
+        "bo": 1,
+        "start": "2026-06-02T10:30:00.000+00:00"
+      },
+      {
+        "match": 120600,
+        "round": 1,
+        "teams": [
+          "SINNERS",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 1,
+        "start": "2026-06-02T10:30:00.000+00:00"
+      },
+      {
+        "match": 120599,
+        "round": 1,
+        "teams": [
+          "MIBR",
+          "THUNDER dOWNUNDER"
+        ],
+        "winner": "THUNDER dOWNUNDER",
+        "bo": 1,
+        "start": "2026-06-02T11:45:00.000+00:00"
+      },
+      {
+        "match": 120596,
+        "round": 1,
+        "teams": [
+          "B8",
+          "TYLOO"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2026-06-02T12:00:00.000+00:00"
+      },
+      {
+        "match": 120598,
+        "round": 1,
+        "teams": [
+          "HEROIC",
+          "Sharks"
+        ],
+        "winner": "Sharks",
+        "bo": 1,
+        "start": "2026-06-02T12:50:00.000+00:00"
+      },
+      {
+        "match": 120597,
+        "round": 1,
+        "teams": [
+          "GamerLegion",
+          "NRG"
+        ],
+        "winner": "GamerLegion",
+        "bo": 1,
+        "start": "2026-06-02T13:10:00.000+00:00"
+      },
+      {
+        "match": 120595,
+        "round": 1,
+        "teams": [
+          "BetBoom",
+          "Gaimin Gladiators"
+        ],
+        "winner": "BetBoom",
+        "bo": 1,
+        "start": "2026-06-02T14:00:00.000+00:00"
+      },
+      {
+        "match": 120602,
+        "round": 1,
+        "teams": [
+          "BIG",
+          "Liquid"
+        ],
+        "winner": "Liquid",
+        "bo": 1,
+        "start": "2026-06-02T14:25:00.000+00:00"
+      },
+      {
+        "match": 121370,
+        "round": 2,
+        "teams": [
+          "HEROIC",
+          "Lynn Vision"
+        ],
+        "winner": "Lynn Vision",
+        "bo": 1,
+        "start": "2026-06-02T15:30:00.000+00:00"
+      },
+      {
+        "match": 121372,
+        "round": 2,
+        "teams": [
+          "B8",
+          "THUNDER dOWNUNDER"
+        ],
+        "winner": "B8",
+        "bo": 1,
+        "start": "2026-06-02T15:38:09.000+00:00"
+      },
+      {
+        "match": 121374,
+        "round": 2,
+        "teams": [
+          "SINNERS",
+          "NRG"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2026-06-02T16:45:00.000+00:00"
+      },
+      {
+        "match": 121371,
+        "round": 2,
+        "teams": [
+          "MIBR",
+          "TYLOO"
+        ],
+        "winner": "MIBR",
+        "bo": 1,
+        "start": "2026-06-02T16:49:08.000+00:00"
+      },
+      {
+        "match": 121373,
+        "round": 2,
+        "teams": [
+          "M80",
+          "Sharks"
+        ],
+        "winner": "M80",
+        "bo": 1,
+        "start": "2026-06-02T17:45:00.000+00:00"
+      },
+      {
+        "match": 121369,
+        "round": 2,
+        "teams": [
+          "GamerLegion",
+          "FlyQuest"
+        ],
+        "winner": "GamerLegion",
+        "bo": 1,
+        "start": "2026-06-02T18:10:00.000+00:00"
+      },
+      {
+        "match": 121375,
+        "round": 2,
+        "teams": [
+          "BIG",
+          "Gaimin Gladiators"
+        ],
+        "winner": "BIG",
+        "bo": 1,
+        "start": "2026-06-02T18:50:00.000+00:00"
+      },
+      {
+        "match": 121376,
+        "round": 2,
+        "teams": [
+          "BetBoom",
+          "Liquid"
+        ],
+        "winner": "BetBoom",
+        "bo": 1,
+        "start": "2026-06-02T19:30:00.000+00:00"
+      },
+      {
+        "match": 121377,
+        "round": 3,
+        "teams": [
+          "Sharks",
+          "Lynn Vision"
+        ],
+        "winner": "Lynn Vision",
+        "bo": 1,
+        "start": "2026-06-03T12:30:00.000+00:00"
+      },
+      {
+        "match": 121378,
+        "round": 3,
+        "teams": [
+          "NRG",
+          "FlyQuest"
+        ],
+        "winner": "NRG",
+        "bo": 1,
+        "start": "2026-06-03T12:30:00.000+00:00"
+      },
+      {
+        "match": 121379,
+        "round": 3,
+        "teams": [
+          "THUNDER dOWNUNDER",
+          "BIG"
+        ],
+        "winner": "BIG",
+        "bo": 1,
+        "start": "2026-06-03T13:30:00.000+00:00"
+      },
+      {
+        "match": 121380,
+        "round": 3,
+        "teams": [
+          "Liquid",
+          "MIBR"
+        ],
+        "winner": "MIBR",
+        "bo": 1,
+        "start": "2026-06-03T13:40:00.000+00:00"
+      },
+      {
+        "match": 121381,
+        "round": 3,
+        "teams": [
+          "TYLOO",
+          "SINNERS"
+        ],
+        "winner": "TYLOO",
+        "bo": 3,
+        "start": "2026-06-03T14:40:00.000+00:00"
+      },
+      {
+        "match": 121382,
+        "round": 3,
+        "teams": [
+          "GamerLegion",
+          "BetBoom"
+        ],
+        "winner": "BetBoom",
+        "bo": 3,
+        "start": "2026-06-03T14:50:00.000+00:00"
+      },
+      {
+        "match": 121432,
+        "round": 3,
+        "teams": [
+          "M80",
+          "B8"
+        ],
+        "winner": "B8",
+        "bo": 3,
+        "start": "2026-06-03T17:00:00.000+00:00"
+      },
+      {
+        "match": 121431,
+        "round": 3,
+        "teams": [
+          "Gaimin Gladiators",
+          "HEROIC"
+        ],
+        "winner": "HEROIC",
+        "bo": 3,
+        "start": "2026-06-03T17:00:00.000+00:00"
+      },
+      {
+        "match": 121434,
+        "round": 4,
+        "teams": [
+          "TYLOO",
+          "Sharks"
+        ],
+        "winner": "TYLOO",
+        "bo": 3,
+        "start": "2026-06-04T12:00:00.000+00:00"
+      },
+      {
+        "match": 121433,
+        "round": 4,
+        "teams": [
+          "THUNDER dOWNUNDER",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 3,
+        "start": "2026-06-04T12:00:00.000+00:00"
+      },
+      {
+        "match": 121436,
+        "round": 4,
+        "teams": [
+          "GamerLegion",
+          "BIG"
+        ],
+        "winner": "GamerLegion",
+        "bo": 3,
+        "start": "2026-06-04T14:30:00.000+00:00"
+      },
+      {
+        "match": 121435,
+        "round": 4,
+        "teams": [
+          "MIBR",
+          "Lynn Vision"
+        ],
+        "winner": "MIBR",
+        "bo": 3,
+        "start": "2026-06-04T15:00:00.000+00:00"
+      },
+      {
+        "match": 121438,
+        "round": 4,
+        "teams": [
+          "M80",
+          "NRG"
+        ],
+        "winner": "M80",
+        "bo": 3,
+        "start": "2026-06-04T17:00:00.000+00:00"
+      },
+      {
+        "match": 121437,
+        "round": 4,
+        "teams": [
+          "Liquid",
+          "HEROIC"
+        ],
+        "winner": "Liquid",
+        "bo": 3,
+        "start": "2026-06-04T17:05:00.000+00:00"
+      },
+      {
+        "match": 121439,
+        "round": 5,
+        "teams": [
+          "TYLOO",
+          "Lynn Vision"
+        ],
+        "winner": "TYLOO",
+        "bo": 3,
+        "start": "2026-06-05T12:00:00.000+00:00"
+      },
+      {
+        "match": 121440,
+        "round": 5,
+        "teams": [
+          "Liquid",
+          "FlyQuest"
+        ],
+        "winner": "FlyQuest",
+        "bo": 3,
+        "start": "2026-06-05T14:30:00.000+00:00"
+      },
+      {
+        "match": 121441,
+        "round": 5,
+        "teams": [
+          "NRG",
+          "BIG"
+        ],
+        "winner": "BIG",
+        "bo": 3,
+        "start": "2026-06-05T17:05:45.000+00:00"
+      }
+    ],
+    "price_source": {
+      "url": "https://api.elections.kalshi.com/trade-api/v2/historical/markets",
+      "cutoff": "2026-06-02T10:00:00Z",
+      "interval_minutes": 60
+    },
+    "openers": [
+      {
+        "teams": [
+          "GamerLegion",
+          "NRG"
+        ],
+        "ticker": "KXCS2GAME-26JUN020830NRGGL-GL",
+        "bid": 0.67,
+        "ask": 0.68,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.675
+      },
+      {
+        "teams": [
+          "B8",
+          "TYLOO"
+        ],
+        "ticker": "KXCS2GAME-26JUN020730TYLOOB8-B8",
+        "bid": 0.56,
+        "ask": 0.57,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.565
+      },
+      {
+        "teams": [
+          "HEROIC",
+          "Sharks"
+        ],
+        "ticker": "KXCS2GAME-26JUN020830SHKHERO-HERO",
+        "bid": 0.62,
+        "ask": 0.63,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.625
+      },
+      {
+        "teams": [
+          "BetBoom",
+          "Gaimin Gladiators"
+        ],
+        "ticker": "KXCS2GAME-26JUN020930GGBB-BB",
+        "bid": 0.73,
+        "ask": 0.74,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.735
+      },
+      {
+        "teams": [
+          "BIG",
+          "Liquid"
+        ],
+        "ticker": "KXCS2GAME-26JUN020930TLBIG-BIG",
+        "bid": 0.53,
+        "ask": 0.54,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.535
+      },
+      {
+        "teams": [
+          "M80",
+          "Lynn Vision"
+        ],
+        "ticker": "KXCS2GAME-26JUN020630LVGM80-M80",
+        "bid": 0.57,
+        "ask": 0.58,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.575
+      },
+      {
+        "teams": [
+          "MIBR",
+          "THUNDER dOWNUNDER"
+        ],
+        "ticker": "KXCS2GAME-26JUN020730THUMIBR-MIBR",
+        "bid": 0.78,
+        "ask": 0.79,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.785
+      },
+      {
+        "teams": [
+          "SINNERS",
+          "FlyQuest"
+        ],
+        "ticker": "KXCS2GAME-26JUN020630FLYSIN-SIN",
+        "bid": 0.56,
+        "ask": 0.58,
+        "observed": "2026-06-02T10:00:00+00:00",
+        "p": 0.5700000000000001
+      }
+    ]
+  }
+}

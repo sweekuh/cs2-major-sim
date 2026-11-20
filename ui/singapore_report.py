@@ -23,13 +23,27 @@ def render(forecast, fixture):
         openers.append(f'<li><a href="{url}">{a} vs {b}</a> · {(q["bid"] + q["ask"])/2:.1%} {a}</li>')
     sensitivity = forecast["sensitivity"]
     assess = forecast["evaluation"]
-    swap = forecast["advance_swap"]
+    swap = forecast["closest_swap"]
+    model = forecast["model"]
+    model_detail = {
+        "Opener only": "Later matches use the November 19 Valve ratings.",
+        "Half carry": "Later matches retain half the opening price adjustment in log-odds.",
+        "Full carry": "Each opening pair retains its average Valve rating. Its full market-implied strength difference carries into later matches.",
+        "Recent maps": "Later matches use opponent-adjusted map results from the preceding 60 days.",
+    }[model]
+    line = forecast["line_tests"][0]
+    scenario = (f'At a hypothetical {line["tested"]:.1%} for {escape(line["team"])} to beat '
+                f'{escape(line["opponent"])} (observed {line["current"]:.1%}),')
+    edge = -100 * line["card_minus_alternative"]
     timestamp = datetime.fromisoformat(forecast["quotes_observed_at"]).astimezone(timezone.utc)
     return template.substitute(
         card=card, team_rows="".join(team_rows), openers="".join(openers),
         chance=f'{assess["p_ge5"]:.1%}', expected=f'{assess["expected_correct"]:.2f}',
         select_n=f'{forecast["n_select"]:,}', eval_n=f'{assess["n"]:,}',
         lo=f'{assess["ci95_sampling"][0]:.1%}', hi=f'{assess["ci95_sampling"][1]:.1%}',
+        line_test=f'{scenario} the swap changes the pass rate by {edge:+.2f} percentage points with the other seven prices fixed.',
+        model_detail=model_detail, bucket=escape(swap["bucket"]), delta=f'{100 * swap["card_minus_alternative"]:+.2f}',
+        delta_lo=f'{100 * swap["ci95_delta"][0]:+.2f}', delta_hi=f'{100 * swap["ci95_delta"][1]:+.2f}',
         reserve=escape(swap["in"]), replaced=escape(swap["out"]), alternate=f'{swap["p_ge5"]:.1%}',
         scenarios="".join(f'<li>{escape(label)} · {s["p_ge5"]:.1%} over {s["n"]:,} runs</li>'
                           for label, s in sensitivity.items()),

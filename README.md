@@ -22,39 +22,31 @@ in the sidebar to open the historical Swiss and playoff simulator.
 | 3–1 or 3–2 | HEROIC, Liquid, NIP, FaZe, Eternal Fire, DENDELE |
 | 0–3 | Chinggis Warriors, Lynn Vision |
 
-The optimizer searched 100,000 tournaments for a card that scores five or more.
-That card passed in **43,024 of 100,000 independent evaluation tournaments** and averaged
-**4.25/10**. M80 for DENDELE scored **43.1%** on the same sample. Three alternate
-strength assumptions put the original card at **40.7–43.3%** over 25,000 tournaments each.
+The card passed in **88,253 of 200,000** fresh simulated tournaments (**44.13%**) after
+selection on a separate 100,000. It averaged 4.28 correct. Replacing DENDELE with M80
+passed in 43.70% of the same tournaments. Keep DENDELE at the frozen prices. If M80’s
+win probability against NIP rises from 42.5% to 47.5% with other prices steady, M80 wins
+the comparison by 0.84 percentage points. Both prices use two-sided bid/ask midpoints.
 
-Seeds use the November 2 invitation standings. Later-round strength uses November 19 VRS
-points and carries forward half of each opener’s market adjustment in log-odds. Round 1
-uses the eight Polymarket moneyline bid/ask midpoints observed November 19 at 6:06 p.m.
-Pacific. The spread of 600 VRS points per tenfold change in map win odds and the half-weight
-are modeling assumptions. Match format, Buchholz pairings, and 3–1/3–2 scoring use the
-existing Swiss engine. [PGL bracket](https://www.pglesports.com/cs2/pgl-major-singapore-2026/) ·
-[Valve invitation seeds](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md) ·
-[November 19 strength inputs](https://www.hltv.org/valve-ranking/teams/2026/november/19)
+The simulator reproduced all 99 pairings from Austin, Budapest and Cologne Stage 1.
+The later-round forecast uses the full strength difference implied by each Singapore
+opener while preserving the two teams’ average November 19 Valve rating. A time-ordered
+comparison against those three Majors favored this adjustment. The 95% interval from
+Monte Carlo sampling alone is 43.91–44.34%. Forecast uncertainty across strength models
+is considerably larger. [Historical scores, sources and limitations](data/singapore2026/evidence/README.md)
 
-Two cross-checks informed this first card. All eight opener midpoints were within 2.8
-percentage points of the November 17 bookmaker prices after removing the two-way margin.
-On the repo’s 33-match Cologne Stage 1 replay, the same 600-point VRS spread gave
-0.615 match log loss (lower is better), versus 0.639 at 400, 0.615 at 700 and 0.693
-for a coin flip. That replay checks the ratings prior only. [Published opener prices](https://wild.io/blog/guides/pgl-singapore-major-2026) ·
-[Valve’s pre-Cologne standings](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/live/2026/standings_global_2026_06_01.md)
-
-To reproduce the card, per-team probabilities, holdout score and sensitivity runs:
+Reproduce the historical checks, forecast and standalone card offline with the frozen inputs.
 
 ```bash
-uv run python -m scripts.singapore_stage1
+uv run --frozen python -m scripts.validate_singapore
+uv run --frozen python -m scripts.singapore_stage1
 ```
 
-The [frozen inputs](data/singapore2026/stage1.json) contain each quoted side, timestamp and
-Polymarket event slug. The runner writes the [forecast](data/singapore2026/forecast.json)
-and standalone card. Use `--output path/to/trial.json` for a separate experiment.
-Before lock, tick **Refresh Round 1 prices from Polymarket** and re-run, or add
-`--refresh-openers` to the CLI command. The CLI saves that run and its quote snapshot
-to `data/_singapore_stage1_latest.json`. A price refresh keeps the November 19 strength ratings.
+The [frozen inputs](data/singapore2026/stage1.json) record the eight opener quotes captured
+November 19 at 9:08 p.m. Pacific. The [forecast](data/singapore2026/forecast.json) includes
+all team probabilities, the paired swap and the price scenarios. Before lock, tick
+**Refresh Round 1 prices from Polymarket** and re-run, or add `--refresh-openers` to the
+forecast command. The CLI saves a refreshed snapshot in `data/_singapore_stage1_latest.json`.
 
 ## Cologne 2026 archive
 
