@@ -33,6 +33,12 @@ What still holds: the headline depends on the spread. Under full carry the publi
 Run these three from the repo root with `uv run python analysis/pr18_review/<file>`; `joint_spread_carry.py`
 takes `analysis/pr18_review/dl/cologne_market.json` as its argument.
 
+## Kalshi entry rule (commit f76e48b)
+
+`kalshi_rule_backtest.py` applies the entry rule in `analysis/singapore_kalshi/` to the 98 Cologne 2026
+Swiss matches, with Polymarket closing prices (`cologne_joined.json`) standing in for an executable price.
+Run from the repo root: `uv run python analysis/pr18_review/kalshi_rule_backtest.py analysis/pr18_review/cologne_joined.json`.
+
 ## Reproduce
 
 ```bash
