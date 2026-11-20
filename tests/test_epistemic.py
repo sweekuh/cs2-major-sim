@@ -223,7 +223,7 @@ def test_rating_only_noop_unchanged():
     The rating-only path must be byte-identical to today's single-point no-op draw, proving
     the epistemic fill + market_blend seam are additive and GATE-01 stays green. We compare:
       (1) the default-arg run (no market_blend) to an explicit market_blend=None run, and
-      (2) an all-zero-var market_blend (which must also collapse to the exact no-op draw).
+      (2) a deterministic market quote, which must price the match in a single draw.
     """
     teams = load_teams()
     N = 5000
@@ -236,9 +236,10 @@ def test_rating_only_noop_unchanged():
     assert base.counts_03 == explicit_none.counts_03
     assert base.band_advance == explicit_none.band_advance
 
-    # An all-zero-var market_blend must ALSO be the exact no-op (var<=0 -> single draw).
-    zero_var = {"1-9": (0.5, 0.0)}
+    # If seed 1 always loses the opener it can never sweep, nor can seed 9 go 0-3.
+    zero_var = {"1-9": (0.0, 0.0)}
     zv = run_mc(teams, None, 40.0, N, {}, seed=2024, n_chunks=20, market_blend=zero_var)
-    assert zv.counts_advance == base.counts_advance, (
-        "all-zero-var market_blend must collapse to the exact rating-only no-op draw"
-    )
+    assert base.counts_30[1] > 0 and base.counts_03[9] > 0
+    assert zv.counts_30[1] == zv.counts_03[9] == 0
+    assert zv.n == N
+    assert zv.band_advance == zv.band_advance_sampling

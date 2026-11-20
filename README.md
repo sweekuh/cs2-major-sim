@@ -1,14 +1,8 @@
-# swiss-mc — IEM Cologne 2026 Swiss Monte Carlo & Pick'Em Optimizer
+# swiss-mc — CS2 Major Pick’Em simulator
 
-Monte-Carlo simulates the IEM Cologne Major 2026 CS2 Swiss stage and gives you honest per-team
-odds, market-anchored ratings, and the math-optimal Pick'Em ballot. The point isn't a pretty
-dashboard, it's a **correct** one: every probability is validated against the Valve rulebook and
-a real past-Major backtest, and the uncertainty is shown, not hidden.
-
-No scraping. APIs only. Single local user. Python + numpy + Streamlit.
-
-![Recommended Pick'Em ballot](docs/assets/ballot.png)
-![Per-team probabilities with two-tone CI bands](docs/assets/table.png)
+The app opens on the **PGL Singapore 2026 Stage 1** forecast. The first match starts
+**Monday, November 23 at 8:00 p.m. Pacific** (November 24 at noon in Singapore).
+The [standalone card](public/index.html) opens directly in a browser.
 
 ## Quickstart
 
@@ -16,12 +10,56 @@ No scraping. APIs only. Single local user. Python + numpy + Streamlit.
 uv run streamlit run app.py
 ```
 
-`uv` auto-creates the env and installs everything from `pyproject.toml` (~45s cold), same command
-on Windows, Mac, and Linux. No `uv`? `pip install streamlit numpy && streamlit run app.py`.
+`uv` installs the dependencies. No API key is needed. The saved card appears immediately.
+Use **Re-run Stage 1** to try a different random seed or sample size. Select **Cologne 2026**
+in the sidebar to open the historical Swiss and playoff simulator.
 
-**The first sim needs no API key and no editing.** Click **Run ▶** with the shipped defaults and
-watch ~100k Swiss tournaments resolve in ~15 seconds (rating-only). Add odds (below) to make it
-market-driven.
+## Singapore Stage 1
+
+| Pick’Em slot | November 19 card |
+|---|---|
+| 3–0 | 100 Thieves, PVISION |
+| 3–1 or 3–2 | HEROIC, Liquid, NIP, FaZe, Eternal Fire, DENDELE |
+| 0–3 | Chinggis Warriors, Lynn Vision |
+
+The optimizer searched 100,000 tournaments for a card that scores five or more.
+That card passed in **43,024 of 100,000 independent evaluation tournaments** and averaged
+**4.25/10**. M80 for DENDELE scored **43.1%** on the same sample. Three alternate
+strength assumptions put the original card at **40.7–43.3%** over 25,000 tournaments each.
+
+Seeds use the November 2 invitation standings. Later-round strength uses November 19 VRS
+points and carries forward half of each opener’s market adjustment in log-odds. Round 1
+uses the eight Polymarket moneyline bid/ask midpoints observed November 19 at 6:06 p.m.
+Pacific. The spread of 600 VRS points per tenfold change in map win odds and the half-weight
+are modeling assumptions. Match format, Buchholz pairings, and 3–1/3–2 scoring use the
+existing Swiss engine. [PGL bracket](https://www.pglesports.com/cs2/pgl-major-singapore-2026/) ·
+[Valve invitation seeds](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md) ·
+[November 19 strength inputs](https://www.hltv.org/valve-ranking/teams/2026/november/19)
+
+Two cross-checks informed this first card. All eight opener midpoints were within 2.8
+percentage points of the November 17 bookmaker prices after removing the two-way margin.
+On the repo’s 33-match Cologne Stage 1 replay, the same 600-point VRS spread gave
+0.615 match log loss (lower is better), versus 0.639 at 400, 0.615 at 700 and 0.693
+for a coin flip. That replay checks the ratings prior only. [Published opener prices](https://wild.io/blog/guides/pgl-singapore-major-2026) ·
+[Valve’s pre-Cologne standings](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/live/2026/standings_global_2026_06_01.md)
+
+To reproduce the card, per-team probabilities, holdout score and sensitivity runs:
+
+```bash
+uv run python -m scripts.singapore_stage1
+```
+
+The [frozen inputs](data/singapore2026/stage1.json) contain each quoted side, timestamp and
+Polymarket event slug. The runner writes the [forecast](data/singapore2026/forecast.json)
+and standalone card. Use `--output path/to/trial.json` for a separate experiment.
+Before lock, tick **Refresh Round 1 prices from Polymarket** and re-run, or add
+`--refresh-openers` to the CLI command. The CLI saves that run and its quote snapshot
+to `data/_singapore_stage1_latest.json`. A price refresh keeps the November 19 strength ratings.
+
+## Cologne 2026 archive
+
+The sections below describe the Cologne simulator, its historical predictions and its live
+odds/results tools. Singapore reads its own event inputs.
 
 ## What the numbers mean
 
@@ -249,9 +287,9 @@ CHANGELOG.md        release history (v1.0 → v4.0), per the git tags
 Python ≥3.12 · numpy 2.4 · Streamlit 1.57 · httpx (odds only) · python-dotenv · `uv`. No pandas,
 no scipy. Planned and built with a phased, test-gated workflow (see `ROADMAP.md` / `STATUS.md`).
 
-## Event-day cold-start drill (30 seconds)
+## Event-day cold-start drill
 
 1. `git pull` — latest engine + rating tweaks.
-2. **Fetch odds now** (if markets are posted) to price the sim from live markets.
-3. Confirm the seeds against the reconcile table; flip **"seeds confirmed."**
-4. Click **Run ▶**. First sim needs no API key.
+2. Start Streamlit and select the Major in the sidebar.
+3. For Singapore, open the Stage 1 card and check the quote timestamp before entering picks.
+4. For Cologne, use **Fetch odds now**, reconcile the seeds and click **Run ▶**.

@@ -43,8 +43,7 @@ from engine.teams import ADVANCE_AT_WINS, ELIMINATE_AT_LOSSES, Team
 DEFAULT_N = 100_000
 DEFAULT_N_CHUNKS = 20
 # Number of epistemic OUTER draws when real cross-source variance is present (PROB-03/04).
-# Small (like DEFAULT_N_CHUNKS) — total sims = K * N. The rating-only / zero-var path uses
-# exactly ONE draw so its counts stay byte-identical to the pre-Phase-5 hot path.
+# Total sims = K * N. Zero variance uses one draw at the quoted prices.
 DEFAULT_EPISTEMIC_DRAWS = 12
 
 
@@ -214,7 +213,7 @@ def run_mc_progressive(
 
     # OUTER epistemic loop (PROB-03/04/05). Build the (blend, var) the draws perturb from
     # the market disagreement (D6: draw at the blended-MATCH level). var all-zero -> the
-    # no-op guard yields exactly ONE draw -> byte-identical rating-only counts.
+    # no-op guard yields one unperturbed draw, including any supplied match prices.
     blend, var, match_keys = _epistemic_inputs(teams, market_blend)
     has_epistemic = any(v > 0.0 for v in var)
     k = k_epistemic if has_epistemic else 1
@@ -232,13 +231,10 @@ def run_mc_progressive(
     for p_vec in epistemic_draws(blend, var, k=k, rng=beta_rng):
         # Translate this draw's p-vector into the per-match market_overrides dict
         # (id-bucket keyed, p = P(lower-id wins)); None keys (no market_blend) -> no override.
-        overrides = None
-        if has_epistemic:
-            overrides = {
-                key: float(p_vec[i])
-                for i, key in enumerate(match_keys)
-                if key is not None
-            }
+        # A single book still prices the match. Zero variance only disables perturbation.
+        overrides = {
+            key: float(p_vec[i]) for i, key in enumerate(match_keys) if key is not None
+        } or None
 
         # Per-DRAW counts (accumulate the global counts across draws for the live tally).
         d_30 = {i: 0 for i in ids}
@@ -276,7 +272,7 @@ def run_mc_progressive(
                         d_03[tid] += 1
                 sample.append(rec)
                 done += 1
-            total_done = sum(sum(d.values()) for d in per_draw_adv) + done
+            total_done = draw_idx * N + done
             running_p_adv = {i: counts_advance[i] / max(1, total_done) for i in ids}
             yield Partial(done=total_done, total=N * k, running_p_adv=running_p_adv)
 
@@ -361,7 +357,7 @@ def run_mc(
 
     ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
     ``dict["lo-hi" -> (p, var)]`` of the imminent round's market-priced matchups; var>0
-    drives the K-Beta epistemic outer loop, var all-zero / None is the exact no-op (GATE-01).
+    drives the K-Beta epistemic outer loop. Zero variance uses one draw at the supplied prices.
 
     ``all_bo3`` (the Stage-3 seam — default False = unchanged; BO-01): forwarded to
     ``run_mc_progressive`` so True runs the stage all-Bo3; False is byte-identical (GATE-01).

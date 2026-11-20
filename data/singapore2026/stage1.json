@@ -1,0 +1,183 @@
+{
+  "stage": {
+    "size": 16,
+    "all_bo3": false
+  },
+  "seeds_confirmed": true,
+  "event": "PGL Major Singapore 2026",
+  "stage_number": 1,
+  "starts_at": "2026-11-24T04:00:00Z",
+  "standings_date": "2026-11-19",
+  "rating_unit": "10 Valve ranking points",
+  "sources": {
+    "bracket": "https://www.pglesports.com/cs2/pgl-major-singapore-2026/",
+    "invitation": "https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md",
+    "strengths": "https://www.hltv.org/valve-ranking/teams/2026/november/19",
+    "rules": "https://github.com/ValveSoftware/counter-strike_rules_and_regs/blob/main/major-supplemental-rulebook.md"
+  },
+  "teams": [
+    {
+      "seed": 1,
+      "name": "NIP",
+      "rating": 147.0
+    },
+    {
+      "seed": 2,
+      "name": "PVISION",
+      "rating": 157.4
+    },
+    {
+      "seed": 3,
+      "name": "HEROIC",
+      "rating": 149.6
+    },
+    {
+      "seed": 4,
+      "name": "FaZe",
+      "rating": 144.7
+    },
+    {
+      "seed": 5,
+      "name": "Liquid",
+      "rating": 152.6
+    },
+    {
+      "seed": 6,
+      "name": "Eternal Fire",
+      "rating": 143.6
+    },
+    {
+      "seed": 7,
+      "name": "100 Thieves",
+      "rating": 151.4
+    },
+    {
+      "seed": 8,
+      "name": "9z",
+      "rating": 137.8
+    },
+    {
+      "seed": 9,
+      "name": "M80",
+      "rating": 141.8
+    },
+    {
+      "seed": 10,
+      "name": "DENDELE",
+      "rating": 141.4
+    },
+    {
+      "seed": 11,
+      "name": "Imperial",
+      "rating": 135.3
+    },
+    {
+      "seed": 12,
+      "name": "Wildcard",
+      "rating": 132.7
+    },
+    {
+      "seed": 13,
+      "name": "GOSH",
+      "rating": 128.7
+    },
+    {
+      "seed": 14,
+      "name": "FlyQuest",
+      "rating": 129.5
+    },
+    {
+      "seed": 15,
+      "name": "Chinggis Warriors",
+      "rating": 122.3
+    },
+    {
+      "seed": 16,
+      "name": "Lynn Vision",
+      "rating": 120.1
+    }
+  ],
+  "quotes_observed_at": "2026-11-20T02:06:49+00:00",
+  "openers": [
+    {
+      "teams": [
+        "NIP",
+        "M80"
+      ],
+      "bid": 0.56,
+      "ask": 0.57,
+      "slug": "cs2-nip-m80-2026-11-24",
+      "updated_at": "2026-11-20T02:05:02.626803Z"
+    },
+    {
+      "teams": [
+        "PVISION",
+        "DENDELE"
+      ],
+      "bid": 0.63,
+      "ask": 0.64,
+      "slug": "cs2-pv-dendel-2026-11-24",
+      "updated_at": "2026-11-20T02:01:02.475738Z"
+    },
+    {
+      "teams": [
+        "HEROIC",
+        "Imperial"
+      ],
+      "bid": 0.66,
+      "ask": 0.67,
+      "slug": "cs2-hero-imp11-2026-11-24",
+      "updated_at": "2026-11-20T02:05:02.626803Z"
+    },
+    {
+      "teams": [
+        "FaZe",
+        "Wildcard"
+      ],
+      "bid": 0.65,
+      "ask": 0.66,
+      "slug": "cs2-faze-wc1-2026-11-24",
+      "updated_at": "2026-11-20T02:01:02.475738Z"
+    },
+    {
+      "teams": [
+        "Liquid",
+        "GOSH"
+      ],
+      "bid": 0.55,
+      "ask": 0.56,
+      "slug": "cs2-tl1-gosh-2026-11-24",
+      "updated_at": "2026-11-20T01:43:02.061103Z"
+    },
+    {
+      "teams": [
+        "Eternal Fire",
+        "FlyQuest"
+      ],
+      "bid": 0.56,
+      "ask": 0.57,
+      "slug": "cs2-ef1-fly-2026-11-24",
+      "updated_at": "2026-11-20T01:55:01.975063Z"
+    },
+    {
+      "teams": [
+        "100 Thieves",
+        "Chinggis Warriors"
+      ],
+      "bid": 0.82,
+      "ask": 0.83,
+      "slug": "cs2-100t-cw-2026-11-24",
+      "updated_at": "2026-11-20T01:51:02.721237Z"
+    },
+    {
+      "teams": [
+        "9z",
+        "Lynn Vision"
+      ],
+      "bid": 0.61,
+      "ask": 0.63,
+      "slug": "cs2-9z-lvg-2026-11-24",
+      "updated_at": "2026-11-20T01:39:01.642208Z"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+<style>
+.sg-report{font:16px/1.5 "Segoe UI",system-ui,sans-serif;color:#e9f1f3;background:#10151a;padding:clamp(16px,4vw,44px);border-radius:8px}
+.sg-report *{box-sizing:border-box}.sg-report h1,.sg-report h2,.sg-report h3{color:#f4f6f4;line-height:1.15;letter-spacing:-.025em;margin:0}
+.sg-report h1{font-size:clamp(32px,5vw,54px);margin:6px 0 12px}.sg-report h2{font-size:23px;margin:32px 0 12px}
+.sg-report .sg-date,.sg-report small{color:#b4c2c7}.sg-report .sg-card{display:grid;grid-template-columns:1fr 1.8fr 1fr;gap:12px;margin:24px 0}
+.sg-report .sg-card section{border-top:3px solid #ecc57e;background:#1c252c;padding:18px 14px}
+.sg-report .sg-card section:nth-child(2){border-color:#80d4bf}.sg-report .sg-card section:nth-child(3){border-color:#b6a2c9}
+.sg-report .sg-card h3{font-size:20px}.sg-report .sg-card p{margin:8px 0 0;font-weight:600}
+.sg-report .sg-odds{font-size:26px;font-weight:650}.sg-report p{margin:8px 0 12px}.sg-report a{color:#9dded2}
+.sg-report .sg-scroll{overflow-x:auto}.sg-report table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.sg-report th,.sg-report td{padding:7px 9px;border-bottom:1px solid #324047;text-align:right;white-space:nowrap}
+.sg-report th:first-child{text-align:left}.sg-report thead th{color:#a8c6c0;font-size:14px}
+.sg-report details{margin:18px 0}.sg-report summary{cursor:pointer;color:#a9ded2;font-weight:600}
+.sg-report li{margin:3px 0}.sg-report ul{padding-left:22px}
+@media(max-width:650px){.sg-report .sg-card{grid-template-columns:1fr;gap:6px}.sg-report .sg-card section{padding:10px 12px}.sg-report th,.sg-report td{padding:6px 5px}}
+</style>
+<article class="sg-report">
+<div class="sg-date">PGL Major Singapore 2026 · 24–27 November</div>
+<h1>Stage 1 Pick’Em</h1>
+<p>Enter the card before the opening matches on Monday, Nov 23 at 8:00 p.m. Pacific (Tuesday, Nov 24 at noon in Singapore).</p>
+<div class="sg-card">$card</div>
+<p><span class="sg-odds">$chance</span> chance of five or more correct · $expected expected points out of ten.</p>
+<p>$select_n tournaments selected the card. Another $eval_n scored it. The 95% interval from simulation noise alone is $lo–$hi.</p>
+<p>Swapping $reserve in for $replaced in the advance slots scored $alternate on those same tournaments.</p>
+<h2>How each team can finish</h2>
+<p>The six middle slots score on a 3–1 or 3–2 finish. The qualification column includes the teams that go 3–0.</p>
+<div class="sg-scroll"><table><thead><tr><th scope="col">Team</th><th scope="col">3–0</th><th scope="col">3–1 or 3–2</th><th scope="col">0–3</th><th scope="col">Qualify</th></tr></thead>
+<tbody>$team_rows</tbody></table></div>
+<details><summary>Round 1 win probabilities and price sources</summary>
+<p>Polymarket bid/ask midpoints recorded $as_of. Each percentage is the first team’s chance to win its best-of-one opener.</p><ul>$openers</ul></details>
+<details><summary>Model assumptions and sensitivity</summary>
+<p>Seeds follow Valve’s November 2 invitation order. Team strength starts from HLTV’s November 19 Valve points. The model uses a 600-point spread for map win odds, then uses independent maps for best-of-three deciders. Opening matches use market prices directly. For later rounds, each pair keeps its average rating and carries forward half the difference between the market and ranking estimates in log-odds. Map vetoes and individual stand-in effects are implicit.</p>
+<p>These estimates score the same card under three alternate assumptions.</p><ul>$scenarios</ul>
+<p><a href="$bracket">PGL bracket and schedule</a> · <a href="$invitation">Valve invitation standings</a> · <a href="$strengths">November 19 ratings</a> · <a href="$rules">Valve Swiss rules</a></p></details>
+</article>
