@@ -1,0 +1,17 @@
+{
+  "unique_matches": 8,
+  "ever_taken": 0,
+  "never_taken": 8,
+  "finished_without_pregame": [],
+  "settled_match_days": 0,
+  "mean_pnl_per_entry_day_bootstrap95": null,
+  "settled_entries": 0,
+  "realized_net_usd": 0,
+  "n_scored": 0,
+  "brier": null,
+  "log_loss": null,
+  "calibration": [],
+  "clv_n": 0,
+  "avg_clv_net_c": null,
+  "entries": []
+}
