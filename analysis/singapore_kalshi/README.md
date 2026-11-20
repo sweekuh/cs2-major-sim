@@ -1,0 +1,36 @@
+# PGL Singapore Major · Kalshi paper ledger
+
+**November 20, 08:23 UTC. Pass on all eight Singapore openers.** Across the three CS2 match-winner series, Kalshi listed 112 open team contracts and none covered these matches. Each row gives the highest whole-cent price the paper model would accept for either team. Executable prices and trade EV remain unavailable until a qualifying book appears. [Eight-match decision sheet](published/decisions.md) · [Performance](published/performance.json) · [Timestamped scan](published/scan.json.gz)
+
+The first observation at 06:00 UTC recorded 110 open contracts and the same eight passes. The ledger records a paper entry only when a later scan observes sufficient liquidity at a qualifying price. [First scan](opening-snapshot.json.gz)
+
+## Independent probability
+
+The main inputs are HLTV’s dated November 19 reconstruction of Valve points for all 32 Singapore teams, the announced opponents, and series length. The November 2 official Valve snapshot provides a second rating scenario. All 16 Stage 1 values in the repo agree with the dated November 19 table. PGL’s registered fives were frozen, including history in place of meyern for 9z. These are organization-level ratings. They have no explicit veto or per-player adjustment. The monitor flags a changed PGL roster publication for review. BO3 and BO5 use the repo’s independent-map series formula. The final is a BO5 extrapolation from Swiss-stage data. [November 19 ranking](https://www.hltv.org/valve-ranking/teams/2026/november/19) · [Valve November 2 file](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/live/2026/standings_global_2026_11_02.md) · [PGL roster sheet](https://news.pglesports.com/api/articles/1794219566606) · [PGL schedule and format](https://www.pglesports.com/cs2/pgl-major-singapore-2026/)
+
+The logistic spread is the raw Valve-point difference associated with tenfold map-win odds. Fit it by minimum match log loss using series format. Austin trained the Budapest forecast, and Austin plus Budapest trained the Cologne forecast. Each holdout contains 99 actual series. The point forecast for Singapore refits all 297 and uses 1,410. Across 5,000 resamples of the nine whole stages, the central 90% of fitted spreads is 980–2,040. Only three Majors contributed stages. [Historical rows and reconstruction](https://github.com/sweekuh/cs2-major-sim/blob/9aba3c0551b2538185ac14f3e20c7680dc63cc40/analysis/pr18_review/fit.py)
+
+| Later event | Spread fitted on earlier events | Walk-forward log loss / Brier | Repo spread 600 | Constant 50% |
+|---|---:|---:|---:|---:|
+| Budapest 2025 | 2,270 | .6542 / .2310 | .6791 / .2410 | .6931 / .2500 |
+| Cologne 2026 | 1,660 | .6426 / .2257 | .6513 / .2299 | .6931 / .2500 |
+
+For a conservative range, evaluate both rating dates at both bootstrap endpoints. Widen the log-odds extremes by 0.564. This is the historical 80th percentile of the absolute difference between the independent walk-forward forecast and a pre-match price on the 16 Budapest/Cologne openers. The range is a stress test. Its coverage as an interval for true win probability is unknown. No Singapore exchange price enters the model. Scores above test winner probabilities, not historical fills or profitability.
+
+## Paper entry and grading
+
+- Scan all pages of the three match-winner series, match the contract terms, named YES team, both opponents and scheduled kickoff against the tournament fixture. Use both YES and NO routes on both team tickers when available. Each 10-contract order walks a single book. Snapshot all eligible books before play and retain them in the ledger. Scheduled time uses US Eastern standard time for this November–December event. [Kalshi series](https://api.elections.kalshi.com/trade-api/v2/series/KXCS2GAME) · [Order book format](https://docs.kalshi.com/getting_started/orderbook_responses)
+- Use the applicable series fee multiplier and the quadratic taker fee at each filled level. Conservatively round the total debit up to the cent for a non-direct member. A whole-cent watch ceiling is the highest hypothetical flat fill price at which the lower stressed probability still beats total cost. Actual fills use the displayed tick precision. A positive call requires ten contracts on both sides and at most a five-cent spread between the two depth-weighted prices. The five-cent threshold and paper size are research assumptions. The recorded fill represents displayed liquidity at one instant. [Fee schedule](https://kalshi.com/fee-schedule) · [Rounding mechanics](https://docs.kalshi.com/getting_started/fee_rounding)
+- Every scan, including a pass, is stored with its time and raw market evidence. At most one entry per fixture is frozen. Pending, late, unavailable or unmatched markets cannot generate an entry. Timing is sampled on a 15-minute cadence while the desktop automation can run. Gaps can miss short-lived prices.
+- Use the last observed liquid midpoint on the identical contract and side in the last 30 minutes before scheduled play. Closing-price advantage is that midpoint minus the fee-inclusive entry cost. Report coverage when this benchmark is missing. Grade P&L against Kalshi’s published settlement value, including fractional settlements if any. Score the first frozen forecast for each completed, played fixture against the recorded winner. Track missing pre-match observations, total screened and taken, Brier, log loss, calibration bins, and realized net P&L. From five settled match days onward, show an exploratory match-day bootstrap interval on mean net profit per 10-contract entry.
+- The upcoming match feed covers Stage 1 (6269), Stage 2 (6268), and Stage 3 plus playoffs (4226). PGL controls the official bracket. A confirmed reschedule, lineup change or unexpected settlement rule calls for a prospective review. Previously published rows and entries stay frozen. [Bo3 match source](https://api.bo3.gg/api/v1/matches?filter%5Bmatches.tournament_id%5D%5Beq%5D=6269) · [Kalshi match terms](https://assets.kalshi.com/contract_terms/ESPORTSWIN.pdf)
+
+## Run
+
+From the project root, run `uv run --frozen python -m analysis.singapore_kalshi.paper`. Repeated runs add dated observations to `paper.sqlite3` and regenerate the local files `latest.md` and `performance.json`. The files in `published/` preserve the observation cited in the pull request. The script only reads public endpoints. It neither accesses a trading account nor submits orders. Run `uv run --frozen python -m pytest -q tests/test_singapore_kalshi.py` to exercise pricing, match identity, deduplication, closing marks and settlement.
+
+## Review backtest
+
+`review/kalshi_rule_backtest.py` applies the entry rule to the 98 Cologne 2026 Swiss matches, with Polymarket closing prices (`review/cologne_joined.json`) standing in for an executable price. On that sample the published rule opened 3 entries in 196 sides, all on market underdogs near 18 cents. Buying whenever the unstressed model beat cost by two cents lost 17 cents per contract (± 5) over 60 entries, and the model added no information once the market price was known. Run it from the project root:
+
+`uv run --frozen python analysis/singapore_kalshi/review/kalshi_rule_backtest.py analysis/singapore_kalshi/review/cologne_joined.json`
