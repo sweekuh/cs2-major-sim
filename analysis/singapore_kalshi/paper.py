@@ -124,11 +124,11 @@ def scheduled_time(m):
     return None
 
 
-def belongs(m, g):
+def belongs(m, g, *, canonicalize=name):
     teams = g["teams"]
-    yes = name(m.get("yes_sub_title") or "")
+    yes = canonicalize(m.get("yes_sub_title") or "")
     subject = re.match(r"If (.+?) wins the ", m["rules_primary"], re.IGNORECASE)
-    if yes not in teams or not subject or name(subject[1]) != yes:
+    if yes not in teams or not subject or canonicalize(subject[1]) != yes:
         return False
     time = scheduled_time(m)
     if time is None or abs(time - datetime.fromisoformat(g["start"])) > timedelta(minutes=90):
@@ -137,7 +137,7 @@ def belongs(m, g):
     match = re.search(r":\s*(.+?)\s+vs\.?\s+(.+?)\s+CS2 match", m["rules_primary"], re.IGNORECASE)
     if not match:
         return False
-    return {name(match[1]), name(match[2])} == set(teams)
+    return {canonicalize(match[1]), canonicalize(match[2])} == set(teams)
 
 
 def inspect_book(m, series_info, data, fair, teams):

@@ -7,7 +7,8 @@ Run from the project root:
 Each event is appended to ``state/events.jsonl`` and passed to the hooks:
 
 - ``--price-on``: run the live pricer (``analysis.singapore_live.price``) for these event types.
-- ``--post URL``: POST each event as JSON to an outbound webhook (off unless a URL is given).
+- ``--post URL``: POST lifecycle events as JSON. Failed deliveries stay queued for that URL.
+  Receivers can deduplicate retries using the Idempotency-Key header.
 - ``--wake-on``: exit after a poll that produced one of these event types, so the
   supervising agent (or a shell loop) can react and restart the watcher.
 
@@ -20,6 +21,7 @@ stopped still produce events when it restarts. Exit codes: 0 woke on an event, 2
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -36,7 +38,7 @@ STATE = HERE / "state"
 ROOT = HERE.parents[1]
 EVENT_TYPES = (
     "fixture_set", "fixture_changed", "maps_set", "match_start",
-    "round_update", "map_end", "match_finish",
+    "round_update", "map_end", "match_finish", "result_corrected",
 )
 
 
@@ -94,24 +96,26 @@ def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, 
                            "rounds": [ra, rb], "map_winner": winner})
         if p.status != "end" and c.status == "end":
             events.append({**base, "type": "match_finish", "winner": c.winner})
+        elif p.status == c.status == "end" and p.winner != c.winner:
+            events.append({**base, "type": "result_corrected", "previous_winner": p.winner,
+                           "previous_score": list(p.score), "winner": c.winner})
     order = {t: i for i, t in enumerate(EVENT_TYPES)}
     return sorted(events, key=lambda e: order[e["type"]])
 
 
-def load_state() -> dict[str, feed.Fixture] | None:
+def load_checkpoint() -> dict:
     path = STATE / "feed.json"
     if not path.exists():
-        return None
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    return {k: feed.from_dict(v) for k, v in raw["fixtures"].items()}
+        return {"pending_posts": {}}
+    checkpoint = json.loads(path.read_text(encoding="utf-8"))
+    checkpoint.setdefault("pending_posts", {})  # migrate pre-outbox checkpoints
+    return checkpoint
 
 
-def save_state(fixtures: dict[str, feed.Fixture], updated: dict, at: str) -> None:
+def save_checkpoint(checkpoint: dict) -> None:
     STATE.mkdir(exist_ok=True)
     tmp = STATE / "feed.json.tmp"
-    tmp.write_text(json.dumps({"at": at, "updated": updated,
-                               "fixtures": {k: f.asdict() for k, f in fixtures.items()}}, indent=1),
-                   encoding="utf-8")
+    tmp.write_text(json.dumps(checkpoint, indent=1), encoding="utf-8")
     tmp.replace(STATE / "feed.json")
 
 
@@ -147,12 +151,27 @@ def run_pricer(reason: str, timeout: int) -> dict:
         return {"ok": False, "error": "pricer printed no summary", "stdout": out.stdout[-800:]}
 
 
-def post(url: str, events: list[dict]) -> None:
-    for event in events:
+def deliver_pending(client, url: str, destination: str, checkpoint: dict) -> None:
+    """Deliver in order. A crash after the receiver accepts a POST can replay its key."""
+    pending = checkpoint["pending_posts"]
+    queue = pending.get(destination, [])
+    while queue:
+        event = queue[0]
+        event_id = hashlib.sha256(json.dumps(event, sort_keys=True).encode()).hexdigest()
         try:
-            httpx.post(url, json=event, timeout=10)
+            response = client.post(url, json=event, headers={"Idempotency-Key": event_id}, timeout=10)
+            response.raise_for_status()
         except httpx.HTTPError as exc:
-            append("errors.jsonl", [{"at": now().isoformat(), "where": "post", "error": str(exc)}])
+            # HTTPX exception messages may contain the secret webhook URL.
+            error = (f"HTTP {exc.response.status_code}" if isinstance(exc, httpx.HTTPStatusError)
+                     else type(exc).__name__)
+            append("errors.jsonl", [{"at": now().isoformat(), "where": "post", "error": error,
+                                     "key": event["key"], "type": event["type"]}])
+            return
+        queue.pop(0)
+        if not queue:
+            del pending[destination]
+        save_checkpoint(checkpoint)
 
 
 def track_prices(client, live: list[feed.Fixture], at: str) -> None:
@@ -185,8 +204,8 @@ def main(argv=None) -> int:
     ap.add_argument("--interval", type=float, default=15, help="seconds between polls while a match is live or imminent")
     ap.add_argument("--idle-interval", type=float, default=60, help="seconds between polls otherwise")
     ap.add_argument("--max-minutes", type=float, default=110)
-    ap.add_argument("--wake-on", default="match_start,map_end,match_finish,fixture_changed")
-    ap.add_argument("--price-on", default="match_start,map_end,match_finish,fixture_set")
+    ap.add_argument("--wake-on", default="match_start,map_end,match_finish,fixture_changed,result_corrected")
+    ap.add_argument("--price-on", default="match_start,map_end,match_finish,fixture_set,result_corrected")
     ap.add_argument("--post", help="outbound webhook URL that receives each event as JSON")
     ap.add_argument("--no-track-prices", action="store_true")
     ap.add_argument("--pricer-timeout", type=int, default=240)
@@ -200,7 +219,10 @@ def main(argv=None) -> int:
     stages = tuple(int(s) for s in args.stages.split(","))
     started, failures, last_error = now(), 0, None
     woke, pricing, last_priced = [], None, 0.0
-    prev = load_state()
+    destination = hashlib.sha256(args.post.encode()).hexdigest() if args.post else None
+    checkpoint = load_checkpoint()
+    prev = ({k: feed.from_dict(v) for k, v in checkpoint["fixtures"].items()}
+            if "fixtures" in checkpoint else None)
     with httpx.Client(timeout=20) as client:
         while True:
             at = now()
@@ -211,20 +233,28 @@ def main(argv=None) -> int:
                 failures += 1
                 last_error = repr(exc)[:500]
                 append("errors.jsonl", [{"at": at.isoformat(), "where": "feed", "error": last_error}])
+                if args.post:
+                    deliver_pending(client, args.post, destination, checkpoint)
                 if failures >= 20:
                     print(json.dumps({"exit": "feed_failing", "error": last_error}))
                     return 3
                 time.sleep(min(60, 5 * failures))
                 continue
             events = diff(prev, cur, at=at.isoformat(), updated=updated)
-            save_state(cur, updated, at.isoformat())
+            if args.post:
+                outbound = [e for e in events if e["type"] != "round_update"]
+                if outbound:
+                    checkpoint["pending_posts"].setdefault(destination, []).extend(outbound)
+            checkpoint.update(at=at.isoformat(), updated=updated,
+                              fixtures={k: f.asdict() for k, f in cur.items()})
+            save_checkpoint(checkpoint)
             prev = cur
             append("events.jsonl", events)
+            if args.post:
+                deliver_pending(client, args.post, destination, checkpoint)
             live, nxt = live_and_next(cur, at)
             if live and not args.no_track_prices:
                 track_prices(client, live, at.isoformat())
-            if args.post and events:
-                post(args.post, [e for e in events if e["type"] != "round_update"])
             reasons = sorted({e["type"] for e in events} & price_on)
             if not reasons and live and args.price_every_live and time.time() - last_priced >= args.price_every_live:
                 reasons = ["live_tick"]
@@ -239,8 +269,10 @@ def main(argv=None) -> int:
                 "live": [[f.key, f.a, f.b, list(f.score), [list(m) for m in f.maps if m[1] or m[2]]] for f in live],
                 "next_start": nxt.isoformat() if nxt else None,
                 "events": [{k: e[k] for k in ("type", "key", "a", "b", "score") if k in e}
-                           | {k: e[k] for k in ("map_index", "map", "rounds", "map_winner", "winner", "late_by_s") if k in e}
+                           | {k: e[k] for k in ("map_index", "map", "rounds", "map_winner", "winner",
+                                                "previous_winner", "previous_score", "late_by_s") if k in e}
                            for e in woke],
+                "pending_posts": len(checkpoint["pending_posts"].get(destination, [])),
                 "pricing": pricing,
             }
             if args.once:
@@ -253,7 +285,7 @@ def main(argv=None) -> int:
                 print(json.dumps({"exit": "max_minutes", **summary}, indent=1))
                 return 2
             soon = nxt is not None and nxt - at < timedelta(minutes=20)
-            if not live and not soon and nxt is not None and nxt - at > timedelta(minutes=args.max_minutes - elapsed):
+            if not summary["pending_posts"] and not live and not soon and nxt is not None and nxt - at > timedelta(minutes=args.max_minutes - elapsed):
                 print(json.dumps({"exit": "idle", **summary}, indent=1))
                 return 4
             time.sleep(args.interval if live or soon else args.idle_interval)

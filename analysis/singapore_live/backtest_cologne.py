@@ -12,7 +12,7 @@ Three checks, all using only information available at each step:
 3. Paper trades: buy the side the simulator favors when the gap beats an assumed half-spread
    plus Polymarket's taker fee by a threshold; one entry per team side, held to settlement.
 
-A ratings-only simulator (Valve points, spread 1,410, no match prices) runs alongside as the
+A ratings-only simulator (Valve points, spread fitted on earlier Majors) runs alongside as the
 comparison. Data: ``data/cologne_bt.json.gz`` (fetched by ``data/fetch_cologne_bt.py``).
 
     uv run --frozen python -m analysis.singapore_live.backtest_cologne
@@ -20,29 +20,34 @@ comparison. Data: ``data/cologne_bt.json.gz`` (fetched by ``data/fetch_cologne_b
 
 from __future__ import annotations
 
+import argparse
 import bisect
 import gzip
+import hashlib
 import json
 import math
 import sys
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 
 from engine.montecarlo import run_mc
 from engine.teams import Team, load_stage
+from analysis.singapore_kalshi.model import fit
 
 from .price import S, fit_strengths
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATA = HERE / "data" / "cologne_bt.json.gz"
+MATCH_TIMES = HERE / "data" / "cologne_match_times.json"
 VALVE = ROOT / "analysis" / "pr18_review" / "major_swiss_matches.json"
 FIXTURES = {1: ROOT / "data" / "stage1.json", 2: ROOT / "data" / "stage2.json"}
 STEP = 900
 N = 3000
 FEE = 0.05
-RATINGS_SPREAD = 141.0  # 1,410 Valve points per tenfold odds, the best ratings-only fit
 ALIAS = {"fut": "FUT Esports", "betboom team": "BetBoom", "heroic": "HEROIC", "sinners": "SINNERS"}
 
 
@@ -66,17 +71,7 @@ class Series:
         return self.p[i] if i >= 0 else None
 
 
-def settled_at(series: Series, start: int) -> int:
-    """First minute after which the match price stays outside [0.03, 0.97] for good."""
-    last_open = None
-    for t, p in zip(series.t, series.p):
-        if t >= start - 3600 and 0.03 <= p <= 0.97:
-            last_open = t
-    after = [t for t in series.t if last_open is None or t > last_open]
-    return after[0] if after else series.t[-1]
-
-
-def stage_inputs(stage, data, valve):
+def stage_inputs(stage, data, valve, match_times):
     template, _ = load_stage(FIXTURES[stage])
     known = {t.name for t in template}
     rows = [r for r in valve if r["event"] == "Cologne 2026" and r["stage"] == stage]
@@ -87,27 +82,71 @@ def stage_inputs(stage, data, valve):
     teams = [Team(t.id, t.name, t.seed, points[t.name] / 10) for t in template]
     by = {t.name: t for t in teams}
     poly = {frozenset(canon(o, known) for o in m["outcomes"]): m for m in data["matches"] if m["stage"] == stage}
+    clocks = {frozenset(canon(o, known) for o in m["teams"]): m for m in match_times if m["stage"] == stage}
+    if clocks.keys() != poly.keys() or len(clocks) != len(rows) or len(rows) != 33:
+        raise ValueError(f"Incomplete match clock coverage for Cologne stage {stage}")
     matches, wins, losses = [], {n: 0 for n in known}, {n: 0 for n in known}
     for r in rows:
         a, b = canon(r["a"], known), canon(r["b"], known)
         m = poly[frozenset((a, b))]
+        clock = clocks[frozenset((a, b))]
+        start = math.ceil(datetime.fromisoformat(clock["start"]).timestamp())
+        end = math.ceil(datetime.fromisoformat(clock["finish"]).timestamp())
+        if start >= end:
+            raise ValueError(f"Invalid clock for {a} vs {b}")
         first = canon(m["outcomes"][0], known)
         series = Series([(t, p if first == a else 1 - p) for t, p in m["hist"]])
         winner = a if r["y"] else b
+        if canon(clock["winner"], known) != winner:
+            raise ValueError(f"Timed match result disagrees with Valve for {a} vs {b}")
         final = series.p[-1]
         if (final > 0.5) != (winner == a):
             raise ValueError(f"Polymarket's final price disagrees with Valve's result for {a} vs {b}")
         matches.append({"a": a, "b": b, "bo": 3 if r["bo3"] else 1, "winner": winner, "round": r["round"],
-                        "start": m["start"], "created": m["created"], "series": series,
-                        "end": settled_at(series, m["start"])})
+                        "start": start, "created": m["created"], "series": series, "end": end})
         wins[winner] += 1
         losses[b if winner == a else a] += 1
     outcome = {n: int(wins[n] == 3) for n in known}
     return teams, by, matches, outcome
 
 
-def replay(stage, data, valve):
-    teams, by, matches, outcome = stage_inputs(stage, data, valve)
+def state_at(t, matches, by):
+    """Predictor inputs through t. Even a 99.9% match quote cannot reveal a winner."""
+    locks, overrides, obs = {}, {}, []
+    record = {n: [0, 0] for n in by}
+    for m in matches:
+        a, b = by[m["a"]], by[m["b"]]
+        if t >= m["end"]:
+            winner = m["winner"]
+            locks[frozenset((a.id, b.id))] = by[winner].id
+            record[winner][0] += 1
+            record[m["b"] if winner == m["a"] else m["a"]][1] += 1
+        if t < m["created"]:
+            continue
+        if t < m["end"]:
+            now = m["series"].at(t)
+            if now is not None:
+                lo, hi = sorted((a.id, b.id))
+                overrides[f"{lo}-{hi}"] = now if a.id == lo else 1 - now
+        pre = m["series"].at(min(t, m["start"]))
+        if pre is not None:
+            obs.append((a.id, b.id, pre, m["bo"]))
+    return record, locks, overrides, obs
+
+
+def simulate_tick(job):
+    teams, locks, overrides, obs, spread, k = job
+    strengths = fit_strengths(teams, obs, 1.0, 0.3)
+    fed = run_mc(teams, strengths, S, N, locks, seed=1000 + k,
+                 market_blend={x: (v, 0.0) for x, v in overrides.items()})
+    prior = {team.id: team.rating for team in teams}
+    rated = run_mc(teams, prior, spread, N, locks, seed=5000 + k)
+    return ({i: c / N for i, c in fed.counts_advance.items()},
+            {i: c / N for i, c in rated.counts_advance.items()})
+
+
+def replay(stage, data, valve, match_times, spread, pool=None):
+    teams, by, matches, outcome = stage_inputs(stage, data, valve, match_times)
     known = set(by)
     markets = {}
     for r in data["qualify"][str(stage)]:
@@ -121,36 +160,17 @@ def replay(stage, data, valve):
             raise ValueError(f"Qualify market for {team} settled against Valve's record")
     begin = max(min(m["created"] for m in markets.values()), min(m["start"] for m in matches) - 12 * 3600)
     end = max(m["end"] for m in matches)
-    ids = [t.id for t in teams]
-    prior = {t.id: t.rating for t in teams}
-    out = []
+    ticks, jobs = [], []
     for k, t in enumerate(range(begin - begin % STEP + STEP, end, STEP)):
-        locks, overrides, obs = {}, {}, []
-        record = {n: [0, 0] for n in known}
-        for m in matches:
-            a, b = by[m["a"]], by[m["b"]]
-            if t >= m["end"]:
-                locks[frozenset((a.id, b.id))] = by[m["winner"]].id
-                record[m["winner"]][0] += 1
-                record[m["b"] if m["winner"] == m["a"] else m["a"]][1] += 1
-                pre = m["series"].at(m["start"])
-                if pre is not None:
-                    obs.append((a.id, b.id, pre, m["bo"]))
-            elif t >= m["created"]:
-                now, pre = m["series"].at(t), m["series"].at(min(t, m["start"]))
-                if now is not None:
-                    lo, hi = sorted((a.id, b.id))
-                    overrides[f"{lo}-{hi}"] = now if a.id == lo else 1 - now
-                if pre is not None:
-                    obs.append((a.id, b.id, pre, m["bo"]))
-        open_teams = [n for n in known if n in markets and 3 not in record[n] and t >= markets[n]["created"]]
+        record, locks, overrides, obs = state_at(t, matches, by)
+        open_teams = [n for n in sorted(markets) if 3 not in record[n] and t >= markets[n]["created"]]
         if not open_teams:
             continue
-        strengths = fit_strengths(teams, obs, 1.0, 0.3)
-        fed = run_mc(teams, strengths, S, N, locks, seed=1000 + k, market_blend={x: (v, 0.0) for x, v in overrides.items()})
-        rated = run_mc(teams, prior, RATINGS_SPREAD, N, locks, seed=5000 + k)
-        q_fed = {i: c / N for i, c in fed.counts_advance.items()}
-        q_rat = {i: c / N for i, c in rated.counts_advance.items()}
+        ticks.append((t, open_teams))
+        jobs.append((teams, locks, overrides, obs, spread, k))
+    results = pool.map(simulate_tick, jobs) if pool is not None else map(simulate_tick, jobs)
+    out = []
+    for (t, open_teams), (q_fed, q_rat) in zip(ticks, results, strict=True):
         for n in open_teams:
             price = markets[n]["series"].at(t)
             if price is None:
@@ -245,15 +265,55 @@ def trades(rows, src, theta, half_spread):
     return out
 
 
+def clustered_trade_se(entries):
+    """Bootstrap the pooled per-share mean, resampling whole stage/team markets."""
+    groups = {}
+    for row in entries:
+        groups.setdefault((row["stage"], row["team"]), []).append(row["pnl"])
+    if len(groups) < 2:
+        return float("nan")
+    clusters = [groups[k] for k in sorted(groups)]
+    totals = np.array([sum(group) for group in clusters])
+    counts = np.array([len(group) for group in clusters])
+    sample = np.random.default_rng(23).integers(len(clusters), size=(5000, len(clusters)))
+    means = totals[sample].sum(axis=1) / counts[sample].sum(axis=1)
+    return float(means.std(ddof=1))
+
+
+def replay_key(spread):
+    """Legacy caches lack a fingerprint and cannot supply replay rows."""
+    inputs = [Path(__file__), DATA, MATCH_TIMES, VALVE, *FIXTURES.values(), HERE / "price.py",
+              *(ROOT / "engine" / filename for filename in ("montecarlo.py", "swiss.py", "teams.py", "probs.py"))]
+    digest = hashlib.sha256(str((spread, STEP, N)).encode())
+    for path in inputs:
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--recompute", action="store_true")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel simulation workers for an uncached replay")
+    args = parser.parse_args()
+    if args.workers < 1:
+        parser.error("--workers must be positive")
+    spread = fit(before_event="Cologne 2026")["fitted"] / 10
+    print(f"Prior-Majors ratings spread: {spread * 10:g} Valve points", flush=True)
+    fingerprint = replay_key(spread)
     cache = HERE / "data" / "cologne_bt_rows.json"
-    if cache.exists() and "--recompute" not in sys.argv:
-        rows = json.loads(cache.read_text())
+    saved = json.loads(cache.read_text()) if cache.exists() and not args.recompute else None
+    if isinstance(saved, dict) and saved.get("fingerprint") == fingerprint:
+        rows = saved["rows"]
     else:
         data = json.loads(gzip.open(DATA).read())
         valve = json.loads(VALVE.read_text())
-        rows = replay(1, data, valve) + replay(2, data, valve)
-        cache.write_text(json.dumps(rows))
+        times = json.loads(MATCH_TIMES.read_text())["matches"]
+        rows = []
+        with ProcessPoolExecutor(max_workers=args.workers) as pool:
+            for stage in (1, 2):
+                rows.extend(replay(stage, data, valve, times, spread, pool))
+                print(f"Completed stage {stage}: {len(rows)} cumulative team observations", flush=True)
+        cache.write_text(json.dumps({"fingerprint": fingerprint, "rows": rows}))
     report = summarize(rows)
     report["joint_discovery"] = joint_discovery(rows)
     for label, keep in (("team_match_live", True), ("no_team_match_live", False)):
@@ -278,7 +338,7 @@ def main():
                     print(f"{src:<8} {theta:.2f}   {h:.2f}          0")
                     continue
                 pnl = np.array([x["pnl"] for x in tr])
-                se = pnl.std(ddof=1) / math.sqrt(len(pnl)) if len(pnl) > 1 else float("nan")
+                se = clustered_trade_se(tr)
                 print(f"{src:<8} {theta:.2f}   {h:.2f}        {len(tr):>4}  {sum(x['pnl'] > 0 for x in tr):>3}   {pnl.mean():+.3f}          ({se:.3f})          {pnl.sum():+.2f}")
     detail = trades(rows, "fed", 0.05, 0.02)
     print("\nMarket-fed trades at theta 0.05, half-spread 0.02:")
