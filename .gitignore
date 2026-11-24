@@ -47,3 +47,7 @@ data/_*.json
 .planning/
 files/
 CLAUDE.md
+
+# Live watcher runtime state (events, ticks, snapshots); curated copies are committed separately.
+analysis/singapore_live/state/
+analysis/singapore_live/data/cologne_bt_rows.json
