@@ -191,3 +191,44 @@ def kalshi_matches(client) -> dict[frozenset, dict]:
         if not cursor:
             break
     return out
+
+
+def kalshi_bo3_markets(client) -> dict[frozenset, list[dict]]:
+    """Open Kalshi total-maps and map-spread markets, keyed by team pair.
+
+    Each row is a binary contract on the series' map score: "over" (three maps played) or
+    "sweep" by a named team (a 2-0 win).
+    """
+    out: dict[frozenset, list[dict]] = {}
+    for series, kind in (("KXCS2TOTALMAPS", "over"), ("KXCS2SPREAD", "sweep")):
+        page = _json(client, "GET", f"{KALSHI}/events",
+                     params={"series_ticker": series, "status": "open", "limit": 200, "with_nested_markets": "true"})
+        for e in page.get("events", []):
+            found = re.match(r"(.+?) vs\.? (.+?): ", e.get("title", ""))
+            if not found:
+                continue
+            try:
+                pair = frozenset((canon(found[1]), canon(found[2])))
+            except KeyError:
+                continue
+            for m in e.get("markets") or []:
+                label = m.get("yes_sub_title") or ""
+                if kind == "over":
+                    if not re.fullmatch(r"Over 2\.5 maps", label.strip(), re.IGNORECASE):
+                        raise ValueError(f"Review total-maps contract {m['ticker']}: {label!r}")
+                    team = None
+                else:
+                    won = re.fullmatch(r"(.+?) wins by over 1\.5 maps?", label.strip(), re.IGNORECASE)
+                    if not won:
+                        raise ValueError(f"Review spread contract {m['ticker']}: {label!r}")
+                    team = canon(won[1])
+                out.setdefault(pair, []).append({"venue": "kalshi", "family": "maps", "kind": kind, "team": team,
+                                                 "market": m["ticker"], "status": m["status"], "label": label})
+    return out
+
+
+def kalshi_series_multiplier(client, series: str) -> Decimal:
+    info = _json(client, "GET", f"{KALSHI}/series/{series}")["series"]
+    if info["fee_type"] not in ("quadratic", "quadratic_with_maker_fees"):
+        raise ValueError(f"Review Kalshi fee type {info['fee_type']} for {series}")
+    return Decimal(str(info["fee_multiplier"]))

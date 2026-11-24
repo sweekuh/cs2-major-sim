@@ -33,6 +33,10 @@ from . import feed
 
 HERE = Path(__file__).resolve().parent
 STATE = HERE / "state"
+# Committed copy of the compact state, so a fresh container can resume the same paper ledger.
+LEDGER = HERE / "ledger"
+LEDGER_FILES = ("entries.jsonl", "events.jsonl", "ticks.jsonl", "feed.json", "closing.json",
+                "latest.md", "pricer_runs.jsonl", "graded.json", "errors.jsonl")
 ROOT = HERE.parents[1]
 EVENT_TYPES = (
     "fixture_set", "fixture_changed", "maps_set", "match_start",
@@ -96,6 +100,51 @@ def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, 
             events.append({**base, "type": "match_finish", "winner": c.winner})
     order = {t: i for i, t in enumerate(EVENT_TYPES)}
     return sorted(events, key=lambda e: order[e["type"]])
+
+
+def restore_ledger() -> list[str]:
+    """Copy committed ledger files into an empty state directory (a fresh container)."""
+    restored = []
+    STATE.mkdir(exist_ok=True)
+    for name in LEDGER_FILES:
+        src, dst = LEDGER / name, STATE / name
+        if src.exists() and not dst.exists():
+            dst.write_bytes(src.read_bytes())
+            restored.append(name)
+    return restored
+
+
+def sync_ledger() -> None:
+    LEDGER.mkdir(exist_ok=True)
+    for name in LEDGER_FILES:
+        src = STATE / name
+        if src.exists():
+            (LEDGER / name).write_bytes(src.read_bytes())
+
+
+def push_text(events: list[dict], pricing: dict | None) -> str | None:
+    """One line under 200 characters summarizing a wake, for a phone notification."""
+    parts = []
+    for e in events:
+        if e["type"] == "match_start":
+            parts.append(f"LIVE {e['a']} v {e['b']} (R{e['round']} Bo{e['bo']})")
+        elif e["type"] == "map_end" and not (e["bo"] == 1):
+            name = (e.get("map") or "").replace("de_", "").title()
+            parts.append(f"{e['a']} {e['score'][0]}-{e['score'][1]} {e['b']} after map {e['map_index']} {name} {e['rounds'][0]}-{e['rounds'][1]}")
+        elif e["type"] == "match_finish":
+            parts.append(f"FINAL {e['a']} {e['score'][0]}-{e['score'][1]} {e['b']}")
+        elif e["type"] == "fixture_changed":
+            parts.append(f"FIXTURE CHANGED {e['key']}: {e['a']} v {e['b']}")
+    if pricing and pricing.get("ok"):
+        if pricing.get("new"):
+            parts.append(f"{len(pricing['new'])} new Kalshi paper: " + "; ".join(pricing["new"][:2]))
+        parts.append(f"PickEm {100 * pricing.get('pickem_p_ge5', 0):.0f}%")
+    elif pricing and not pricing.get("ok"):
+        parts.append("pricer error, check log")
+    if not parts:
+        return None
+    text = " | ".join(parts)
+    return text if len(text) <= 195 else text[:192] + "..."
 
 
 def load_state() -> dict[str, feed.Fixture] | None:
@@ -166,14 +215,25 @@ def track_prices(client, live: list[feed.Fixture], at: str) -> None:
             if info:
                 wanted[f.key] = info
         mids = poly_midpoints(client, [i["tokens"][0] for i in wanted.values()])
+        try:
+            from .markets import kalshi_matches
+            kalshi = kalshi_matches(client)
+        except Exception:
+            kalshi = {}
         rows = []
-        for key, info in wanted.items():
-            f = next(x for x in live if x.key == key)
-            mid = mids.get(info["tokens"][0])
-            if mid is None:
+        for f in live:
+            info = wanted.get(f.key)
+            mid = mids.get(info["tokens"][0]) if info else None
+            p_a = (mid if info["outcomes"][0] == f.a else 1 - mid) if mid is not None else None
+            k = kalshi.get(frozenset((f.a, f.b)))
+            k_a = None
+            if k and f.a in k["quotes"]:
+                bid, ask = k["quotes"][f.a]
+                k_a = round((bid + ask) / 2, 4) if 0 < bid < ask < 1 else None
+            if p_a is None and k_a is None:
                 continue
-            p_a = mid if info["outcomes"][0] == f.a else 1 - mid
-            rows.append({"at": at, "key": key, "a": f.a, "b": f.b, "p_a": round(p_a, 4),
+            rows.append({"at": at, "key": f.key, "a": f.a, "b": f.b,
+                         "p_a": round(p_a, 4) if p_a is not None else None, "kalshi_a": k_a,
                          "score": list(f.score), "maps": [list(m) for m in f.maps]})
         append("ticks.jsonl", rows)
     except Exception as exc:  # price tracking never stops the watcher
@@ -200,7 +260,9 @@ def main(argv=None) -> int:
     stages = tuple(int(s) for s in args.stages.split(","))
     started, failures, last_error = now(), 0, None
     woke, pricing, last_priced = [], None, 0.0
+    restored = restore_ledger()
     prev = load_state()
+    sync_ledger()
     with httpx.Client(timeout=20) as client:
         while True:
             at = now()
@@ -225,6 +287,8 @@ def main(argv=None) -> int:
                 track_prices(client, live, at.isoformat())
             if args.post and events:
                 post(args.post, [e for e in events if e["type"] != "round_update"])
+            if events:
+                sync_ledger()
             reasons = sorted({e["type"] for e in events} & price_on)
             if not reasons and live and args.price_every_live and time.time() - last_priced >= args.price_every_live:
                 reasons = ["live_tick"]
@@ -232,6 +296,7 @@ def main(argv=None) -> int:
                 last_priced = time.time()
                 pricing = run_pricer(",".join(reasons), args.pricer_timeout)
                 append("pricer_runs.jsonl", [{"at": at.isoformat(), "reason": reasons, **{k: v for k, v in pricing.items() if k != "stdout"}}])
+                sync_ledger()
             woke += [e for e in events if e["type"] in wake]
             elapsed = (now() - started).total_seconds() / 60
             summary = {
@@ -242,6 +307,8 @@ def main(argv=None) -> int:
                            | {k: e[k] for k in ("map_index", "map", "rounds", "map_winner", "winner", "late_by_s") if k in e}
                            for e in woke],
                 "pricing": pricing,
+                "push": push_text(woke, pricing),
+                "restored_from_ledger": restored,
             }
             if args.once:
                 print(json.dumps({"exit": "once", **summary}, indent=1))

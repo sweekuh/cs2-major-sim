@@ -43,6 +43,8 @@ N_SIMS = 20_000
 SEED = 20261125
 POLY_SHARES = 20
 EDGE_MIN = 0.02
+EDGE_MIN_MAPS = 0.05  # exploratory family, not part of the pre-registered test
+PAPER_VENUES = {"kalshi"}  # the user trades on Kalshi only; Polymarket is a read-only price input
 # (prior scale, ridge weight): how far undrawn-round strengths lean on Nov 19 points.
 SCENARIOS = {"base": (1.0, 0.3), "flat_prior": (0.5, 0.3), "sticky": (1.0, 2.0), "flat_sticky": (0.5, 2.0)}
 RECORDS = {"3-0": [(3, 0)], "3-1": [(3, 1)], "3-2": [(3, 2)], "0-3": [(0, 3)],
@@ -99,6 +101,31 @@ def closing_price(client, cache: dict, slug: str, token: str, start: str) -> flo
     pts = [h for h in hist.get("history", []) if h["t"] <= t0]
     cache[slug] = pts[-1]["p"] if pts else None
     return cache[slug]
+
+
+def map_score_probs(s_a: float, r: float, score: tuple[int, int]) -> dict:
+    """Best-of-three map-score probabilities for team A from the live series price.
+
+    ``s_a`` is A's current series price, ``r`` A's per-map probability on a fresh map (from the
+    pre-match price). The map in progress gets whatever probability ``q`` reconciles ``s_a`` with
+    fresh maps at ``r``; using one per-map probability for both would misprice a mid-map state.
+    """
+    a, b = score
+    r = min(max(r, 1e-4), 1 - 1e-4)
+    s = min(max(s_a, 0.0), 1.0)
+    clamp = lambda x: min(max(x, 0.0), 1.0)
+    if (a, b) == (0, 0):
+        q = clamp((s - r * r) / (2 * r * (1 - r)))
+        return {"sweep_a": q * r, "sweep_b": (1 - q) * (1 - r), "over": 1 - q * r - (1 - q) * (1 - r)}
+    if (a, b) == (1, 0):
+        q = clamp((s - r) / (1 - r))
+        return {"sweep_a": q, "sweep_b": 0.0, "over": 1 - q}
+    if (a, b) == (0, 1):
+        q = clamp(s / r)
+        return {"sweep_a": 0.0, "sweep_b": 1 - q, "over": q}
+    if (a, b) == (1, 1):
+        return {"sweep_a": 0.0, "sweep_b": 0.0, "over": 1.0}
+    return {"sweep_a": float((a, b) == (2, 0)), "sweep_b": float((a, b) == (0, 2)), "over": float(a + b == 3)}
 
 
 def records(sample, ids):
@@ -176,6 +203,17 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
         for m in k_markets:
             if m["status"] == "active":
                 k_books[m["market"]] = mk.kalshi_book(client, m["market"])
+        try:
+            k_maps = mk.kalshi_bo3_markets(client)
+            map_mult = mk.kalshi_series_multiplier(client, "KXCS2TOTALMAPS")
+            if mk.kalshi_series_multiplier(client, "KXCS2SPREAD") != map_mult:
+                raise ValueError("Total-maps and spread fee multipliers differ")
+        except httpx.HTTPError:
+            k_maps, map_mult = {}, k_mult
+        for rows in k_maps.values():
+            for m in rows:
+                if m["status"] == "active":
+                    k_books[m["market"]] = mk.kalshi_book(client, m["market"])
 
         locks, overrides, observations, match_rows = {}, {}, [], []
         for f in fixtures:
@@ -277,6 +315,49 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                                         "worst_fair": round(worst, 4), "edge": round(edge, 4)})
             quotes.append(row)
 
+        # Exploratory: Kalshi best-of-three map-score markets, priced from the match price alone.
+        for f in fixtures:
+            pair = frozenset((f.a, f.b))
+            if f.bo != 3 or f.status == "end" or pair not in k_maps:
+                continue
+            mr = next(m for m in match_rows if m["key"] == f.key)
+            if mr.get("p_a") is None:
+                continue
+            pre = mr.get("close_a") if mr.get("close_a") is not None else mr["p_a"]
+            probs = map_score_probs(mr["p_a"], bo3_to_map(pre), f.score)
+            for m in k_maps[pair]:
+                if m["market"] not in k_books:
+                    continue
+                if m["kind"] == "over":
+                    p = probs["over"]
+                else:
+                    p = probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]
+                book = k_books[m["market"]]
+                yb, nb = book.get("yes_dollars") or [], book.get("no_dollars") or []
+                row = {"venue": "kalshi", "family": "maps", "team": m["team"] or "over 2.5", "market": m["market"],
+                       "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p, 4),
+                       "fair_hi": round(p, 4), "bid": max((float(x[0]) for x in yb), default=None),
+                       "ask": round(1 - max((float(x[0]) for x in nb), default=1.0), 4) if nb else None}
+                for side, levels, fair in (("yes", nb, p), ("no", yb, 1 - p)):
+                    fill = kalshi_walk(levels, map_mult) if levels else None
+                    if fill:
+                        unit = fill["debit_usd"] / fill["qty"]
+                        row[f"{side}_unit"] = round(unit, 4)
+                        row[f"{side}_edge"] = round(fair - unit, 4)
+                        if fair - unit >= EDGE_MIN_MAPS:
+                            signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
+                                            "in_play": f.a in playing, "market": m["market"], "family": "maps",
+                                            "kind": m["kind"], "team": m["team"], "match_key": f.key,
+                                            "a": f.a, "b": f.b, "score": list(f.score), "side": side,
+                                            "shares": KALSHI_SIZE, "avg": round(fill["ask_c"] / 100, 4),
+                                            "unit_cost": round(unit, 4), "fair": round(fair, 4),
+                                            "worst_fair": round(fair, 4), "edge": round(fair - unit, 4)})
+                quotes.append(row)
+
+    # Only venues the user can trade produce paper entries; the rest stay in the snapshot as reference.
+    reference = [s for s in signals if s["venue"] not in PAPER_VENUES]
+    signals = [s for s in signals if s["venue"] in PAPER_VENUES]
+
     # Pick'Em: chance the locked card still reaches five correct.
     card = json.loads(CARD.read_text())["card"]
     arr = samples["base"]
@@ -298,13 +379,16 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
     append("entries.jsonl", new)
     snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
             "locks": len(locks), "priced_matches": len(overrides), "observations": len(observations),
-            "pickem": pickem, "quotes": quotes, "signals": signals, "new_entries": len(new)}
+            "pickem": pickem, "quotes": quotes, "signals": signals, "reference_signals": reference,
+            "new_entries": len(new)}
     append("snapshots.jsonl", [snap])
     write_latest(snap)
     summary = {"at": snap["at"], "reason": reason, "pickem_p_ge5": round(pickem["p_ge5"], 4),
                "live_teams": sorted(playing), "new_in_play": sum(bool(s.get("in_play")) for s in new),
+               "new": [f"{s['family']} {s.get('team') or ''} {s.get('kind', '')} {s['side'].upper()} @{s['unit_cost']:.2f} fair {s['fair']:.2f}{' in-play' if s.get('in_play') else ''}".replace("  ", " ")
+                       for s in new],
                "pickem_max": pickem["max_possible"], "signals": len(signals), "new_entries": len(new),
-               "top": [f"{s['venue']} {s['family']} {s['team']} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c{' in-play' if s.get('in_play') else ''}"
+               "top": [f"{s['venue']} {s['family']} {s.get('team') or ''} {s.get('kind', '')} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c{' in-play' if s.get('in_play') else ''}"
                        for s in sorted(signals, key=lambda s: -s["edge"])[:5]]}
     if not quiet:
         print((STATE / "latest.md").read_text())
@@ -346,6 +430,19 @@ def grade() -> dict:
     rows = [json.loads(x) for x in path.read_text().splitlines()] if path.exists() else []
     settled = []
     for e in rows:
+        if e["family"] == "maps":
+            f = fx.get(e["match_key"])
+            if not f or f.status != "end" or {f.a, f.b} != {e["a"], e["b"]}:
+                continue
+            a_maps, b_maps = f.score if f.a == e["a"] else f.score[::-1]
+            if e["kind"] == "over":
+                hit = a_maps + b_maps == 3
+            else:
+                hit = (a_maps, b_maps) == (2, 0) if e["team"] == e["a"] else (a_maps, b_maps) == (0, 2)
+            payoff = float(hit if e["side"] == "yes" else not hit)
+            settled.append({**e, "final_maps": [a_maps, b_maps], "payoff": payoff,
+                            "pnl": round(e["shares"] * (payoff - e["unit_cost"]), 4)})
+            continue
         if e["team"] not in final:
             continue
         hit = final[e["team"]] in RECORDS[e["family"]]
@@ -355,9 +452,17 @@ def grade() -> dict:
     out = {"entries": len(rows), "settled": len(settled),
            "pnl_usd": round(sum(s["pnl"] for s in settled), 2),
            "staked_usd": round(sum(s["shares"] * s["unit_cost"] for s in settled), 2), "rows": settled}
-    # Pre-registered split (Nov 24, before round 3): in-play entries are the hypothesis, the rest the control.
-    for label, keep in (("in_play", True), ("not_in_play", False)):
-        part = [s for s in settled if bool(s.get("in_play")) == keep]
+    # Pre-registered split (Nov 24, before round 3): Kalshi qualify entries made in-play are the
+    # hypothesis and the other Kalshi qualify entries the control. Map-score markets are exploratory;
+    # Polymarket entries (logged before the Kalshi-only decision) are reference only.
+    groups = {
+        "hypothesis_kalshi_qualify_in_play": lambda s: s["venue"] == "kalshi" and s["family"] == "qualify" and s.get("in_play"),
+        "control_kalshi_qualify_not_in_play": lambda s: s["venue"] == "kalshi" and s["family"] == "qualify" and not s.get("in_play"),
+        "exploratory_kalshi_maps": lambda s: s["venue"] == "kalshi" and s["family"] == "maps",
+        "reference_polymarket": lambda s: s["venue"] != "kalshi",
+    }
+    for label, keep in groups.items():
+        part = [s for s in settled if keep(s)]
         per_share = [s["pnl"] / s["shares"] for s in part]
         out[label] = {"settled": len(part), "pnl_usd": round(sum(s["pnl"] for s in part), 2),
                       "mean_per_share": round(float(np.mean(per_share)), 4) if part else None,

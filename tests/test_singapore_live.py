@@ -97,3 +97,34 @@ def test_simulated_records_respect_stage_totals():
     totals = {fam: sum(fair[t.id][fam] for t in teams) for fam in price.RECORDS}
     assert totals == pytest.approx({"3-0": 2, "3-1": 3, "3-2": 3, "0-3": 2, "qualify": 8})
     assert arr.shape == (4000, 16, 2)
+
+
+def test_map_score_probabilities_reconcile_the_series_price():
+    r = 0.55
+    s0 = price.bo3_to_map  # noqa: F841  (inverse used elsewhere)
+    pre = r * r * (3 - 2 * r)
+    p = price.map_score_probs(pre, r, (0, 0))
+    assert p["sweep_a"] + p["sweep_b"] + p["over"] == pytest.approx(1)
+    assert p["sweep_a"] == pytest.approx(r * r) and p["over"] == pytest.approx(2 * r * (1 - r))
+    # Leading 1-0 while trailing badly on map 2: the live series price implies a low map-2 chance,
+    # so three maps become likely even though fresh maps stay at r.
+    q = 0.15
+    live = q + (1 - q) * r
+    p = price.map_score_probs(live, r, (1, 0))
+    assert p["sweep_a"] == pytest.approx(q) and p["over"] == pytest.approx(1 - q) and p["sweep_b"] == 0
+    p = price.map_score_probs(0.2, r, (0, 1))
+    assert p["over"] == pytest.approx(0.2 / r) and p["sweep_b"] == pytest.approx(1 - 0.2 / r)
+    assert price.map_score_probs(0.6, r, (1, 1))["over"] == 1.0
+    assert price.map_score_probs(1.0, r, (2, 1)) == {"sweep_a": 0.0, "sweep_b": 0.0, "over": 1.0}
+
+
+def test_push_text_is_one_short_line():
+    from analysis.singapore_live.watch import push_text
+
+    events = [{"type": "map_end", "a": "Imperial", "b": "FlyQuest", "bo": 3, "round": 3, "score": [1, 0],
+               "map_index": 1, "map": "de_nuke", "rounds": [13, 9]},
+              {"type": "match_start", "a": "NIP", "b": "Liquid", "bo": 3, "round": 3, "score": [0, 0]}]
+    text = push_text(events, {"ok": True, "pickem_p_ge5": 0.098, "new": ["qualify FlyQuest YES @0.62 fair 0.70 in-play"]})
+    assert "\n" not in text and len(text) <= 195
+    assert text.startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9") and "PickEm 10%" in text
+    assert push_text([], None) is None
