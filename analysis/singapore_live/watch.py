@@ -190,6 +190,8 @@ def main(argv=None) -> int:
     ap.add_argument("--post", help="outbound webhook URL that receives each event as JSON")
     ap.add_argument("--no-track-prices", action="store_true")
     ap.add_argument("--pricer-timeout", type=int, default=240)
+    ap.add_argument("--price-every-live", type=float, default=180,
+                    help="also rerun the pricer this often (seconds) while a match is live; 0 disables")
     ap.add_argument("--stages", default="1,2,3,4")
     ap.add_argument("--once", action="store_true", help="poll once, report, and exit")
     args = ap.parse_args(argv)
@@ -197,7 +199,7 @@ def main(argv=None) -> int:
     price_on = set(filter(None, args.price_on.split(",")))
     stages = tuple(int(s) for s in args.stages.split(","))
     started, failures, last_error = now(), 0, None
-    woke, pricing = [], None
+    woke, pricing, last_priced = [], None, 0.0
     prev = load_state()
     with httpx.Client(timeout=20) as client:
         while True:
@@ -224,7 +226,10 @@ def main(argv=None) -> int:
             if args.post and events:
                 post(args.post, [e for e in events if e["type"] != "round_update"])
             reasons = sorted({e["type"] for e in events} & price_on)
+            if not reasons and live and args.price_every_live and time.time() - last_priced >= args.price_every_live:
+                reasons = ["live_tick"]
             if reasons:
+                last_priced = time.time()
                 pricing = run_pricer(",".join(reasons), args.pricer_timeout)
                 append("pricer_runs.jsonl", [{"at": at.isoformat(), "reason": reasons, **{k: v for k, v in pricing.items() if k != "stdout"}}])
             woke += [e for e in events if e["type"] in wake]

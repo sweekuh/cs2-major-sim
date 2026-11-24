@@ -60,3 +60,32 @@ contract, rounded up, through the existing `analysis.singapore_kalshi.model.walk
   small.
 - Polymarket's markets carry `restricted: true` (not available to US persons); Kalshi is the
   US-regulated venue. Check eligibility before acting on anything here.
+
+## Cologne backtest
+
+`backtest_cologne.py` replays IEM Cologne 2026 Stages 1 and 2 every 15 minutes against
+Polymarket's "Qualify to Stage 2" (open from June 4, so rounds 4 and 5) and "Qualify to
+Stage 3" (all of Stage 2): 19 team markets, 4,080 steps. Each step uses only results and
+match prices known at that minute. A ratings-only simulator (Valve points, spread 1,410)
+runs alongside for comparison.
+
+| Check | Market-fed simulator | Ratings only |
+|---|---|---|
+| Log loss minus the qualify market's (lower is better) | +0.015 ± 0.026 | +0.053 ± 0.026 |
+| Next-hour move per unit of gap, team's own match live | 0.44 (90% CI 0.14 to 0.72) | 0.09 (-0.18 to 0.43) |
+| Same, no team match live | 0.10 (0.05 to 0.15) | 0.09 (0.04 to 0.15) |
+| Paper trades held to settlement (gap of 5c after a 2c half-spread and the fee) | 33 trades, +3.1c a share (SE 8.3c) | 31 trades, -6.3c a share (SE 8.1c) |
+
+The move regressions control for reversal of the last 15 minutes, since noise in the market
+price alone makes any gap look predictive. Reading:
+
+- Overall, the market-fed simulator is about as accurate as the thin qualify market, not more.
+- While a team's own match is live, the qualify market closes about 44% of the market-fed gap
+  within the hour. Between matches, the market-fed and ratings gaps close alike and slowly.
+- Settlement P&L is dominated by binary outcomes. 33 trades cannot detect an edge of a few
+  cents, so this neither shows a profit nor rules one out.
+
+Registered before Singapore round 3 (November 24): entries tagged `in_play` (the team's own
+match was live) are the hypothesis, other entries the control, and `--grade` reports them
+separately. While a match is live the watcher reprices every 3 minutes so in-play gaps get
+observed.

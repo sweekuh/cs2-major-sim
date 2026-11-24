@@ -226,6 +226,9 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             return fair["base"][by_name[team].id][family], min(vals), max(vals)
 
         se = lambda p: math.sqrt(max(p * (1 - p), 1e-6) / N_SIMS)
+        # Cologne backtest: the qualify market closed ~44% of the gap within an hour only while the
+        # team's own match was live. Entries carry this tag so grading can test that split.
+        playing = {n for f in fixtures if f.status != "end" and (f.status == "live" or any(r1 or r2 for _, r1, r2 in f.maps) or sum(f.score)) for n in (f.a, f.b)}
         quotes, signals = [], []
         for d in derivs:
             p, lo, hi = band(d["team"], d["family"])
@@ -242,7 +245,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                     edge = worst - cost["unit"]
                     row[f"{side}_edge"] = round(edge, 4)
                     if edge >= EDGE_MIN and d["accepting"]:
-                        signals.append({"at": at.isoformat(), "reason": reason, "venue": "polymarket",
+                        signals.append({"at": at.isoformat(), "reason": reason, "venue": "polymarket", "in_play": d["team"] in playing,
                                         "market": d["market"], "token": d["tokens"][0 if side == "yes" else 1],
                                         "family": d["family"], "team": d["team"], "side": side,
                                         "shares": POLY_SHARES, "avg": round(cost["avg"], 4),
@@ -267,7 +270,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                     row[f"{side}_unit"] = round(unit, 4)
                     row[f"{side}_edge"] = round(edge, 4)
                     if edge >= EDGE_MIN:
-                        signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
+                        signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi", "in_play": m["team"] in playing,
                                         "market": m["market"], "family": "qualify", "team": m["team"],
                                         "side": side, "shares": KALSHI_SIZE, "avg": round(fill["ask_c"] / 100, 4),
                                         "unit_cost": round(unit, 4), "fair": round(p if side == "yes" else 1 - p, 4),
@@ -299,8 +302,9 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
     append("snapshots.jsonl", [snap])
     write_latest(snap)
     summary = {"at": snap["at"], "reason": reason, "pickem_p_ge5": round(pickem["p_ge5"], 4),
+               "live_teams": sorted(playing), "new_in_play": sum(bool(s.get("in_play")) for s in new),
                "pickem_max": pickem["max_possible"], "signals": len(signals), "new_entries": len(new),
-               "top": [f"{s['venue']} {s['family']} {s['team']} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c"
+               "top": [f"{s['venue']} {s['family']} {s['team']} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c{' in-play' if s.get('in_play') else ''}"
                        for s in sorted(signals, key=lambda s: -s["edge"])[:5]]}
     if not quiet:
         print((STATE / "latest.md").read_text())
@@ -351,6 +355,13 @@ def grade() -> dict:
     out = {"entries": len(rows), "settled": len(settled),
            "pnl_usd": round(sum(s["pnl"] for s in settled), 2),
            "staked_usd": round(sum(s["shares"] * s["unit_cost"] for s in settled), 2), "rows": settled}
+    # Pre-registered split (Nov 24, before round 3): in-play entries are the hypothesis, the rest the control.
+    for label, keep in (("in_play", True), ("not_in_play", False)):
+        part = [s for s in settled if bool(s.get("in_play")) == keep]
+        per_share = [s["pnl"] / s["shares"] for s in part]
+        out[label] = {"settled": len(part), "pnl_usd": round(sum(s["pnl"] for s in part), 2),
+                      "mean_per_share": round(float(np.mean(per_share)), 4) if part else None,
+                      "se_per_share": round(float(np.std(per_share, ddof=1) / math.sqrt(len(part))), 4) if len(part) > 1 else None}
     (STATE / "graded.json").write_text(json.dumps(out, indent=1))
     print(json.dumps({k: v for k, v in out.items() if k != "rows"}))
     return out
