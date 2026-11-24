@@ -1,10 +1,11 @@
 """Read the eight pre-match Singapore Stage 1 moneylines from Polymarket's public API."""
 
 import json
+import math
 from datetime import datetime, timezone
 
 
-def parse_book(event, opener):
+def parse_book(event, opener, *, observed_at=None):
     slug = opener["slug"]
     if event.get("slug") != slug:
         raise ValueError(f"Wrong event returned for {slug}")
@@ -20,6 +21,13 @@ def parse_book(event, opener):
     bid, ask = float(market["bestBid"]), float(market["bestAsk"])
     if not 0 < bid <= ask < 1:
         raise ValueError(f"No two-sided price for {slug}")
+    if ask - bid > 0.030000001:
+        raise ValueError(f"Moneyline spread exceeds three cents for {slug}")
+    if observed_at is not None:
+        age = (observed_at - datetime.fromisoformat(market["updatedAt"])).total_seconds()
+        volume = float(market.get("volumeNum") or 0)
+        if not 0 <= age <= 1800 or not math.isfinite(volume) or volume < 100:
+            raise ValueError(f"Moneyline needs an update within 30 minutes and $100 traded for {slug}")
     if sides == expected[::-1]:
         bid, ask = 1 - ask, 1 - bid
     elif sides != expected:
@@ -44,7 +52,10 @@ def refresh(fixture):
             if len(events) != 1:
                 raise ValueError(f"Expected one Singapore opener for {opener['slug']}")
             try:
-                quotes.append(parse_book(events[0], opener))
+                quotes.append(parse_book(events[0], opener, observed_at=datetime.now(timezone.utc)))
             except (KeyError, TypeError, AttributeError) as exc:
                 raise ValueError(f"Incomplete quote for {opener['slug']}") from exc
-    return quotes, datetime.now(timezone.utc).isoformat(timespec="seconds")
+    at = datetime.now(timezone.utc)
+    if at >= datetime.fromisoformat(fixture["starts_at"]):
+        raise ValueError("Stage 1 started during the refresh")
+    return quotes, at.isoformat(timespec="seconds")

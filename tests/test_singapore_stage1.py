@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import pytest
 from streamlit.testing.v1 import AppTest
@@ -42,6 +43,11 @@ def test_refresh_orients_the_named_side_and_rejects_a_prop():
     event = {"slug": "match", "markets": [market]}
     quote = parse_book(event, opener)
     assert (quote["bid"], quote["ask"]) == pytest.approx((0.62, 0.65))
+    now = datetime.fromisoformat("2026-11-19T20:01:00Z")
+    for changes in ({"bestBid": 0.01}, {"volumeNum": 20}, {"updatedAt": "2026-11-19T17:00:00Z"}):
+        bad = {**market, "volumeNum": 150, **changes}
+        with pytest.raises(ValueError):
+            parse_book({**event, "markets": [bad]}, opener, observed_at=now)
     market["sportsMarketType"] = "map_handicap"
     with pytest.raises(ValueError):
         parse_book(event, opener)
