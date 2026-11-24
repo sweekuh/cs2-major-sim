@@ -300,11 +300,14 @@ def scan(db, client):
                 row.update(decision="PASS", reason="book snapshot older than 30 seconds")
     at = now()
     rows = {i: r for i, r in rows.items() if at < datetime.fromisoformat(r["start"])}
+    cutoffs = {m["ticker"]: scheduled_time(m) for _, m in markets}
     for row in rows.values():
+        if any(at >= cutoffs[o["ticker"]] for o in row["options"]):
+            row.update(decision="PASS", reason="original Kalshi kickoff passed")
         if roster_changed:
             row.update(decision="PASS", reason="updated PGL roster sheet requires review")
         row["usable_close"] = not any(
-            (at - datetime.fromisoformat(books[o["ticker"]]["at"])).total_seconds() > 30
+            at >= cutoffs[o["ticker"]] or (at - datetime.fromisoformat(books[o["ticker"]]["at"])).total_seconds() > 30
             for o in row["options"]
         )
     timestamp = at.isoformat()
@@ -329,10 +332,11 @@ def scan(db, client):
             db.execute(
                 "INSERT OR IGNORE INTO first_forecasts VALUES(?,?,?)", (mid, timestamp, blob)
             )
-            previous = db.execute("SELECT at FROM entries WHERE match=?", (mid,)).fetchone()
+            previous = db.execute("SELECT at,row FROM entries WHERE match=?", (mid,)).fetchone()
             if previous:
                 row["decision"] = "HOLD"
                 row["reason"] = "entry previously frozen at " + previous[0]
+                row["frozen_entry"] = json.loads(previous[1])["best"]
             elif row["decision"] == "TAKE":
                 db.execute("INSERT INTO entries VALUES(?,?,?)", (mid, timestamp, blob))
             soon = (datetime.fromisoformat(row["start"]) - at).total_seconds() <= 1800
@@ -415,6 +419,10 @@ def report(db, snap):
         current = snap["games"].get(mid)
         if current is None or current["status"] == "upcoming":
             close = None
+        if close:
+            cutoff = datetime.fromisoformat(current["start"])
+            if not cutoff - timedelta(minutes=30) <= datetime.fromisoformat(close[0]) < cutoff:
+                close = None
         edge = close[1] - opt["execution"]["debit_usd"] * 100 / SIZE if close else None
         if edge is not None:
             clv.append(edge)
@@ -505,7 +513,7 @@ def sheet(snap, stats):
         a, b = row["teams"]
         f = row["fair"][a]
         lim = row["limits_c"]
-        opt = row["best"]
+        opt = row.get("frozen_entry") if row["decision"] == "HOLD" else row["best"]
         action = f"{row['decision']} · {row['reason']}"
         if opt:
             cost = opt["execution"]

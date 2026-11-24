@@ -24,7 +24,8 @@ def run(label, S, s90, resid, rule):
         print(f"{label}: entries {n} of {2*len(J)} sides; bought at mean {c.mean():.3f}; won {int(wins)}/{n} ({wins/n:.3f}); market favorites among entries {fav}; P&L per contract {per.mean():+.4f} +/- {per.std(ddof=1)/math.sqrt(n):.4f}; total {per.sum():+.2f} contracts-dollars; model fair avg {np.mean([r[2] for r in rows]):.3f}")
     else: print(f"{label}: no entries")
 run("PR rule, published parameters (1410; 980-2040; 0.564)", fd["fitted"], fd["spread90"], R, "stressed")
-run("PR rule, walk-forward spread for Cologne (1660)", fd["walk"]["Cologne 2026"]["spread"], fd["spread90"], R, "stressed")
+prior = model.fit(before_event="Cologne 2026")
+run("Cologne holdout, all parameters from earlier Majors", prior["fitted"], prior["spread90"], prior["residual80"], "stressed")
 run("no stress: model fair > cost + 2c, spread 1410", fd["fitted"], fd["spread90"], R, "naive")
 run("no stress, spread 1660", 1660, fd["spread90"], R, "naive")
 # how the model's fair value compares with the market on the same matches

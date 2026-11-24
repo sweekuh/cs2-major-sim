@@ -20,8 +20,12 @@ def read(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def fit():
+def fit(*, before_event=None):
+    events = EVENTS[:EVENTS.index(before_event)] if before_event else EVENTS
+    if len(events) < 2:
+        raise ValueError("Need two earlier Majors to estimate a held-out residual")
     rows = read(HERE / "historical_series.json")["rows"]
+    rows = [r for r in rows if r["event"] in events]
     differences = np.array([r["ra"] - r["rb"] for r in rows])
     y = np.array([r["y"] for r in rows], dtype=bool)
     p = 1 / (1 + 10 ** (-differences[:, None] / GRID))
@@ -31,14 +35,15 @@ def fit():
     event = np.array([r["event"] for r in rows])
     stage = np.array([r["stage"] for r in rows])
     stage_losses = np.array(
-        [loss[(event == e) & (stage == s)].mean(0) for e in EVENTS for s in (1, 2, 3)]
+        [loss[(event == e) & (stage == s)].mean(0) for e in events for s in (1, 2, 3)]
     )
-    if len(rows) != 297 or any(
-        sum((event == e) & (stage == s)) != 33 for e in EVENTS for s in (1, 2, 3)
+    if len(rows) != 99 * len(events) or any(
+        sum((event == e) & (stage == s)) != 33 for e in events for s in (1, 2, 3)
     ):
         raise ValueError("Incomplete historical archive")
     # Resample whole Swiss stages to preserve dependence among opponents.
-    weights = np.random.default_rng(20261120).multinomial(9, np.ones(9) / 9, size=5000)
+    n_stages = len(stage_losses)
+    weights = np.random.default_rng(20261120).multinomial(n_stages, np.ones(n_stages) / n_stages, size=5000)
     spreads = GRID[np.argmin(weights @ stage_losses, axis=1)]
     fitted = int(GRID[np.argmin(loss.mean(0))])
     walk = {}
@@ -51,7 +56,7 @@ def fit():
             "brier": float(brier[mask, column].mean()),
         }
 
-    for i in (1, 2):
+    for i in range(1, len(events)):
         train = np.isin(event, EVENTS[:i])
         test = event == EVENTS[i]
         index = int(loss[train].mean(0).argmin())

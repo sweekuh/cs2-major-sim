@@ -29,7 +29,15 @@ For a conservative range, evaluate both rating dates at both bootstrap endpoints
 
 From the project root, run `uv run --frozen python -m analysis.singapore_kalshi.paper`. Repeated runs add dated observations to `paper.sqlite3` and regenerate the local files `latest.md` and `performance.json`. The files in `published/` preserve the observation cited in the pull request. The script only reads public endpoints. It neither accesses a trading account nor submits orders. Run `uv run --frozen python -m pytest -q tests/test_singapore_kalshi.py` to exercise pricing, match identity, deduplication, closing marks and settlement.
 
-## Review backtest
+## Live tournament futures
+
+Run `uv run --frozen python -m analysis.singapore_kalshi.live` alongside the match monitor. The first run simulates the three Swiss stages and playoffs from PGL's confirmed results. Later runs reuse the simulation while its inputs are unchanged and fetch fresh ten-contract YES and NO prices on all four futures events. Finished maps in ongoing series change the remaining series probability. Live round scores within a map are excluded.
+
+The central forecast uses November 19 organization ratings. Sensitivities use the earlier Valve ratings, the historical spread range, and higher and lower strengths for lineups that differ from the November 2 five. The lineup stress uses the historical log-odds residual as a scenario width. Each scenario runs 10,000 tournaments. A candidate must beat fees at the lower sensitivity bound, have a ten-lot spread of at most five cents, and have a reviewed roster. Futures involving teams currently playing are marked watch-only. The local `live.sqlite3` archives model inputs, estimates, terms and executable books. Futures candidates do not add match entries to the paper ledger. [PGL results](https://www.pglesports.com/cs2/pgl-major-singapore-2026/)
+
+## Review backtest results
+
+Fitting every parameter on Austin and Budapest before scoring Cologne produced five entries, one win, and mean net P&L of +4.34¢ per contract using proxy prices. The three-entry result below reuses Cologne in the parameter fit.
 
 `review/kalshi_rule_backtest.py` applies the entry rule to the 98 Cologne 2026 Swiss matches, with Polymarket closing prices (`review/cologne_joined.json`) standing in for an executable price. On that sample the published rule opened 3 entries in 196 sides, all on market underdogs near 18 cents. Buying whenever the unstressed model beat cost by two cents lost 17 cents per contract (± 5) over 60 entries, and the model added no information once the market price was known. Run it from the project root:
 
