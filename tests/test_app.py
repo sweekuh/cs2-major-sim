@@ -24,30 +24,18 @@ APP = "app.py"
 
 
 @pytest.fixture(autouse=True)
-def _no_ambient_odds_cache():
-    """Isolate every AppTest run from the ambient ``data/odds_cache.json`` (a gitignored runtime
-    artifact). Once odds are fetched that file is populated and the app takes the odds-fed path
-    (K epistemic draws x N sims, ~12x cost), which blows the 60s AppTest budget for the timing
-    tests in this file. A fresh checkout has no such file, which is why these tests passed before;
-    here we recreate that clean state by moving any real cache aside for the duration of the test
-    and restoring it after. Tests that need a cache (test_cache_present_feeds_sim) supply their own
-    via a tmp file + monkeypatch, and the direct-loader test passes explicit paths — both are
-    unaffected because the real ``load_odds_cache`` is left intact."""
-    p = Path("data/odds_cache.json")
-    backup = p.with_suffix(".json.testbak") if p.exists() else None
-    if backup is not None:
-        p.replace(backup)
-    try:
-        yield
-    finally:
-        if backup is not None:
-            backup.replace(p)
+def _no_ambient_odds_cache(tmp_path, monkeypatch):
+    """Point the loader at a private cache so tests never move the operator's odds file."""
+    monkeypatch.setattr("ui.odds_loader._CACHE_PATH", tmp_path / "odds_cache.json")
 
 
 def _apptest():
     from streamlit.testing.v1 import AppTest
 
-    return AppTest.from_file(APP, default_timeout=60)
+    # These regression cases exercise the Cologne stage chain and its historical caches.
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["major_event"] = "Cologne 2026"
+    return at
 
 
 def test_zero_config_first_run():

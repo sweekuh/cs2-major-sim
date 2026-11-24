@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+A single quoted market price now feeds the Swiss simulator even when cross-source variance is zero.
+
 Release history for swiss-mc (IEM Cologne 2026 Swiss MC & Pick'Em optimizer). Versions track the
 `ROADMAP.md` phase vocabulary and the annotated git tags. Dates are UTC.
 

@@ -113,7 +113,33 @@ EM_DASH = "—"  # — : empty-state placeholder for probs (never "0%")
 # flank is the across-draw epistemic spread; the solid core is the sampling band (UI-06: all blue).
 TWO_TONE_LEGEND = "CI bars: solid = sampling band · faint = extra width from the books disagreeing."
 
-st.set_page_config(page_title="Cologne 2026 Swiss MC", layout="wide")
+st.set_page_config(page_title="Major Pick’Em · Swiss MC", layout="wide")
+event = st.sidebar.radio("Major", ["Singapore 2026", "Cologne 2026"], key="major_event")
+if event == "Singapore 2026":
+    import json
+
+    from scripts.singapore_stage1 import FIXTURE, FORECAST, SEED, forecast
+    from ui.singapore_report import render
+
+    fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+    n = st.sidebar.number_input(
+        "Tournaments per selection and evaluation run", 1000, 200_000, 25_000, 1000
+    )
+    seed = st.sidebar.number_input("Random seed", min_value=0, value=SEED)
+    refresh_prices = st.sidebar.checkbox("Refresh Round 1 prices from Polymarket")
+    if st.sidebar.button("Re-run Stage 1"):
+        with st.spinner("Selecting the card and scoring it on fresh tournaments…"):
+            try:
+                st.session_state["singapore_card"] = forecast(
+                    n, n, max(1000, n // 4), seed, refresh_openers=refresh_prices
+                )
+            except (ValueError, KeyError, OSError) as exc:
+                st.sidebar.error(f"Run failed. Showing the previous card. {exc}")
+    card = st.session_state.get("singapore_card")
+    if not card or "line_tests" not in card:
+        card = json.loads(FORECAST.read_text(encoding="utf-8"))
+    st.html(render(card, fixture))
+    st.stop()
 
 # session_state init (Pattern 2 option B): a dict keyed on (ratings_key, S, N, locked_key)
 # gives single-compute-per-unique-key AND a real progress bar, surviving reruns in-session.
@@ -554,7 +580,7 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
 
     ``market_blend`` (the Phase-5 odds seam — default None = unchanged rating-only path):
     ``dict["lo-hi" -> (p, var)]`` of the market-priced matchups; var>0 drives the K-Beta
-    epistemic OUTER loop, var all-zero / None is the exact no-op (GATE-01 byte-identical).
+    epistemic OUTER loop. Zero variance runs once at the posted prices.
 
     ``all_bo3`` (keyword-only, default False; BO-01): forwarded straight to
     run_mc_progressive so Stage 3 resolves every match through the Bo3 closed form. False on
@@ -568,11 +594,7 @@ def _drive_progress(ratings: dict, S: float, N: int, locked: dict, market_blend=
     try:
         while True:
             p = next(gen)
-            # Clamp into [0, 1]: under the Phase-5 epistemic OUTER loop (market_blend var>0) the
-            # generator's running ``done`` tally can momentarily overshoot ``total`` across the K
-            # draws, and st.progress raises on a fraction outside [0, 1]. The bar is cosmetic, so
-            # clamp defensively rather than crash the run (Rule 1 — the engine tally is not ours
-            # to change here; this keeps the odds-fed run from ever throwing on the progress bar).
+            # Streamlit expects a fraction across all draws.
             frac = p.done / p.total if p.total else 0.0
             frac = min(1.0, max(0.0, frac))
             bar.progress(frac, text=f"Simulating… {min(p.done, p.total):,} / {p.total:,}")

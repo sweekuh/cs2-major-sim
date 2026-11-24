@@ -1,7 +1,20 @@
 # Status
 
-**v4 shipped — the project is complete: Swiss Stages 1–3 + the Playoffs.** Stage 3 is over;
-its real results are committed and the single-elimination playoff bracket is simulated end-to-end.
+## PGL Singapore 2026 · November 19
+
+Stage 1 is ready. The default app and [standalone forecast](public/index.html) show the
+ten picks, independent evaluation, price sources and sensitivity runs. The card is chosen
+and scored across a weighted mix of rating spreads; its chance of five correct is above 40%. The field, ratings,
+and opener quotes are frozen under [data/singapore2026](data/singapore2026/).
+The first match is November 24 at 04:00 UTC.
+
+The Monte Carlo engine now honors a single-source opener even when its price variance is zero.
+Multi-draw progress also counts each tournament once. Singapore loads an event-specific snapshot.
+
+## Cologne archive · June 17
+
+The v4 Cologne simulator covers Swiss Stages 1–3 and the playoffs. It includes the
+Stage 3 results and simulates the single-elimination playoff bracket end to end.
 
 Last updated: 2026-06-17
 
