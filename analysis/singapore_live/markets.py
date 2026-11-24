@@ -9,7 +9,11 @@ from __future__ import annotations
 import json
 import re
 import time
+from collections import Counter, defaultdict
 from decimal import Decimal
+from functools import partial
+
+from analysis.singapore_kalshi.paper import belongs
 
 from .names import canon
 
@@ -90,7 +94,8 @@ def poly_derivatives(events: list[dict]) -> list[dict]:
                 raise ValueError(f"Unexpected outcomes on {m.get('slug')}: {outcomes}")
             out.append({
                 "venue": "polymarket", "family": family, "team": canon(m["groupItemTitle"]),
-                "market": m["slug"], "question": m["question"], "tokens": json.loads(m["clobTokenIds"]),
+                "market": m["slug"], "question": m["question"], "rules": m.get("description", ""),
+                "tokens": json.loads(m["clobTokenIds"]),
                 "closed": bool(m.get("closed")), "accepting": bool(m.get("acceptingOrders")),
                 "fee_rate": poly_rate(m), "volume": float(m.get("volumeNum") or 0),
             })
@@ -145,7 +150,7 @@ def poly_mid(book: dict | None) -> float | None:
     if not book or not book["bids"] or not book["asks"]:
         return None
     bid, ask = book["bids"][0][0], book["asks"][0][0]
-    return (bid + ask) / 2 if ask - bid <= 0.10 else None
+    return (bid + ask) / 2 if 0 < bid <= ask < 1 and ask - bid <= 0.10 + 1e-9 else None
 
 
 # ---------------------------------------------------------------- Kalshi
@@ -166,31 +171,56 @@ def kalshi_book(client, ticker: str) -> dict:
     return _json(client, "GET", f"{KALSHI}/markets/{ticker}/orderbook")["orderbook_fp"]
 
 
-def kalshi_matches(client) -> dict[frozenset, dict]:
-    """Open Kalshi CS2 match markets keyed by team pair, with each team's bid/ask."""
-    out, cursor = {}, None
-    for _ in range(10):
+def kalshi_matches(client, fixtures) -> dict[str, dict]:
+    """Return a fallback quote only for a unique Singapore fixture and listing."""
+    by_pair = defaultdict(list)
+    for f in fixtures:
+        if f.a and f.b and f.status != "end":
+            by_pair[frozenset((f.a, f.b))].append(f)
+    candidates = defaultdict(dict)
+    normalize = partial(canon, strict=False)
+    cursor = None
+    while True:
         params = {"series_ticker": "KXCS2GAME", "status": "open", "limit": 200, "with_nested_markets": "true"}
         if cursor:
             params["cursor"] = cursor
         page = _json(client, "GET", f"{KALSHI}/events", params=params)
         for e in page.get("events", []):
             ms = e.get("markets") or []
-            try:
-                teams = [canon(m["yes_sub_title"]) for m in ms]
-            except KeyError:
+            ticker = e["event_ticker"]
+            teams = [normalize(m.get("yes_sub_title")) for m in ms]
+            possible = by_pair.get(frozenset(teams))
+            if len(ms) != 2 or not possible:
                 continue
-            if len(teams) != 2:
+            if any(
+                m.get("status") != "active" or m.get("event_ticker") != ticker
+                or m.get("market_type") != "binary"
+                or not re.search(r"\bPGL (?:Major Singapore|Singapore Major)(?: 2026)?:",
+                                 m.get("rules_primary") or "", re.IGNORECASE)
+                for m in ms
+            ):
                 continue
-            out[frozenset(teams)] = {
-                "event": e["event_ticker"],
-                "quotes": {canon(m["yes_sub_title"]): (float(m.get("yes_bid_dollars") or 0), float(m.get("yes_ask_dollars") or 1)) for m in ms},
-                "tickers": {canon(m["yes_sub_title"]): m["ticker"] for m in ms},
+            quotes = {
+                team: (float(m.get("yes_bid_dollars") or 0), float(m.get("yes_ask_dollars") or 1))
+                for team, m in zip(teams, ms)
             }
+            listing = {"event": ticker, "quotes": quotes,
+                       "tickers": {team: m["ticker"] for team, m in zip(teams, ms)}}
+            for f in possible:
+                fixture = {"teams": (f.a, f.b), "start": f.start}
+                if all(belongs(m, fixture, canonicalize=normalize) for m in ms):
+                    candidates[f.key][ticker] = listing
         cursor = page.get("cursor")
         if not cursor:
             break
-    return out
+    fixture_counts = Counter(ticker for listings in candidates.values() for ticker in listings)
+    quotes = {}
+    for key, listings in candidates.items():
+        if len(listings) == 1:
+            ticker, quote = next(iter(listings.items()))
+            if fixture_counts[ticker] == 1:
+                quotes[key] = quote
+    return quotes
 
 
 def kalshi_bo3_markets(client) -> dict[frozenset, list[dict]]:

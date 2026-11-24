@@ -9,7 +9,10 @@ Stage 2" lists, and Kalshi's "reach Stage 2" futures.
 
 A paper entry is logged when buying one side at the displayed book, after the taker fee,
 beats the least favorable fair value across the strength scenarios by ``EDGE_MIN``. The first
-entry per market side is frozen; later snapshots only record whether the gap persists.
+entry per market side is frozen after rechecking the fixture state and executable book.
+At a map break a missing match quote uses the remaining maps and the pre-match strength.
+During a map, missing match odds hold the stage forecast because every team's future draw
+can depend on that result.
 
     uv run --frozen python -m analysis.singapore_live.price            # print the table
     uv run --frozen python -m analysis.singapore_live.price --grade    # settle entries from PGL
@@ -21,19 +24,20 @@ import argparse
 import json
 import math
 import sys
-from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 import numpy as np
 
 from engine.montecarlo import run_mc
+from engine.probs import p_map
 from engine.swiss import simulate_stage
 from engine.teams import Team, build_round1_pairs, load_stage
 
 from . import feed, markets as mk
 from .watch import STATE, append
+from analysis.singapore_kalshi.model import SIZE as KALSHI_SIZE, walk as kalshi_walk
 
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "data/singapore2026/stage1.json"
@@ -92,7 +96,7 @@ def closing_price(client, cache: dict, slug: str, token: str, start: str) -> flo
     """Last Polymarket price at or before the (actual) start, cached per market."""
     if slug in cache:
         return cache[slug]
-    t0 = int(datetime.fromisoformat(start.replace(" ", "T").replace("+00", "+00:00")).timestamp())
+    t0 = int(datetime.fromisoformat(start).timestamp())
     try:
         hist = mk._json(client, "GET", f"{mk.CLOB}/prices-history",
                         params={"market": token, "startTs": t0 - 4 * 3600, "endTs": t0 + 60, "fidelity": 1})
@@ -168,9 +172,128 @@ def taker_cost_poly(book, shares, rate):
     return None
 
 
-def snapshot(reason: str, quiet: bool = False) -> dict:
-    from analysis.singapore_kalshi.model import walk as kalshi_walk, SIZE as KALSHI_SIZE
+def in_play(f):
+    return f.status != "end" and (
+        f.status == "live" or any(f.score) or any(a or b for _, a, b in f.maps)
+    )
 
+
+def at_map_break(f):
+    if f.bo != 3 or f.score not in ((1, 0), (0, 1), (1, 1)):
+        return False
+    finished = sum(f.score)
+    if len(f.maps) <= finished or any(a or b for _, a, b in f.maps[finished:]):
+        return False
+    completed = f.maps[:finished]
+    if any(max(a, b) < 13 or abs(a - b) < 2 for _, a, b in completed):
+        return False
+    return (sum(a > b for _, a, b in completed), sum(b > a for _, a, b in completed)) == f.score
+
+
+def remaining_bo3(score, map_win):
+    if score == (1, 0):
+        return 1 - (1 - map_win) ** 2
+    if score == (0, 1):
+        return map_win ** 2
+    if score == (1, 1):
+        return map_win
+    raise ValueError(f"Not a BO3 map break: {score}")
+
+
+def match_quote(f, info, books, km):
+    if info and not info["closed"] and info["accepting"] and info["bo"] == f.bo:
+        mid = mk.poly_mid(books.get(info["tokens"][0]))
+        if mid is not None:
+            return (mid if info["outcomes"][0] == f.a else 1 - mid), "polymarket"
+    if f.key in km:
+        bid, ask = km[f.key]["quotes"][f.a]
+        if 0 < bid < ask < 1 and ask - bid <= 0.10:
+            return (bid + ask) / 2, "kalshi"
+    return None, None
+
+
+def kalshi_cost(book, side, multiplier):
+    levels = book.get("no_dollars" if side == "yes" else "yes_dollars") or []
+    fill = kalshi_walk(levels, multiplier)
+    if fill:
+        return {"avg": fill["ask_c"] / 100, "unit": fill["debit_usd"] / fill["qty"], "shares": fill["qty"]}
+    return None
+
+
+def confirm_signals(client, candidates, fx, live_probs, initial_terms):
+    """Refresh the candidate books and confirm the simulated stage state still applies."""
+    if not candidates:
+        return [], None
+    wants_poly = any(s["venue"] == "polymarket" for s in candidates)
+    wants_kalshi = any(s["venue"] == "kalshi" and s.get("family") != "maps" for s in candidates)
+    wants_maps = any(s.get("family") == "maps" for s in candidates)
+    events = mk.poly_events(client) if wants_poly or live_probs else []
+    terms = {}
+    if wants_poly:
+        terms.update({("polymarket", m["market"]): m for m in mk.poly_derivatives(events)
+                      if not m["closed"] and m["accepting"]})
+    multiplier = None
+    if wants_kalshi:
+        kalshi, multiplier = mk.kalshi_s2(client)
+        terms.update({("kalshi", m["market"]): m for m in kalshi if m["status"] == "active"})
+    maps_multiplier = None
+    if wants_maps:
+        maps_multiplier = mk.kalshi_series_multiplier(client, "KXCS2TOTALMAPS")
+        terms.update({("kalshi", m["market"]): m for rows in mk.kalshi_bo3_markets(client).values()
+                      for m in rows if m["status"] == "active"})
+
+    verified = []
+    for signal in candidates:
+        key = signal["venue"], signal["market"]
+        original, fresh = initial_terms[key], terms.get(key)
+        if fresh and all(original.get(k) == fresh.get(k)
+                         for k in ("family", "team", "rules", "question", "tokens", "kind", "label")):
+            verified.append((signal, fresh))
+    if not verified:
+        return [], "Candidate markets closed or changed terms"
+
+    live_fx = [fx[key] for key in live_probs]
+    matches = mk.poly_matches(events) if live_fx else {}
+    match_info = {f.key: matches.get((f.stage, frozenset((f.a, f.b)))) for f in live_fx}
+    tokens = {s["token"] for s, _ in verified if s["venue"] == "polymarket"}
+    tokens.update(m["tokens"][0] for m in match_info.values() if m and not m["closed"] and m["accepting"])
+    books = mk.poly_books(client, sorted(tokens)) if tokens else {}
+    poly_at = now().isoformat()
+    if live_fx:
+        km = mk.kalshi_matches(client, live_fx)
+        for f in live_fx:
+            p, _ = match_quote(f, match_info[f.key], books, km)
+            if p != live_probs[f.key]:
+                return [], "A live match price changed during the scan"
+
+    confirmed = []
+    kalshi_books = {}
+    for signal, market in verified:
+        if signal["venue"] == "polymarket":
+            cost = taker_cost_poly(books.get(signal["token"]), signal["shares"], market["fee_rate"])
+            quote_at = poly_at
+        else:
+            ticker = market["market"]
+            if ticker not in kalshi_books:
+                book = mk.kalshi_book(client, ticker)
+                kalshi_books[ticker] = book, now().isoformat()
+            book, quote_at = kalshi_books[ticker]
+            cost = kalshi_cost(book, signal["side"], maps_multiplier if signal.get("family") == "maps" else multiplier)
+        threshold = EDGE_MIN_MAPS if signal.get("family") == "maps" else EDGE_MIN
+        if cost and signal["worst_fair"] - cost["unit"] >= threshold:
+            confirmed.append({**signal, "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
+                              "edge": round(signal["worst_fair"] - cost["unit"], 4), "quote_observed_at": quote_at})
+    # Read the official state *after* every book. Stage-wide Swiss derivatives depend
+    # on other teams' matches as well as the contract team's own score.
+    checked, _ = feed.fetch(client, (1,))
+    state_at = now().isoformat()
+    if checked != fx:
+        return [], "PGL fixtures or scores changed during the scan"
+    return [{**s, "worst_fair": round(s["worst_fair"], 4), "at": state_at, "state_observed_at": state_at}
+            for s in confirmed], None
+
+
+def snapshot(reason: str, quiet: bool = False) -> dict:
     teams, _ = load_stage(FIXTURE)
     by_name = {t.name: t for t in teams}
     ids = [t.id for t in teams]
@@ -190,12 +313,12 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
         events = mk.poly_events(client)
         pm = {k[1]: v for k, v in mk.poly_matches(events).items() if k[0] == 1}
         derivs = [d for d in mk.poly_derivatives(events) if not d["closed"]]
+        open_fx = [f for f in fixtures if f.status != "end"]
         try:
-            km = mk.kalshi_matches(client)
+            km = mk.kalshi_matches(client, open_fx)
         except httpx.HTTPError:
             km = {}
-        open_fx = [f for f in fixtures if f.status != "end"]
-        tokens = [t for f in open_fx if frozenset((f.a, f.b)) in pm for t in pm[frozenset((f.a, f.b))]["tokens"]]
+        tokens = [m["tokens"][0] for m in pm.values() if not m["closed"] and m["accepting"]]
         tokens += [t for d in derivs for t in d["tokens"]]
         books = mk.poly_books(client, tokens)
         k_markets, k_mult = mk.kalshi_s2(client)
@@ -216,11 +339,12 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                     k_books[m["market"]] = mk.kalshi_book(client, m["market"])
 
         locks, overrides, observations, match_rows = {}, {}, [], []
+        live_probs, map_breaks, missing = {}, [], []
         for f in fixtures:
             a, b = by_name[f.a], by_name[f.b]
             info = pm.get(frozenset((f.a, f.b)))
             close = None
-            if info and info.get("start") and (f.status != "upcoming"):
+            if info and info.get("start") and (f.status == "end" or in_play(f)):
                 c = closing_price(client, cache, info["slug"], info["tokens"][0], info["start"])
                 if c is not None:
                     close = c if info["outcomes"][0] == f.a else 1 - c
@@ -231,42 +355,59 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                 match_rows.append({"key": f.key, "round": f.round, "a": f.a, "b": f.b, "status": "end",
                                    "winner": f.winner, "close_a": close})
                 continue
-            p_a, src = None, None
-            if info:
-                mid = mk.poly_mid(books.get(info["tokens"][0]))
-                if mid is not None:
-                    p_a, src = (mid if info["outcomes"][0] == f.a else 1 - mid), "polymarket"
-            if p_a is None and frozenset((f.a, f.b)) in km:
-                bid, ask = km[frozenset((f.a, f.b))]["quotes"][f.a]
-                if 0 < bid < ask < 1 and ask - bid <= 0.10:
-                    p_a, src = (bid + ask) / 2, "kalshi"
+            p_a, src = match_quote(f, info, books, km)
+            if in_play(f):
+                live_probs[f.key] = p_a
+                if p_a is None:
+                    if at_map_break(f):
+                        map_breaks.append((f, a, b, close))
+                        src = "remaining maps"
+                    else:
+                        missing.append(f.key)
+            pre = close if in_play(f) else p_a
+            if pre is not None:
+                observations.append((a.id, b.id, pre, f.bo))
             if p_a is not None:
                 lo, hi = sorted((a.id, b.id))
                 overrides[f"{lo}-{hi}"] = p_a if a.id == lo else 1 - p_a
-                pre = close if f.status == "live" else p_a
-                if pre is not None:
-                    observations.append((a.id, b.id, pre, f.bo))
             match_rows.append({"key": f.key, "round": f.round, "a": f.a, "b": f.b, "status": f.status,
                                "score": list(f.score), "p_a": p_a, "source": src, "close_a": close})
         cache_path.write_text(json.dumps(cache, indent=1))
+        if missing:
+            hold = "Waiting for live series odds: " + ", ".join(missing)
+            snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
+                    "pickem": None, "entry_hold": hold, "quotes": [], "signals": [], "new_entries": 0}
+            append("snapshots.jsonl", [snap])
+            (STATE / "latest.md").write_text(f"# Singapore live pricing\n\n{hold}\n", encoding="utf-8")
+            print(json.dumps({"at": snap["at"], "reason": reason, "entry_hold": hold, "new_entries": 0}))
+            return snap
         check_draw(teams, locks, {k: v for k, v in overrides.items()}, fixtures, ids)
 
         fair, samples = {}, {}
+        break_probs = {f.key: {} for f, _, _, _ in map_breaks}
         for label, (scale, lam) in SCENARIOS.items():
             strengths = fit_strengths(teams, observations, scale, lam)
+            conditional = dict(overrides)
+            for f, a, b, close in map_breaks:
+                map_win = bo3_to_map(close) if close is not None else p_map(strengths[a.id], strengths[b.id], S)
+                series_win = remaining_bo3(f.score, map_win)
+                break_probs[f.key][label] = series_win
+                lo, hi = sorted((a.id, b.id))
+                conditional[f"{lo}-{hi}"] = series_win if a.id == lo else 1 - series_win
             res = run_mc(teams, strengths, S, N_SIMS, locks, seed=SEED,
-                         market_blend={k: (v, 0.0) for k, v in overrides.items()})
+                         market_blend={k: (v, 0.0) for k, v in conditional.items()})
             fair[label], samples[label] = records(res.sample, ids)
-        names = {t.id: t.name for t in teams}
+        for row in match_rows:
+            if row["key"] in break_probs:
+                probs = break_probs[row["key"]]
+                row.update(p_a=probs["base"], p_a_low=min(probs.values()), p_a_high=max(probs.values()))
 
         def band(team, family):
             vals = [fair[s][by_name[team].id][family] for s in SCENARIOS]
             return fair["base"][by_name[team].id][family], min(vals), max(vals)
 
         se = lambda p: math.sqrt(max(p * (1 - p), 1e-6) / N_SIMS)
-        # Cologne backtest: the qualify market closed ~44% of the gap within an hour only while the
-        # team's own match was live. Entries carry this tag so grading can test that split.
-        playing = {n for f in fixtures if f.status != "end" and (f.status == "live" or any(r1 or r2 for _, r1, r2 in f.maps) or sum(f.score)) for n in (f.a, f.b)}
+        playing = {name for f in fixtures if in_play(f) for name in (f.a, f.b)}
         quotes, signals = [], []
         for d in derivs:
             p, lo, hi = band(d["team"], d["family"])
@@ -288,7 +429,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                                         "family": d["family"], "team": d["team"], "side": side,
                                         "shares": POLY_SHARES, "avg": round(cost["avg"], 4),
                                         "unit_cost": round(cost["unit"], 4), "fair": round(p if side == "yes" else 1 - p, 4),
-                                        "worst_fair": round(worst, 4), "edge": round(edge, 4)})
+                                        "worst_fair": worst, "edge": round(edge, 4)})
             quotes.append(row)
         for m in k_markets:
             if m["market"] not in k_books:
@@ -300,22 +441,23 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             yb, nb = book.get("yes_dollars") or [], book.get("no_dollars") or []
             row["bid"] = max((float(x[0]) for x in yb), default=None)
             row["ask"] = round(1 - max((float(x[0]) for x in nb), default=1.0), 4) if nb else None
-            for side, levels, worst in (("yes", nb, lo - 2 * se(lo)), ("no", yb, 1 - hi - 2 * se(hi))):
-                fill = kalshi_walk(levels, k_mult) if levels else None
-                if fill:
-                    unit = fill["debit_usd"] / fill["qty"]
+            for side, worst in (("yes", lo - 2 * se(lo)), ("no", 1 - hi - 2 * se(hi))):
+                cost = kalshi_cost(book, side, k_mult)
+                if cost:
+                    unit = cost["unit"]
                     edge = worst - unit
                     row[f"{side}_unit"] = round(unit, 4)
                     row[f"{side}_edge"] = round(edge, 4)
                     if edge >= EDGE_MIN:
                         signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi", "in_play": m["team"] in playing,
                                         "market": m["market"], "family": "qualify", "team": m["team"],
-                                        "side": side, "shares": KALSHI_SIZE, "avg": round(fill["ask_c"] / 100, 4),
+                                        "side": side, "shares": KALSHI_SIZE, "avg": round(cost["avg"], 4),
                                         "unit_cost": round(unit, 4), "fair": round(p if side == "yes" else 1 - p, 4),
-                                        "worst_fair": round(worst, 4), "edge": round(edge, 4)})
+                                        "worst_fair": worst, "edge": round(edge, 4)})
             quotes.append(row)
 
         # Exploratory: Kalshi best-of-three map-score markets, priced from the match price alone.
+        map_rows = [m for rows in k_maps.values() for m in rows]
         for f in fixtures:
             pair = frozenset((f.a, f.b))
             if f.bo != 3 or f.status == "end" or pair not in k_maps:
@@ -328,35 +470,33 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             for m in k_maps[pair]:
                 if m["market"] not in k_books:
                     continue
-                if m["kind"] == "over":
-                    p = probs["over"]
-                else:
-                    p = probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]
+                p = probs["over"] if m["kind"] == "over" else probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]
                 book = k_books[m["market"]]
                 yb, nb = book.get("yes_dollars") or [], book.get("no_dollars") or []
                 row = {"venue": "kalshi", "family": "maps", "team": m["team"] or "over 2.5", "market": m["market"],
                        "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p, 4),
                        "fair_hi": round(p, 4), "bid": max((float(x[0]) for x in yb), default=None),
                        "ask": round(1 - max((float(x[0]) for x in nb), default=1.0), 4) if nb else None}
-                for side, levels, fair in (("yes", nb, p), ("no", yb, 1 - p)):
-                    fill = kalshi_walk(levels, map_mult) if levels else None
-                    if fill:
-                        unit = fill["debit_usd"] / fill["qty"]
-                        row[f"{side}_unit"] = round(unit, 4)
-                        row[f"{side}_edge"] = round(fair - unit, 4)
-                        if fair - unit >= EDGE_MIN_MAPS:
+                for side, fair_side in (("yes", p), ("no", 1 - p)):
+                    cost = kalshi_cost(book, side, map_mult)
+                    if cost:
+                        row[f"{side}_unit"] = round(cost["unit"], 4)
+                        row[f"{side}_edge"] = round(fair_side - cost["unit"], 4)
+                        if fair_side - cost["unit"] >= EDGE_MIN_MAPS:
                             signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
                                             "in_play": f.a in playing, "market": m["market"], "family": "maps",
-                                            "kind": m["kind"], "team": m["team"], "match_key": f.key,
-                                            "a": f.a, "b": f.b, "score": list(f.score), "side": side,
-                                            "shares": KALSHI_SIZE, "avg": round(fill["ask_c"] / 100, 4),
-                                            "unit_cost": round(unit, 4), "fair": round(fair, 4),
-                                            "worst_fair": round(fair, 4), "edge": round(fair - unit, 4)})
+                                            "kind": m["kind"], "team": m["team"], "label": m["label"],
+                                            "match_key": f.key, "a": f.a, "b": f.b, "score": list(f.score),
+                                            "side": side, "shares": KALSHI_SIZE, "avg": round(cost["avg"], 4),
+                                            "unit_cost": round(cost["unit"], 4), "fair": round(fair_side, 4),
+                                            "worst_fair": fair_side, "edge": round(fair_side - cost["unit"], 4)})
                 quotes.append(row)
 
-    # Only venues the user can trade produce paper entries; the rest stay in the snapshot as reference.
-    reference = [s for s in signals if s["venue"] not in PAPER_VENUES]
-    signals = [s for s in signals if s["venue"] in PAPER_VENUES]
+        # Only venues the user can trade produce paper entries; the rest stay in the snapshot as reference.
+        reference = [s for s in signals if s["venue"] not in PAPER_VENUES]
+        signals = [s for s in signals if s["venue"] in PAPER_VENUES]
+        terms = {(m["venue"], m["market"]): m for m in [*derivs, *k_markets, *map_rows]}
+        signals, hold = confirm_signals(client, signals, fx, live_probs, terms)
 
     # Pick'Em: chance the locked card still reaches five correct.
     card = json.loads(CARD.read_text())["card"]
@@ -380,15 +520,17 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
     snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
             "locks": len(locks), "priced_matches": len(overrides), "observations": len(observations),
             "pickem": pickem, "quotes": quotes, "signals": signals, "reference_signals": reference,
-            "new_entries": len(new)}
+            "new_entries": len(new), "entry_hold": hold}
     append("snapshots.jsonl", [snap])
     write_latest(snap)
     summary = {"at": snap["at"], "reason": reason, "pickem_p_ge5": round(pickem["p_ge5"], 4),
+               "entry_hold": hold,
                "live_teams": sorted(playing), "new_in_play": sum(bool(s.get("in_play")) for s in new),
-               "new": [f"{s['family']} {s.get('team') or ''} {s.get('kind', '')} {s['side'].upper()} @{s['unit_cost']:.2f} fair {s['fair']:.2f}{' in-play' if s.get('in_play') else ''}".replace("  ", " ")
-                       for s in new],
                "pickem_max": pickem["max_possible"], "signals": len(signals), "new_entries": len(new),
-               "top": [f"{s['venue']} {s['family']} {s.get('team') or ''} {s.get('kind', '')} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c{' in-play' if s.get('in_play') else ''}"
+               "new": [" ".join(x for x in (s["family"], s.get("team") or "", s.get("kind", ""), s["side"].upper(),
+                                            f"@{s['unit_cost']:.2f} fair {s['fair']:.2f}", "in-play" if s.get("in_play") else "") if x)
+                       for s in new],
+               "top": [f"{s['venue']} {s['family']} {s.get('team') or s.get('kind', '')} {s['side'].upper()} @{s['unit_cost']:.3f} fair>={s['worst_fair']:.3f} edge {100*s['edge']:.1f}c{' in-play' if s.get('in_play') else ''}"
                        for s in sorted(signals, key=lambda s: -s["edge"])[:5]]}
     if not quiet:
         print((STATE / "latest.md").read_text())
@@ -403,6 +545,8 @@ def write_latest(snap):
     for m in snap["matches"]:
         if m["status"] != "end":
             price = f"{m['p_a']:.3f}" if m.get("p_a") is not None else "n/a"
+            if "p_a_low" in m:
+                price += f" ({m['p_a_low']:.3f}-{m['p_a_high']:.3f})"
             lines.append(f"| {m['a']} vs {m['b']} | {m['status']} {m.get('score', '')} | {price} | {m.get('source')} |")
     lines += ["", "| Venue | Market | Team | Fair (range) | Bid / Ask | YES edge | NO edge |", "|---|---|---|---|---|---|---|"]
     rows = sorted(snap["quotes"], key=lambda q: -max(q.get("yes_edge", -1), q.get("no_edge", -1)))
@@ -411,11 +555,14 @@ def write_latest(snap):
                      f"{q.get('bid')} / {q.get('ask')} | {q.get('yes_edge', '')} | {q.get('no_edge', '')} |")
     lines += ["", f"Signals this snapshot: {len(snap['signals'])}, new paper entries: {snap['new_entries']}. "
               "Edges are after taker fees against the least favorable scenario. Paper only."]
+    if snap.get("entry_hold"):
+        lines.append(snap["entry_hold"])
     (STATE / "latest.md").write_text("\n".join(lines) + "\n")
 
 
 def grade() -> dict:
     """Settle frozen entries once Stage 1 records are final on PGL."""
+    STATE.mkdir(exist_ok=True)
     with httpx.Client(timeout=25) as client:
         fx, _ = feed.fetch(client, (1,))
     rec = {}
