@@ -128,3 +128,39 @@ def test_push_text_is_one_short_line():
     assert "\n" not in text and len(text) <= 195
     assert text.startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9") and "PickEm 10%" in text
     assert push_text([], None) is None
+
+
+def test_map_markets_bind_to_the_fixture_and_skip_unknown_contracts(monkeypatch):
+    pages = {
+        "KXCS2TOTALMAPS": [
+            {"event_ticker": "KXCS2TOTALMAPS-26NOV250530TLNIP", "title": "Liquid vs. NIP: Total Maps",
+             "markets": [{"ticker": "T-3", "yes_sub_title": "Over 2.5 maps", "status": "active"}]},
+            {"event_ticker": "KXCS2TOTALMAPS-26NOV290300TLNIP", "title": "Liquid vs. NIP: Total Maps",
+             "markets": [{"ticker": "T-rematch", "yes_sub_title": "Over 2.5 maps", "status": "active"},
+                         {"ticker": "T-odd", "yes_sub_title": "Over 3.5 maps", "status": "active"}]},
+        ],
+        "KXCS2SPREAD": [
+            {"event_ticker": "KXCS2SPREAD-26NOV250530TLNIP", "title": "Liquid vs. NIP: Spread",
+             "markets": [{"ticker": "S-TL", "yes_sub_title": "Liquid wins by over 1.5 maps", "status": "active"},
+                         {"ticker": "S-odd", "yes_sub_title": "Someone else wins by over 1.5 maps", "status": "active"}]},
+        ],
+    }
+    monkeypatch.setattr(mk, "_json", lambda client, method, url, params=None, **_: {"events": pages[params["series_ticker"]]})
+    rows = mk.kalshi_bo3_markets(None)[frozenset(("Liquid", "NIP"))]
+    assert {r["market"] for r in rows} == {"T-3", "T-rematch", "S-TL"}  # unknown wording skipped, no crash
+    f = fx(key="s1-22", a="NIP", b="Liquid")
+    km = {"s1-22": {"event": "KXCS2GAME-26NOV250530TLNIP"}}
+    bound = price.fixture_map_markets(f, mk.kalshi_bo3_markets(None), km)
+    assert {r["market"] for r in bound} == {"T-3", "S-TL"}  # the later rematch listing is excluded
+    assert price.fixture_map_markets(f, mk.kalshi_bo3_markets(None), {}) == []
+
+
+def test_series_score_after_each_map_when_two_maps_end_between_polls():
+    from analysis.singapore_live.watch import push_text
+
+    at = "2026-11-25T09:30:00+00:00"
+    before = fx(status="live", maps=(("de_nuke", 3, 2), ("", 0, 0), ("", 0, 0)))
+    after = fx(status="live", score=(1, 1), maps=(("de_nuke", 13, 9), ("de_inferno", 7, 13), ("", 0, 0)))
+    ends = [e for e in diff({"s1-20": before}, {"s1-20": after}, at=at) if e["type"] == "map_end"]
+    assert [e["series_after"] for e in ends] == [[1, 0], [1, 1]]
+    assert push_text(ends[:1], None).startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9")

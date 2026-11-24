@@ -132,6 +132,20 @@ def map_score_probs(s_a: float, r: float, score: tuple[int, int]) -> dict:
     return {"sweep_a": float((a, b) == (2, 0)), "sweep_b": float((a, b) == (0, 2)), "over": float(a + b == 3)}
 
 
+def fixture_map_markets(f, k_maps, km):
+    """Kalshi map-score rows for this fixture only.
+
+    Map markets share the event suffix of the KXCS2GAME listing (``...-26NOV250530TLNIP``), and
+    that listing is already bound to the PGL fixture by teams, settlement wording and kickoff.
+    Without a bound listing the fixture gets no map markets, so a rematch can never borrow them.
+    """
+    listing = km.get(f.key)
+    if not listing or "event" not in listing:
+        return []
+    suffix = listing["event"].split("-", 1)[1]
+    return [m for m in k_maps.get(frozenset((f.a, f.b)), []) if m.get("event", "").split("-", 1)[-1] == suffix]
+
+
 def records(sample, ids):
     arr = np.array([[s[i] for i in ids] for s in sample], dtype=np.int8)  # (n, teams, 2)
     out = {}
@@ -459,15 +473,18 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
         # Exploratory: Kalshi best-of-three map-score markets, priced from the match price alone.
         map_rows = [m for rows in k_maps.values() for m in rows]
         for f in fixtures:
-            pair = frozenset((f.a, f.b))
-            if f.bo != 3 or f.status == "end" or pair not in k_maps:
+            bound = fixture_map_markets(f, k_maps, km) if f.bo == 3 and f.status != "end" else []
+            if not bound:
                 continue
             mr = next(m for m in match_rows if m["key"] == f.key)
             if mr.get("p_a") is None:
                 continue
-            pre = mr.get("close_a") if mr.get("close_a") is not None else mr["p_a"]
+            # Fresh maps need the pre-match strength. Mid-match, the live price is not a substitute.
+            pre = mr.get("close_a") if mr.get("close_a") is not None else (None if in_play(f) else mr["p_a"])
+            if pre is None:
+                continue
             probs = map_score_probs(mr["p_a"], bo3_to_map(pre), f.score)
-            for m in k_maps[pair]:
+            for m in bound:
                 if m["market"] not in k_books:
                     continue
                 p = probs["over"] if m["kind"] == "over" else probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]

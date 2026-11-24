@@ -227,7 +227,9 @@ def kalshi_bo3_markets(client) -> dict[frozenset, list[dict]]:
     """Open Kalshi total-maps and map-spread markets, keyed by team pair.
 
     Each row is a binary contract on the series' map score: "over" (three maps played) or
-    "sweep" by a named team (a 2-0 win).
+    "sweep" by a named team (a 2-0 win). Rows carry their event ticker so the pricer can bind
+    them to one fixture through the matching KXCS2GAME listing. A contract whose wording is not
+    recognized is skipped, so it cannot be traded and cannot stop the rest of the pricer.
     """
     out: dict[frozenset, list[dict]] = {}
     for series, kind in (("KXCS2TOTALMAPS", "over"), ("KXCS2SPREAD", "sweep")):
@@ -243,17 +245,20 @@ def kalshi_bo3_markets(client) -> dict[frozenset, list[dict]]:
                 continue
             for m in e.get("markets") or []:
                 label = m.get("yes_sub_title") or ""
+                if m.get("market_type", "binary") != "binary":
+                    continue
                 if kind == "over":
                     if not re.fullmatch(r"Over 2\.5 maps", label.strip(), re.IGNORECASE):
-                        raise ValueError(f"Review total-maps contract {m['ticker']}: {label!r}")
+                        continue
                     team = None
                 else:
                     won = re.fullmatch(r"(.+?) wins by over 1\.5 maps?", label.strip(), re.IGNORECASE)
-                    if not won:
-                        raise ValueError(f"Review spread contract {m['ticker']}: {label!r}")
-                    team = canon(won[1])
+                    team = canon(won[1], strict=False) if won else None
+                    if team not in pair:
+                        continue
                 out.setdefault(pair, []).append({"venue": "kalshi", "family": "maps", "kind": kind, "team": team,
-                                                 "market": m["ticker"], "status": m["status"], "label": label})
+                                                 "market": m["ticker"], "status": m["status"], "label": label,
+                                                 "event": e["event_ticker"]})
     return out
 
 

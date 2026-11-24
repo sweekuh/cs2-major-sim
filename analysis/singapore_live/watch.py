@@ -96,8 +96,10 @@ def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, 
             idx = n - 1
             name, ra, rb = c.maps[idx] if idx < len(c.maps) else ("", 0, 0)
             winner = c.a if ra > rb else c.b if rb > ra else None
+            done = c.maps[:n]
             events.append({**base, "type": "map_end", "map_index": n, "map": name,
-                           "rounds": [ra, rb], "map_winner": winner})
+                           "rounds": [ra, rb], "map_winner": winner,
+                           "series_after": [sum(x > y for _, x, y in done), sum(y > x for _, x, y in done)]})
         if p.status != "end" and c.status == "end":
             events.append({**base, "type": "match_finish", "winner": c.winner})
         elif p.status == c.status == "end" and p.winner != c.winner:
@@ -135,7 +137,8 @@ def push_text(events: list[dict], pricing: dict | None) -> str | None:
             parts.append(f"LIVE {e['a']} v {e['b']} (R{e['round']} Bo{e['bo']})")
         elif e["type"] == "map_end" and not (e["bo"] == 1):
             name = (e.get("map") or "").replace("de_", "").title()
-            parts.append(f"{e['a']} {e['score'][0]}-{e['score'][1]} {e['b']} after map {e['map_index']} {name} {e['rounds'][0]}-{e['rounds'][1]}")
+            sa, sb = e.get("series_after", e["score"])
+            parts.append(f"{e['a']} {sa}-{sb} {e['b']} after map {e['map_index']} {name} {e['rounds'][0]}-{e['rounds'][1]}")
         elif e["type"] == "match_finish":
             parts.append(f"FINAL {e['a']} {e['score'][0]}-{e['score'][1]} {e['b']}")
         elif e["type"] == "fixture_changed":
