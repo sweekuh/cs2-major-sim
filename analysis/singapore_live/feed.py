@@ -164,6 +164,11 @@ def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -
         else:
             if max(won) >= f.bo // 2 + 1:
                 continue  # maps say it is over but the match is not marked finished
+            if sum(f.score) >= sum(won) and (sum(f.score) or any(ra or rb for _, ra, rb in f.maps)):
+                # PGL is at least as far along (bo3.gg can list a map finished before naming its
+                # winner): keep PGL's score and round scores and only mark the match live.
+                out[f.key] = replace(f, status="live")
+                continue
             out[f.key] = replace(f, status="live", score=won, maps=maps)
     return out
 

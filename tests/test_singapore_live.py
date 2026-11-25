@@ -208,6 +208,21 @@ def test_bo3_overlay_defers_to_pgl_and_ignores_mismatches():
     assert feed.overlay({"s1-20": upcoming}, {1: twice})["s1-20"] == upcoming  # ambiguous: no overlay
 
 
+def test_bo3_never_hides_a_map_result_pgl_already_has():
+    """On November 25 bo3.gg listed Dust2 finished with no winner while PGL had FlyQuest 13-11."""
+    was = fx(status="live", maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    pgl = fx(status="live", score=(0, 1), maps=(("de_dust2", 11, 13), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    unnamed = [{"number": 1, "status": "finished", "map_name": "de_dust2", "winner_clan_name": None,
+                "winner_clan_score": None, "loser_clan_score": None},
+               {"number": 2, "status": "upcoming", "map_name": None}, {"number": 3, "status": "upcoming", "map_name": None}]
+    now = feed.overlay({"s1-20": pgl}, {1: [_bo3("current", unnamed)]})["s1-20"]
+    assert now == pgl
+    ends = [e for e in diff({"s1-20": was}, {"s1-20": now}, at="2026-11-25T09:30:00+00:00") if e["type"] == "map_end"]
+    assert [(e["map"], e["rounds"], e["map_winner"]) for e in ends] == [("de_dust2", [11, 13], "FlyQuest")]
+    upcoming = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", unnamed)]})["s1-20"].status == "live"
+
+
 def test_bo3_current_before_a_map_starts_is_not_a_start():
     """On November 25 bo3.gg marked Imperial v FlyQuest current at 08:10 with no map underway, then reverted."""
     vetoed = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
