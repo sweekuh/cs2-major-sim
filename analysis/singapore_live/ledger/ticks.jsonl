@@ -202,3 +202,22 @@
 {"at": "2026-11-25T07:00:56.097915+00:00", "key": "s1-16", "a": "HEROIC", "b": "M80", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
 {"at": "2026-11-25T07:00:56.097915+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.495, "kalshi_a": 0.515, "score": [0, 0], "maps": [["", 0, 0]]}
 {"at": "2026-11-25T07:01:24.870863+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.495, "kalshi_a": 0.505, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:02:23.601744+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.485, "kalshi_a": 0.5, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:02:57.381572+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.495, "kalshi_a": 0.495, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:03:14.982087+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.475, "kalshi_a": 0.485, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:03:32.732286+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.475, "kalshi_a": null, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:04:14.183833+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.595, "kalshi_a": null, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:04:55.801347+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.585, "kalshi_a": 0.57, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:05:24.537828+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.575, "kalshi_a": 0.565, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:06:20.362987+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.555, "kalshi_a": null, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:07:01.684009+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.625, "kalshi_a": 0.625, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:07:21.182465+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.635, "kalshi_a": 0.63, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:08:02.309438+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.635, "kalshi_a": 0.62, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:08:20.113385+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.675, "kalshi_a": 0.65, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:08:38.142588+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.655, "kalshi_a": 0.65, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:09:24.043737+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.515, "kalshi_a": 0.57, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:09:41.546609+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.505, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:10:10.244245+00:00", "key": "s1-18", "a": "PVISION", "b": "FaZe", "p_a": 0.555, "kalshi_a": 0.555, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:10:10.244245+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.475, "kalshi_a": 0.485, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}
+{"at": "2026-11-25T07:11:01.231278+00:00", "key": "s1-18", "a": "PVISION", "b": "FaZe", "p_a": 0.555, "kalshi_a": 0.555, "score": [0, 0], "maps": [["", 0, 0]]}
+{"at": "2026-11-25T07:11:01.231278+00:00", "key": "s1-19", "a": "Wildcard", "b": "Lynn Vision", "p_a": 0.415, "kalshi_a": 0.445, "score": [0, 0], "maps": [["de_dust2", 0, 0]]}

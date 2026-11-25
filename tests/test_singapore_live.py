@@ -204,3 +204,16 @@ def test_bo3_overlay_defers_to_pgl_and_ignores_mismatches():
     assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("finished", [], s=(1, 1))]})["s1-20"] == upcoming
     twice = [_bo3("current", []), _bo3("current", [])]
     assert feed.overlay({"s1-20": upcoming}, {1: twice})["s1-20"] == upcoming  # ambiguous: no overlay
+
+
+def test_a_flapping_start_is_reported_once(monkeypatch, tmp_path):
+    from analysis.singapore_live import watch
+
+    monkeypatch.setattr(watch, "STATE", tmp_path)
+    upcoming, live = fx(key="s1-18", bo=1, maps=(("", 0, 0),)), fx(key="s1-18", bo=1, status="live", maps=(("de_nuke", 0, 0),))
+    states = iter([upcoming, live, upcoming, live])
+    monkeypatch.setattr(watch.feed, "fetch", lambda *_: ({"s1-18": next(states)}, {1: "t"}))
+    for _ in range(4):
+        watch.main(["--once", "--no-track-prices", "--price-on", "", "--price-every-live", "0"])
+    starts = [json.loads(x) for x in (tmp_path / "events.jsonl").read_text().splitlines()]
+    assert [e["type"] for e in starts if e["type"] == "match_start"] == ["match_start"]

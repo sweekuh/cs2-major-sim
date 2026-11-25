@@ -314,6 +314,14 @@ def main(argv=None) -> int:
                 time.sleep(min(60, 5 * failures))
                 continue
             events = diff(prev, cur, at=at.isoformat(), updated=updated)
+            # bo3.gg can mark a match current early, drop it back to upcoming, then start it
+            # for real. Report each match's start once; later starts stay in the local log only.
+            reported = set(checkpoint.setdefault("started", []))
+            repeats = [e for e in events if e["type"] == "match_start" and e["key"] in reported]
+            if repeats:
+                append("errors.jsonl", [{"at": at.isoformat(), "where": "repeat_start", "key": e["key"]} for e in repeats])
+                events = [e for e in events if e not in repeats]
+            checkpoint["started"] = sorted(reported | {e["key"] for e in events if e["type"] == "match_start"})
             if args.post:
                 outbound = [e for e in events if e["type"] != "round_update"]
                 if outbound:
