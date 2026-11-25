@@ -727,3 +727,5 @@
 {"at": "2026-11-25T08:52:24.023023+00:00", "key": "s1-21", "a": "9z", "b": "DENDELE", "p_a": 0.785, "kalshi_a": 0.785, "score": [0, 0], "maps": [["de_mirage", 0, 0], ["de_cache", 0, 0], ["de_nuke", 0, 0]]}
 {"at": "2026-11-25T08:52:41.858006+00:00", "key": "s1-20", "a": "Imperial", "b": "FlyQuest", "p_a": 0.525, "kalshi_a": 0.52, "score": [0, 0], "maps": [["de_dust2", 0, 0], ["de_cache", 0, 0], ["de_inferno", 0, 0]]}
 {"at": "2026-11-25T08:52:41.858006+00:00", "key": "s1-21", "a": "9z", "b": "DENDELE", "p_a": 0.785, "kalshi_a": 0.785, "score": [1, 0], "maps": [["de_mirage", 13, 5], ["de_cache", 0, 0], ["de_nuke", 0, 0]]}
+{"at": "2026-11-25T08:53:29.208802+00:00", "key": "s1-20", "a": "Imperial", "b": "FlyQuest", "p_a": 0.535, "kalshi_a": 0.535, "score": [0, 0], "maps": [["de_dust2", 0, 0], ["de_cache", 0, 0], ["de_inferno", 0, 0]]}
+{"at": "2026-11-25T08:53:29.208802+00:00", "key": "s1-21", "a": "9z", "b": "DENDELE", "p_a": 0.785, "kalshi_a": 0.785, "score": [1, 0], "maps": [["de_mirage", 13, 5], ["de_cache", 0, 0], ["de_nuke", 0, 0]]}
