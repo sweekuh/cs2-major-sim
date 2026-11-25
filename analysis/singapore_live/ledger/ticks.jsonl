@@ -1832,3 +1832,4 @@
 {"at": "2026-11-25T12:40:27.931110+00:00", "key": "s1-22", "a": "NIP", "b": "Liquid", "p_a": 0.9995, "kalshi_a": null, "score": [1, 0], "maps": [["de_inferno", 13, 3], ["de_ancient", 0, 0], ["de_nuke", 0, 0]]}
 {"at": "2026-11-25T12:40:27.931110+00:00", "key": "s1-23", "a": "GOSH", "b": "Chinggis Warriors", "p_a": 0.22, "kalshi_a": 0.215, "score": [1, 1], "maps": [["de_ancient", 11, 13], ["de_dust2", 13, 6], ["de_nuke", 0, 0]]}
 {"at": "2026-11-25T12:40:46.031045+00:00", "key": "s1-23", "a": "GOSH", "b": "Chinggis Warriors", "p_a": 0.235, "kalshi_a": 0.225, "score": [1, 1], "maps": [["de_ancient", 11, 13], ["de_dust2", 13, 6], ["de_nuke", 0, 0]]}
+{"at": "2026-11-25T12:41:16.067084+00:00", "key": "s1-23", "a": "GOSH", "b": "Chinggis Warriors", "p_a": 0.165, "kalshi_a": 0.175, "score": [1, 1], "maps": [["de_ancient", 11, 13], ["de_dust2", 13, 6], ["de_nuke", 0, 0]]}

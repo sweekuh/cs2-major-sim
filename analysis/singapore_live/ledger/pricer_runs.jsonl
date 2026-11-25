@@ -141,3 +141,4 @@
 {"at": "2026-11-25T12:35:20.829038+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0049, "entry_hold": null, "live_teams": ["Chinggis Warriors", "GOSH", "Liquid", "NIP"], "new_in_play": 0, "pickem_max": 5, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-25T12:38:33.479967+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-22", "new_entries": 0}
 {"at": "2026-11-25T12:40:49.070521+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0043, "entry_hold": null, "live_teams": ["Chinggis Warriors", "GOSH"], "new_in_play": 0, "pickem_max": 5, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-25T12:41:19.442602+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0033, "entry_hold": null, "live_teams": ["Chinggis Warriors", "GOSH"], "new_in_play": 0, "pickem_max": 5, "signals": 0, "new_entries": 0, "new": [], "top": []}
