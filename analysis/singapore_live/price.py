@@ -48,6 +48,10 @@ SEED = 20261125
 POLY_SHARES = 20
 EDGE_MIN = 0.02
 EDGE_MIN_MAPS = 0.05  # exploratory family, not part of the pre-registered test
+# In-play match prices move every few seconds, so an exact match between scan and recheck would
+# block every in-play entry. A recheck accepts a move of at most this much per live match and
+# raises the required edge by the most that move can shift the entry's fair value.
+LIVE_PRICE_TOLERANCE = 0.02
 PAPER_VENUES = {"kalshi"}  # the user trades on Kalshi only; Polymarket is a read-only price input
 # (prior scale, ridge weight): how far undrawn-round strengths lean on Nov 19 points.
 SCENARIOS = {"base": (1.0, 0.3), "flat_prior": (0.5, 0.3), "sticky": (1.0, 2.0), "flat_sticky": (0.5, 2.0)}
@@ -273,12 +277,19 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
     tokens.update(m["tokens"][0] for m in match_info.values() if m and not m["closed"] and m["accepting"])
     books = mk.poly_books(client, sorted(tokens)) if tokens else {}
     poly_at = now().isoformat()
+    moved = {}
     if live_fx:
         km = mk.kalshi_matches(client, live_fx)
         for f in live_fx:
             p, _ = match_quote(f, match_info[f.key], books, km)
-            if p != live_probs[f.key]:
+            was = live_probs[f.key]
+            if p is None or was is None:
+                if p != was:
+                    return [], "A live match price changed during the scan"
+                continue
+            if abs(p - was) > LIVE_PRICE_TOLERANCE + 1e-9:
                 return [], "A live match price changed during the scan"
+            moved[f.key] = abs(p - was)
 
     confirmed = []
     kalshi_books = {}
@@ -294,8 +305,17 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
             book, quote_at = kalshi_books[ticker]
             cost = kalshi_cost(book, signal["side"], maps_multiplier if signal.get("family") == "maps" else multiplier)
         threshold = EDGE_MIN_MAPS if signal.get("family") == "maps" else EDGE_MIN
+        # A stage derivative is linear in each live match price with slope in [-1, 1], so the
+        # total move bounds its fair-value change. A map-score contract depends only on its own
+        # match, at most 1 / min(r, 1 - r) per unit of series price (``price_slope``).
+        if signal.get("family") == "maps":
+            drift = signal.get("price_slope", 1.0) * moved.get(signal.get("match_key"), 0.0)
+        else:
+            drift = sum(moved.values())
+        threshold += drift
         if cost and signal["worst_fair"] - cost["unit"] >= threshold:
-            confirmed.append({**signal, "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
+            confirmed.append({**signal, "live_price_drift": round(drift, 4),
+                              "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
                               "edge": round(signal["worst_fair"] - cost["unit"], 4), "quote_observed_at": quote_at})
     # Read the official state *after* every book. Stage-wide Swiss derivatives depend
     # on other teams' matches as well as the contract team's own score.
@@ -485,7 +505,9 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             pre = mr.get("close_a") if mr.get("close_a") is not None else (None if in_play(f) else mr["p_a"])
             if pre is None:
                 continue
-            probs = map_score_probs(mr["p_a"], bo3_to_map(pre), f.score)
+            fresh = bo3_to_map(pre)
+            probs = map_score_probs(mr["p_a"], fresh, f.score)
+            slope = 1 / max(min(fresh, 1 - fresh), 1e-3)
             for m in bound:
                 if m["market"] not in k_books:
                     continue
@@ -505,7 +527,8 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                             signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
                                             "in_play": f.a in playing, "market": m["market"], "family": "maps",
                                             "kind": m["kind"], "team": m["team"], "label": m["label"],
-                                            "match_key": f.key, "a": f.a, "b": f.b, "score": list(f.score),
+                                            "match_key": f.key, "price_slope": round(slope, 4),
+                                            "a": f.a, "b": f.b, "score": list(f.score),
                                             "side": side, "shares": KALSHI_SIZE, "avg": round(cost["avg"], 4),
                                             "unit_cost": round(cost["unit"], 4), "fair": round(fair_side, 4),
                                             "worst_fair": fair_side, "edge": round(fair_side - cost["unit"], 4)})

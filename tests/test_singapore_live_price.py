@@ -192,3 +192,24 @@ def test_grade_on_fresh_checkout(monkeypatch, tmp_path):
     monkeypatch.setattr(feed, "fetch", lambda *_: ({}, {}))
     assert price.grade()["entries"] == 0
     assert json.loads((state / "graded.json").read_text())["settled"] == 0
+
+
+def test_small_live_move_raises_the_bar_instead_of_blocking(monkeypatch):
+    """In-play prices tick constantly; a move within tolerance only raises the required edge."""
+    fixtures, f = stage_at_round_three()
+    poly = poly_market(f.a)
+    monkeypatch.setattr(price.mk, "poly_events", lambda *_: [])
+    monkeypatch.setattr(price.mk, "poly_derivatives", lambda *_: [poly])
+    monkeypatch.setattr(price.mk, "poly_matches", lambda *_: {})
+    monkeypatch.setattr(price.mk, "poly_books", lambda *_: {"yes": book(.5)})
+    monkeypatch.setattr(price.mk, "kalshi_matches", lambda *_: {f.key: {"quotes": {f.a: (.80, .82)}}})
+    monkeypatch.setattr(feed, "fetch", lambda *_: (fixtures, {1: "test"}))
+    terms = {("polymarket", poly["market"]): poly}
+    cost = .5 + .05 * .5 * .5
+    # The quote moved 1 cent (0.80 -> 0.81). An edge of 2.5 cents fails (needs 2 + 1); 3.5 passes.
+    thin = {"venue": "polymarket", "market": poly["market"], "token": "yes", "side": "yes", "shares": 20,
+            "worst_fair": cost + .025}
+    assert price.confirm_signals(None, [thin], fixtures, {f.key: .80}, terms)[0] == []
+    wide = {**thin, "worst_fair": cost + .035}
+    entries, hold = price.confirm_signals(None, [wide], fixtures, {f.key: .80}, terms)
+    assert hold is None and len(entries) == 1 and entries[0]["live_price_drift"] == pytest.approx(.01)
