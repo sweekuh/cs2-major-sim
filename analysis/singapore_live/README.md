@@ -51,7 +51,9 @@ It uses these simulations to value Polymarket's 3-0, 3-1, 3-2, 0-3 and qualifica
 markets and Kalshi's Stage 2 qualification futures. The engine checks its draw against PGL.
 
 If both match quotes disappear between confirmed maps of a best-of-three, the simulator
-prices only the remaining maps. For equally matched teams, a 1–0 lead implies a 75%
+prices only the remaining maps. Neither feed reports live round scores, so a break counts
+only when bo3.gg shows the last map finished and none in progress; otherwise the pricer
+treats the map as underway. For equally matched teams, a 1–0 lead implies a 75%
 series win probability and a 0–1 deficit implies 25%. If a map is underway and neither
 venue provides a usable match quote, the pricer holds the stage forecast and paper entries
 until it can price that match again. One result can change other teams' Swiss pairings.
@@ -121,10 +123,15 @@ observed.
 - **Map-score markets (exploratory).** Kalshi's best-of-three "Total Maps" and map "Spread"
   contracts are priced from the live series price: the map in progress takes whatever chance
   reconciles that price with fresh maps at the pre-match per-map strength. Entries need a
-  5-cent edge and are graded as their own group, outside the pre-registered test.
+  5-cent edge and are graded as their own group, outside the pre-registered test. They also
+  need a price between 3 and 97 cents and an edge of at most 25 cents. Near the end of a map the
+  market knows the round score and the model does not: on November 25 four 1-cent map entries
+  came from stale inputs.
 - **Durable runs.** `--ledger` restores the compact state from the committed `ledger/`
   directory when `state/` is empty (a fresh container) and copies it back after every event and
   pricer run. The supervising session commits `ledger/` so the paper ledger survives a container
   replacement.
 - **Notifications.** Each wake's JSON includes `push`, one line under 200 characters with the
   game events, new Kalshi paper entries and the Pick'Em chance, for a phone notification.
+  A pricer run that records entries wakes the supervisor even without a game event
+  (`"exit": "entries"`).
