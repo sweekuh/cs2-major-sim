@@ -152,3 +152,4 @@
 {"at": "2026-11-25T13:07:29.426222+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-23", "new_entries": 0}
 {"at": "2026-11-25T13:10:45.890938+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-23", "new_entries": 0}
 {"at": "2026-11-25T13:11:06.542003+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 4, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify NIP YES @0.977 fair>=1.000 edge 2.3c"]}
+{"at": "2026-11-25T13:17:17.152577+00:00", "reason": "fixture_set", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 4, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify NIP YES @0.977 fair>=1.000 edge 2.3c"]}
