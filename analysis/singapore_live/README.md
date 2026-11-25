@@ -6,13 +6,21 @@ Paper only. Nothing here places orders or connects to an account.
 
 PGL publishes results through `news.pglesports.com/api/groupStageEndpoint` with no push
 notifications, so `watch.py` polls it (15 s while a match is live or within 20 minutes of
-starting, 60 s otherwise) and turns changes into events:
+starting, 60 s otherwise) and turns changes into events.
+
+PGL's feed can trail live play: on November 24 its update time stayed fixed while matches were
+played. The watcher therefore layers bo3.gg's match API over every match PGL has not finished.
+A bo3.gg record counts only if it is the one listing of the same two teams within 12 hours of
+PGL's start time and uses the same format. A map winner it cannot name stops the record there,
+and PGL's result stands once PGL has one. bo3.gg marks a match current around the veto and can
+flip it back, so a match counts as live only once a map is underway, and each start is reported
+once.
 
 | Event | Fires when |
 |---|---|
-| `match_start` | PGL marks the match live or the first round score appears |
+| `match_start` | PGL marks the match live, bo3.gg shows a map underway, or the first round score appears. Once per match. |
 | `map_end` | the series score increases, once per finished map (a best-of-one's only map included) |
-| `match_finish` | PGL marks the match ended |
+| `match_finish` | PGL marks the match ended, or bo3.gg marks it finished with a decisive score |
 | `result_corrected` | PGL changes the winner of a finished match. The event carries the old and new winners and series scores. |
 | `fixture_set`, `maps_set`, `round_update` | a later round is drawn, the veto is published, a map's round score changes |
 
@@ -52,7 +60,10 @@ The pricer screens 20 Polymarket shares or 10 Kalshi contracts against the least
 fair value, allowing two simulation standard errors. Before recording a paper entry, it
 rechecks the market terms, executable depth, costs, live match prices and PGL state.
 It records the refreshed price and both observation times if the edge still clears two
-cents per share after fees.
+cents per share after fees. A live match price may move by up to 5 cents during the recheck,
+and the required edge rises by the move: by the sum of the live matches' moves for stage
+markets, and for map-score contracts by the move in their own match scaled by how strongly the
+contract depends on that price. A larger move blocks the entry until the next pass.
 
 Fees: Polymarket sports takers pay `shares x 0.05 x p x (1 - p)` and makers pay nothing
 ([docs](https://docs.polymarket.com/trading/fees)). Kalshi charges `0.07 x p x (1 - p)` per
