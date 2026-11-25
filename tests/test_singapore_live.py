@@ -198,12 +198,26 @@ def test_bo3_overlay_defers_to_pgl_and_ignores_mismatches():
     record = _bo3("finished", [], s=(0, 2))
     assert feed.overlay({"s1-20": ended}, {1: [record]})["s1-20"] == ended  # PGL's result stands
     upcoming = fx()
-    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], t2="NIP")]})["s1-20"] == upcoming
-    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], start="2026-11-29T08:00:00.000+00:00")]})["s1-20"] == upcoming
-    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], bo=1)]})["s1-20"] == upcoming
+    playing = [{"number": 1, "status": "current", "map_name": "de_nuke"}]
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing)]})["s1-20"].status == "live"
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, t2="NIP")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, start="2026-11-29T08:00:00.000+00:00")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, bo=1)]})["s1-20"] == upcoming
     assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("finished", [], s=(1, 1))]})["s1-20"] == upcoming
-    twice = [_bo3("current", []), _bo3("current", [])]
+    twice = [_bo3("current", playing), _bo3("current", playing)]
     assert feed.overlay({"s1-20": upcoming}, {1: twice})["s1-20"] == upcoming  # ambiguous: no overlay
+
+
+def test_bo3_current_before_a_map_starts_is_not_a_start():
+    """On November 25 bo3.gg marked Imperial v FlyQuest current at 08:10 with no map underway, then reverted."""
+    vetoed = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    veto = [{"number": n, "status": "upcoming", "map_name": None} for n in (1, 2, 3)]
+    assert feed.overlay({"s1-20": vetoed}, {1: [_bo3("current", veto)]})["s1-20"] == vetoed
+    playing = [{"number": 1, "status": "current", "map_name": "de_dust2"}] + veto[1:]
+    live = feed.overlay({"s1-20": vetoed}, {1: [_bo3("current", playing)]})["s1-20"]
+    assert live.status == "live" and [m for m, _, _ in live.maps] == ["de_dust2", "de_cache", "de_inferno"]
+    kinds = [e["type"] for e in diff({"s1-20": vetoed}, {"s1-20": live}, at="2026-11-25T08:20:00+00:00")]
+    assert kinds == ["match_start"]  # PGL's veto survives the overlay, so no maps_set churn
 
 
 def test_a_flapping_start_is_reported_once(monkeypatch, tmp_path):

@@ -136,9 +136,12 @@ def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -
         m, t1, t2 = found[0]
         if m.get("status") not in ("current", "finished") or int(m.get("bo_type") or 0) != f.bo:
             continue
+        games = sorted(m.get("games") or [], key=lambda g: g.get("number") or 0)
+        if m["status"] == "current" and not any(g.get("status") in ("current", "finished") for g in games):
+            continue  # bo3.gg marks a match current around the veto and can flip back; wait for a map
         maps = []
-        for g in sorted(m.get("games") or [], key=lambda g: g.get("number") or 0):
-            name = g.get("map_name") or ""
+        for i, g in enumerate(games):
+            name = g.get("map_name") or (f.maps[i][0] if i < len(f.maps) else "")  # keep PGL's veto
             if g.get("status") == "finished" and g.get("winner_clan_score") is not None:
                 winner = canon(g.get("winner_clan_name"), strict=False)
                 ws, ls = int(g["winner_clan_score"]), int(g["loser_clan_score"])
