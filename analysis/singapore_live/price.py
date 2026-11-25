@@ -51,7 +51,7 @@ EDGE_MIN_MAPS = 0.05  # exploratory family, not part of the pre-registered test
 # In-play match prices move every few seconds, so an exact match between scan and recheck would
 # block every in-play entry. A recheck accepts a move of at most this much per live match and
 # raises the required edge by the most that move can shift the entry's fair value.
-LIVE_PRICE_TOLERANCE = 0.02
+LIVE_PRICE_TOLERANCE = 0.05
 PAPER_VENUES = {"kalshi"}  # the user trades on Kalshi only; Polymarket is a read-only price input
 # (prior scale, ridge weight): how far undrawn-round strengths lean on Nov 19 points.
 SCENARIOS = {"base": (1.0, 0.3), "flat_prior": (0.5, 0.3), "sticky": (1.0, 2.0), "flat_sticky": (0.5, 2.0)}
