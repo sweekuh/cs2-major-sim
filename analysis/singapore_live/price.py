@@ -48,6 +48,14 @@ SEED = 20261125
 POLY_SHARES = 20
 EDGE_MIN = 0.02
 EDGE_MIN_MAPS = 0.05  # exploratory family, not part of the pre-registered test
+# A live map market at 1-3 cents or 97-99 cents knows the round score, which the map-level
+# model does not; a gap over 25 cents there has been a stale input, not value (November 25).
+MAPS_PRICE_BAND = (0.03, 0.97)
+MAPS_MAX_EDGE = 0.25
+
+
+def plausible_map_entry(avg: float, edge: float) -> bool:
+    return MAPS_PRICE_BAND[0] < avg < MAPS_PRICE_BAND[1] and edge <= MAPS_MAX_EDGE
 # In-play match prices move every few seconds, so an exact match between scan and recheck would
 # block every in-play entry. A recheck accepts a move of at most this much per live match and
 # raises the required edge by the most that move can shift the entry's fair value.
@@ -197,7 +205,9 @@ def in_play(f):
 
 
 def at_map_break(f):
-    if f.bo != 3 or f.score not in ((1, 0), (0, 1), (1, 1)):
+    # Neither feed shows live round scores, so "no rounds yet" holds for the whole next map.
+    # Only bo3.gg's game status can confirm the break; without it the pricer holds instead.
+    if f.underway is not False or f.bo != 3 or f.score not in ((1, 0), (0, 1), (1, 1)):
         return False
     finished = sum(f.score)
     if len(f.maps) <= finished or any(a or b for _, a, b in f.maps[finished:]):
@@ -313,6 +323,9 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
         else:
             drift = sum(moved.values())
         threshold += drift
+        if cost and signal.get("family") == "maps" and \
+                not plausible_map_entry(cost["avg"], signal["worst_fair"] - cost["unit"]):
+            continue
         if cost and signal["worst_fair"] - cost["unit"] >= threshold:
             confirmed.append({**signal, "live_price_drift": round(drift, 4),
                               "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
@@ -523,7 +536,8 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                     if cost:
                         row[f"{side}_unit"] = round(cost["unit"], 4)
                         row[f"{side}_edge"] = round(fair_side - cost["unit"], 4)
-                        if fair_side - cost["unit"] >= EDGE_MIN_MAPS:
+                        if fair_side - cost["unit"] >= EDGE_MIN_MAPS and \
+                                plausible_map_entry(cost["avg"], fair_side - cost["unit"]):
                             signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
                                             "in_play": f.a in playing, "market": m["market"], "family": "maps",
                                             "kind": m["kind"], "team": m["team"], "label": m["label"],

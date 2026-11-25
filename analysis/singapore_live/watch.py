@@ -358,6 +358,8 @@ def main(argv=None) -> int:
                 append("pricer_runs.jsonl", [{"at": at.isoformat(), "reason": reasons, **{k: v for k, v in pricing.items() if k != "stdout"}}])
                 sync()
             woke += [e for e in events if e["type"] in wake]
+            # Entries recorded on a live tick have no game event behind them; wake for them too.
+            entered = bool(reasons) and bool((pricing or {}).get("new_entries"))
             elapsed = (now() - started).total_seconds() / 60
             summary = {
                 "at": at.isoformat(), "feed_updated": updated,
@@ -375,8 +377,8 @@ def main(argv=None) -> int:
             if args.once:
                 print(json.dumps({"exit": "once", **summary}, indent=1))
                 return 0
-            if woke:
-                print(json.dumps({"exit": "event", **summary}, indent=1))
+            if woke or entered:
+                print(json.dumps({"exit": "event" if woke else "entries", **summary}, indent=1))
                 return 0
             if elapsed >= args.max_minutes:
                 print(json.dumps({"exit": "max_minutes", **summary}, indent=1))

@@ -31,6 +31,9 @@ class Fixture:
     b: str | None
     score: tuple[int, int]
     maps: tuple[tuple[str, int, int], ...]  # (map, rounds for a, rounds for b)
+    # bo3.gg's view of a live match: True while a map is being played, False between maps,
+    # None when unknown. Neither feed reports live round scores, so this is the only signal.
+    underway: bool | None = None
 
     @property
     def winner(self) -> str | None:
@@ -169,12 +172,13 @@ def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -
         else:
             if max(won) >= f.bo // 2 + 1:
                 continue  # maps say it is over but the match is not marked finished
+            underway = any(g.get("status") == "current" for g in games)
             if sum(f.score) >= sum(won) and (sum(f.score) or any(ra or rb for _, ra, rb in f.maps)):
                 # PGL is at least as far along (bo3.gg can list a map finished before naming its
                 # winner): keep PGL's score and round scores and only mark the match live.
-                out[f.key] = replace(f, status="live")
+                out[f.key] = replace(f, status="live", underway=underway)
                 continue
-            out[f.key] = replace(f, status="live", score=won, maps=maps)
+            out[f.key] = replace(f, status="live", score=won, maps=maps, underway=underway)
     return out
 
 

@@ -73,7 +73,7 @@ def test_snapshot_conditions_the_break_and_holds_mid_map(monkeypatch, tmp_path):
     monkeypatch.setattr(price.mk, "poly_books", lambda client, tokens: {t: book(.01) for t in tokens})
     probs = []
     for score, first in [((1, 0), (13, 8)), ((0, 1), (8, 13))]:
-        fixtures[f.key] = replace(f, status="upcoming", score=score,
+        fixtures[f.key] = replace(f, status="upcoming", score=score, underway=False,  # bo3.gg: between maps
                                   maps=(("nuke", *first), ("dust2", 0, 0), ("inferno", 0, 0)))
         snap = price.snapshot("map_end", quiet=True)
         probs.append(snap["quotes"][0]["fair"])

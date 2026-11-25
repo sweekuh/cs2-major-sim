@@ -1,6 +1,7 @@
 """Offline checks for the live watcher and pricer (no network)."""
 
 import json
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -216,7 +217,7 @@ def test_bo3_never_hides_a_map_result_pgl_already_has():
                 "winner_clan_score": None, "loser_clan_score": None},
                {"number": 2, "status": "upcoming", "map_name": None}, {"number": 3, "status": "upcoming", "map_name": None}]
     now = feed.overlay({"s1-20": pgl}, {1: [_bo3("current", unnamed)]})["s1-20"]
-    assert now == pgl
+    assert now == replace(pgl, underway=False)  # map 1 finished, map 2 not started: a break
     ends = [e for e in diff({"s1-20": was}, {"s1-20": now}, at="2026-11-25T09:30:00+00:00") if e["type"] == "map_end"]
     assert [(e["map"], e["rounds"], e["map_winner"]) for e in ends] == [("de_dust2", [11, 13], "FlyQuest")]
     upcoming = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
@@ -254,6 +255,7 @@ def test_bo3_current_before_a_map_starts_is_not_a_start():
     playing = [{"number": 1, "status": "current", "map_name": "de_dust2"}] + veto[1:]
     live = feed.overlay({"s1-20": vetoed}, {1: [_bo3("current", playing)]})["s1-20"]
     assert live.status == "live" and [m for m, _, _ in live.maps] == ["de_dust2", "de_cache", "de_inferno"]
+    assert live.underway is True
     kinds = [e["type"] for e in diff({"s1-20": vetoed}, {"s1-20": live}, at="2026-11-25T08:20:00+00:00")]
     assert kinds == ["match_start"]  # PGL's veto survives the overlay, so no maps_set churn
 
@@ -269,3 +271,40 @@ def test_a_flapping_start_is_reported_once(monkeypatch, tmp_path):
         watch.main(["--once", "--no-track-prices", "--price-on", "", "--price-every-live", "0"])
     starts = [json.loads(x) for x in (tmp_path / "events.jsonl").read_text().splitlines()]
     assert [e["type"] for e in starts if e["type"] == "match_start"] == ["match_start"]
+
+
+def test_map_break_needs_bo3_to_confirm_no_map_is_underway():
+    """Neither feed shows live round scores, so "no rounds yet" held for all of map 2 of 9z v
+    DENDELE on November 25. When the series quotes vanished near its end, the pricer took it
+    for a break, priced a fresh map at about 50%, and logged 1-cent map entries."""
+    from analysis.singapore_live import price
+
+    f = fx(status="live", score=(1, 0), maps=(("de_mirage", 13, 5), ("de_cache", 0, 0), ("de_nuke", 0, 0)))
+    assert not price.at_map_break(f)  # unknown
+    assert not price.at_map_break(replace(f, underway=True))
+    assert price.at_map_break(replace(f, underway=False))
+
+
+def test_map_entries_at_extreme_prices_or_huge_gaps_are_skipped():
+    from analysis.singapore_live.price import plausible_map_entry
+
+    assert not plausible_map_entry(0.01, 0.06)  # GOSH sweep at 1 cent on November 25
+    assert not plausible_map_entry(0.01, 0.49)  # 9z v DENDELE over 2.5 maps at 1 cent
+    assert not plausible_map_entry(0.50, 0.30)
+    assert plausible_map_entry(0.85, 0.07)
+
+
+def test_entries_from_a_live_tick_wake_the_supervisor(monkeypatch, tmp_path, capsys):
+    from analysis.singapore_live import watch
+
+    monkeypatch.setattr(watch, "STATE", tmp_path)
+    live = fx(key="s1-22", status="live", score=(1, 0), maps=(("de_inferno", 13, 3), ("de_ancient", 0, 0), ("de_nuke", 0, 0)))
+    monkeypatch.setattr(watch.feed, "fetch", lambda *_: ({"s1-22": live}, {1: "t"}))
+    watch.main(["--once", "--no-track-prices", "--price-on", "", "--price-every-live", "0"])
+    capsys.readouterr()
+    pricing = {"ok": True, "new_entries": 1, "new": ["kalshi qualify NIP YES @0.90 fair>=0.943"], "pickem_p_ge5": 0.01}
+    monkeypatch.setattr(watch, "run_pricer", lambda *_: pricing)
+    assert watch.main(["--no-track-prices", "--price-on", "", "--price-every-live", "180"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["exit"] == "entries" and out["events"] == []
+    assert out["push"] == "1 new Kalshi paper: kalshi qualify NIP YES @0.90 fair>=0.943 | PickEm 1%"
