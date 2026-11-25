@@ -99,3 +99,90 @@ def fetch(client, stages=(1, 2, 3, 4)) -> tuple[dict[str, Fixture], dict]:
 
 def from_dict(d: dict) -> Fixture:
     return Fixture(**{**d, "score": tuple(d["score"]), "maps": tuple(tuple(m) for m in d["maps"])})
+
+
+# ---------------------------------------------------------------- live overlay (bo3.gg)
+# PGL publishes results in batches (on Nov 25 its feed still showed round 3 as upcoming
+# twenty minutes after both openers began). bo3.gg's public match feed marks a match
+# current at kickoff and records each finished map's winner and round score, so it is
+# layered over PGL for live state. PGL stays authoritative: once PGL marks a match ended,
+# its result wins, and a different bo3.gg result surfaces as ``result_corrected``.
+BO3 = "https://api.bo3.gg/api/v1/matches"
+BO3_TOURNAMENTS = {1: 6269, 2: 6268, 3: 4226, 4: 4226}
+LIVE_OVERLAY = True  # tests switch this off so they stay offline
+
+
+def _utc(stamp: str) -> datetime:
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+
+
+def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -> dict[str, Fixture]:
+    """Return fixtures with bo3.gg live state applied where PGL has not finished the match."""
+    from dataclasses import replace
+
+    out = dict(fixtures)
+    for f in fixtures.values():
+        if f.status == "end" or not f.a or not f.b:
+            continue
+        found = []
+        for m in bo3_by_stage.get(f.stage, []):
+            t1 = canon((m.get("team1") or {}).get("name"), strict=False)
+            t2 = canon((m.get("team2") or {}).get("name"), strict=False)
+            if {t1, t2} == {f.a, f.b} and m.get("start_date") and \
+                    abs((_utc(m["start_date"]) - _utc(f.start)).total_seconds()) <= 12 * 3600:
+                found.append((m, t1, t2))
+        if len(found) != 1:
+            continue
+        m, t1, t2 = found[0]
+        if m.get("status") not in ("current", "finished") or int(m.get("bo_type") or 0) != f.bo:
+            continue
+        maps = []
+        for g in sorted(m.get("games") or [], key=lambda g: g.get("number") or 0):
+            name = g.get("map_name") or ""
+            if g.get("status") == "finished" and g.get("winner_clan_score") is not None:
+                winner = canon(g.get("winner_clan_name"), strict=False)
+                ws, ls = int(g["winner_clan_score"]), int(g["loser_clan_score"])
+                if winner == f.a:
+                    maps.append((name, ws, ls))
+                elif winner == f.b:
+                    maps.append((name, ls, ws))
+                else:
+                    break  # an unrecognized map winner ends what we trust from this record
+            else:
+                maps.append((name, 0, 0))
+        maps = tuple(maps[: f.bo]) + (("", 0, 0),) * max(0, f.bo - len(maps))
+        won = (sum(a > b for _, a, b in maps), sum(b > a for _, a, b in maps))
+        if m["status"] == "finished":
+            s1, s2 = int(m.get("team1_score") or 0), int(m.get("team2_score") or 0)
+            score = (s1, s2) if t1 == f.a else (s2, s1)
+            if max(score) != f.bo // 2 + 1 or score[0] == score[1]:
+                continue  # not a decisive series in this format; wait for PGL
+            out[f.key] = replace(f, status="end", score=score, maps=maps)
+        else:
+            if max(won) >= f.bo // 2 + 1:
+                continue  # maps say it is over but the match is not marked finished
+            out[f.key] = replace(f, status="live", score=won, maps=maps)
+    return out
+
+
+def fetch_bo3(client, stages) -> dict[int, list[dict]]:
+    out = {}
+    for stage in stages:
+        r = client.get(BO3, params={"filter[matches.tournament_id][eq]": BO3_TOURNAMENTS[stage],
+                                    "with": "games,teams", "page[limit]": 100}, headers=HEADERS)
+        r.raise_for_status()
+        out[stage] = r.json().get("results", [])
+    return out
+
+
+def with_live(client, fixtures: dict[str, Fixture]) -> tuple[dict[str, Fixture], str | None]:
+    """PGL fixtures with bo3.gg live state layered on. Returns (fixtures, error or None)."""
+    if not LIVE_OVERLAY:
+        return fixtures, None
+    stages = sorted({f.stage for f in fixtures.values() if f.status != "end" and f.a and f.b})
+    if not stages:
+        return fixtures, None
+    try:
+        return overlay(fixtures, fetch_bo3(client, stages)), None
+    except Exception as exc:  # the overlay is an accelerator; PGL alone remains usable
+        return fixtures, f"bo3.gg overlay failed: {type(exc).__name__}"

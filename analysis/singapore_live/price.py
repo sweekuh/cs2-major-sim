@@ -300,6 +300,7 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
     # Read the official state *after* every book. Stage-wide Swiss derivatives depend
     # on other teams' matches as well as the contract team's own score.
     checked, _ = feed.fetch(client, (1,))
+    checked, _ = feed.with_live(client, checked)
     state_at = now().isoformat()
     if checked != fx:
         return [], "PGL fixtures or scores changed during the scan"
@@ -317,6 +318,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     with httpx.Client(timeout=25) as client:
         fx, updated = feed.fetch(client, (1,))
+        fx, _ = feed.with_live(client, fx)
         fixtures = [f for f in fx.values() if f.a and f.b]
         for f in fixtures:
             if f.a not in by_name or f.b not in by_name:

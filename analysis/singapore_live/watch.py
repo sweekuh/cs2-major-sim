@@ -298,6 +298,9 @@ def main(argv=None) -> int:
             at = now()
             try:
                 cur, updated = feed.fetch(client, stages)
+                cur, overlay_error = feed.with_live(client, cur)
+                if overlay_error:
+                    append("errors.jsonl", [{"at": at.isoformat(), "where": "overlay", "error": overlay_error}])
                 failures = 0
             except (httpx.HTTPError, ValueError, KeyError) as exc:
                 failures += 1

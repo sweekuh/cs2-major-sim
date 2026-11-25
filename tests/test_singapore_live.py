@@ -164,3 +164,43 @@ def test_series_score_after_each_map_when_two_maps_end_between_polls():
     ends = [e for e in diff({"s1-20": before}, {"s1-20": after}, at=at) if e["type"] == "map_end"]
     assert [e["series_after"] for e in ends] == [[1, 0], [1, 1]]
     assert push_text(ends[:1], None).startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9")
+
+
+def _bo3(status, games, t1="Imperial", t2="FlyQuest", s=(0, 0), bo=3, start="2026-11-25T08:00:00.000+00:00"):
+    return {"status": status, "bo_type": bo, "start_date": start, "team1": {"name": t1}, "team2": {"name": t2},
+            "team1_score": s[0], "team2_score": s[1], "games": games}
+
+
+def test_bo3_overlay_drives_start_map_end_and_finish_while_pgl_lags():
+    pgl = {"s1-20": fx()}  # PGL still shows the match as upcoming throughout
+    at = "2026-11-25T08:40:00+00:00"
+    live = feed.overlay(pgl, {1: [_bo3("current", [{"number": 1, "status": "current", "map_name": "de_nuke"}])]})
+    assert live["s1-20"].status == "live" and live["s1-20"].maps[0] == ("de_nuke", 0, 0)
+    first = feed.overlay(pgl, {1: [_bo3("current", [
+        {"number": 1, "status": "finished", "map_name": "de_nuke", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 9},
+        {"number": 2, "status": "current", "map_name": "de_inferno"}], t1="FlyQuest", t2="Imperial Esports")]})
+    assert first["s1-20"].score == (0, 1) and first["s1-20"].maps[0] == ("de_nuke", 9, 13)
+    done = feed.overlay(pgl, {1: [_bo3("finished", [
+        {"number": 1, "status": "finished", "map_name": "de_nuke", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 9},
+        {"number": 2, "status": "finished", "map_name": "de_inferno", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 5}], t1="FlyQuest", t2="Imperial", s=(2, 0))]})
+    assert done["s1-20"].status == "end" and done["s1-20"].score == (0, 2) and done["s1-20"].winner == "FlyQuest"
+    kinds = []
+    for prev, cur in ((pgl, live), (live, first), (first, done)):
+        kinds += [e["type"] for e in diff(prev, cur, at=at) if e["type"] not in ("round_update", "maps_set")]
+    assert kinds == ["match_start", "map_end", "map_end", "match_finish"]
+
+
+def test_bo3_overlay_defers_to_pgl_and_ignores_mismatches():
+    ended = fx(status="end", score=(2, 1), maps=(("de_nuke", 13, 9), ("de_inferno", 9, 13), ("de_ancient", 13, 7)))
+    record = _bo3("finished", [], s=(0, 2))
+    assert feed.overlay({"s1-20": ended}, {1: [record]})["s1-20"] == ended  # PGL's result stands
+    upcoming = fx()
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], t2="NIP")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], start="2026-11-29T08:00:00.000+00:00")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", [], bo=1)]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("finished", [], s=(1, 1))]})["s1-20"] == upcoming
+    twice = [_bo3("current", []), _bo3("current", [])]
+    assert feed.overlay({"s1-20": upcoming}, {1: twice})["s1-20"] == upcoming  # ambiguous: no overlay
