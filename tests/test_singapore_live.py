@@ -223,6 +223,29 @@ def test_bo3_never_hides_a_map_result_pgl_already_has():
     assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", unnamed)]})["s1-20"].status == "live"
 
 
+def test_bo3_map_winners_are_matched_by_team_id_not_clan_tag():
+    """On November 25 bo3.gg named FlyQuest's map wins by clan tag "FLY" and finished the match before PGL."""
+    from analysis.singapore_live.watch import push_text
+
+    was = fx(status="live", score=(0, 1), maps=(("de_dust2", 11, 13), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    fly = {"team_id": 10398}
+    games = [{"number": 1, "status": "finished", "map_name": "de_dust2", "winner_clan_name": "FLY",
+              "winner_team_clan": fly, "winner_clan_score": 13, "loser_clan_score": 11},
+             {"number": 2, "status": "finished", "map_name": "de_cache", "winner_clan_name": "FLY",
+              "winner_team_clan": fly, "winner_clan_score": 13, "loser_clan_score": 9}]
+    record = {**_bo3("finished", games, s=(0, 2)), "team1": {"name": "Imperial", "id": 1430},
+              "team2": {"name": "FlyQuest", "id": 10398}}
+    done = feed.overlay({"s1-20": was}, {1: [record]})["s1-20"]
+    assert done.status == "end" and done.score == (0, 2)
+    assert done.maps == (("de_dust2", 11, 13), ("de_cache", 9, 13), ("de_inferno", 0, 0))
+    events = [e for e in diff({"s1-20": was}, {"s1-20": done}, at="2026-11-25T10:42:22+00:00") if e["type"] != "round_update"]
+    assert push_text(events, None) == "Imperial 0-2 FlyQuest after map 2 Cache 9-13 | FINAL Imperial 0-2 FlyQuest"
+    blind = {**record, "games": [{**g, "winner_team_clan": None, "winner_clan_name": "???"} for g in games]}
+    unknown = feed.overlay({"s1-20": was}, {1: [blind]})["s1-20"]  # winners unknown: names kept, no fake scores
+    events = [e for e in diff({"s1-20": was}, {"s1-20": unknown}, at="2026-11-25T10:42:22+00:00") if e["type"] != "round_update"]
+    assert push_text(events, None) == "Imperial 0-2 FlyQuest after map 2 Cache | FINAL Imperial 0-2 FlyQuest"
+
+
 def test_bo3_current_before_a_map_starts_is_not_a_start():
     """On November 25 bo3.gg marked Imperial v FlyQuest current at 08:10 with no map underway, then reverted."""
     vetoed = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))

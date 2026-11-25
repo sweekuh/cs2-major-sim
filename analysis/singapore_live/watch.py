@@ -97,9 +97,12 @@ def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, 
             name, ra, rb = c.maps[idx] if idx < len(c.maps) else ("", 0, 0)
             winner = c.a if ra > rb else c.b if rb > ra else None
             done = c.maps[:n]
+            if all(x != y for _, x, y in done):
+                series = [sum(x > y for _, x, y in done), sum(y > x for _, x, y in done)]
+            else:  # a source finished the map without its score; only the latest map's series is known
+                series = list(c.score) if n == done_now else None
             events.append({**base, "type": "map_end", "map_index": n, "map": name,
-                           "rounds": [ra, rb], "map_winner": winner,
-                           "series_after": [sum(x > y for _, x, y in done), sum(y > x for _, x, y in done)]})
+                           "rounds": [ra, rb], "map_winner": winner, "series_after": series})
         if p.status != "end" and c.status == "end":
             events.append({**base, "type": "match_finish", "winner": c.winner})
         elif p.status == c.status == "end" and p.winner != c.winner:
@@ -136,9 +139,13 @@ def push_text(events: list[dict], pricing: dict | None) -> str | None:
         if e["type"] == "match_start":
             parts.append(f"LIVE {e['a']} v {e['b']} (R{e['round']} Bo{e['bo']})")
         elif e["type"] == "map_end" and not (e["bo"] == 1):
-            name = (e.get("map") or "").replace("de_", "").title()
-            sa, sb = e.get("series_after", e["score"])
-            parts.append(f"{e['a']} {sa}-{sb} {e['b']} after map {e['map_index']} {name} {e['rounds'][0]}-{e['rounds'][1]}")
+            where = " ".join(x for x in (f"map {e['map_index']}", (e.get("map") or "").replace("de_", "").title(),
+                                         "-".join(map(str, e["rounds"])) if any(e["rounds"]) else "") if x)
+            series = e.get("series_after", e["score"])
+            if series is None:
+                parts.append(f"{e['a']} v {e['b']} {where} done")
+            else:
+                parts.append(f"{e['a']} {series[0]}-{series[1]} {e['b']} after {where}")
         elif e["type"] == "match_finish":
             parts.append(f"FINAL {e['a']} {e['score'][0]}-{e['score'][1]} {e['b']}")
         elif e["type"] == "fixture_changed":

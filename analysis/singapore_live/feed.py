@@ -139,11 +139,15 @@ def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -
         games = sorted(m.get("games") or [], key=lambda g: g.get("number") or 0)
         if m["status"] == "current" and not any(g.get("status") in ("current", "finished") for g in games):
             continue  # bo3.gg marks a match current around the veto and can flip back; wait for a map
+        # Map winners carry the in-game clan tag ("FLY", "GAMDOM IMPERIAL"), so match on team id first.
+        ids = {t["id"]: team for t, team in ((m.get("team1") or {}, t1), (m.get("team2") or {}, t2))
+               if t.get("id") is not None}
         maps = []
         for i, g in enumerate(games):
             name = g.get("map_name") or (f.maps[i][0] if i < len(f.maps) else "")  # keep PGL's veto
             if g.get("status") == "finished" and g.get("winner_clan_score") is not None:
-                winner = canon(g.get("winner_clan_name"), strict=False)
+                winner = ids.get((g.get("winner_team_clan") or {}).get("team_id")) or \
+                    canon(g.get("winner_clan_name"), strict=False)
                 ws, ls = int(g["winner_clan_score"]), int(g["loser_clan_score"])
                 if winner == f.a:
                     maps.append((name, ws, ls))
@@ -153,7 +157,8 @@ def overlay(fixtures: dict[str, Fixture], bo3_by_stage: dict[int, list[dict]]) -
                     break  # an unrecognized map winner ends what we trust from this record
             else:
                 maps.append((name, 0, 0))
-        maps = tuple(maps[: f.bo]) + (("", 0, 0),) * max(0, f.bo - len(maps))
+        maps = tuple(maps[: f.bo]) + tuple((f.maps[i][0] if i < len(f.maps) else "", 0, 0)
+                                           for i in range(len(maps), f.bo))
         won = (sum(a > b for _, a, b in maps), sum(b > a for _, a, b in maps))
         if m["status"] == "finished":
             s1, s2 = int(m.get("team1_score") or 0), int(m.get("team2_score") or 0)
