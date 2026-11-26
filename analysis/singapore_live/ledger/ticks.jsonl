@@ -2797,3 +2797,4 @@
 {"at": "2026-11-26T08:42:56.640855+00:00", "key": "s1-25", "a": "HEROIC", "b": "FaZe", "p_a": 0.9995, "kalshi_a": 0.71, "score": [1, 1], "maps": [["de_mirage", 13, 3], ["de_ancient", 11, 13], ["de_nuke", 0, 0]]}
 {"at": "2026-11-26T08:43:14.797698+00:00", "key": "s1-25", "a": "HEROIC", "b": "FaZe", "p_a": 0.9995, "kalshi_a": 0.71, "score": [1, 1], "maps": [["de_mirage", 13, 3], ["de_ancient", 11, 13], ["de_nuke", 0, 0]]}
 {"at": "2026-11-26T08:43:34.098340+00:00", "key": "s1-25", "a": "HEROIC", "b": "FaZe", "p_a": 0.9995, "kalshi_a": 0.71, "score": [1, 1], "maps": [["de_mirage", 13, 3], ["de_ancient", 11, 13], ["de_nuke", 0, 0]]}
+{"at": "2026-11-26T09:00:00.155252+00:00", "key": "s1-26", "a": "Lynn Vision", "b": "PVISION", "p_a": 0.195, "kalshi_a": 0.25, "score": [0, 0], "maps": [["de_ancient", 0, 0], ["de_dust2", 0, 0], ["de_inferno", 0, 0]]}
