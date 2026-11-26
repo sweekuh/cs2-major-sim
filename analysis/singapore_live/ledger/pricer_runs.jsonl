@@ -211,3 +211,6 @@
 {"at": "2026-11-26T08:31:39.418899+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Eternal Fire", "FaZe", "HEROIC", "M80"], "new_in_play": 0, "pickem_max": 4, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-26T08:35:06.593139+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-24", "new_entries": 0}
 {"at": "2026-11-26T08:38:11.372662+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["FaZe", "HEROIC"], "new_in_play": 0, "pickem_max": 4, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-26T08:39:05.442714+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["FaZe", "HEROIC"], "new_in_play": 0, "pickem_max": 4, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-26T08:42:12.645816+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-25", "new_entries": 0}
+{"at": "2026-11-26T08:43:55.655389+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 4, "signals": 0, "new_entries": 0, "new": [], "top": []}
