@@ -57,6 +57,11 @@ def round_of(stage: int, label: str) -> int | str:
     return int(found[1])
 
 
+def final_score(a: int, b: int) -> bool:
+    """A finished CS2 map: 13 in regulation or more in overtime, won by two."""
+    return max(a, b) >= 13 and abs(a - b) >= 2
+
+
 def parse(stage: int, rows: list[dict]) -> dict[str, Fixture]:
     fixtures = {}
     for i, m in enumerate(rows):
@@ -71,6 +76,16 @@ def parse(stage: int, rows: list[dict]) -> dict[str, Fixture]:
             (mp.get("map") or "", int(mp.get("leftScore") or 0), int(mp.get("rightScore") or 0))
             for mp in m.get("maps") or []
         )
+        score, status = (int(m.get("leftScore") or 0), int(m.get("rightScore") or 0)), m["status"]
+        # PGL enters a map's rounds one side at a time and can count the map before both are in:
+        # on November 26 Lynn Vision v PVISION read 1-1 with Dust2 at 10-0 for 8 seconds before
+        # 0-2 with Dust2 at 10-13. A map with rounds that are not a final score is still being
+        # played, so the series counts only finished maps until PGL agrees.
+        if any((ra or rb) and not final_score(ra, rb) for _, ra, rb in maps):
+            done = [(ra, rb) for _, ra, rb in maps if final_score(ra, rb)]
+            counted = (sum(ra > rb for ra, rb in done), sum(rb > ra for ra, rb in done))
+            if counted != score:
+                score, status = counted, "live" if status == "end" else status
         fixtures[f"s{stage}-{i:02d}"] = Fixture(
             key=f"s{stage}-{i:02d}",
             stage=stage,
@@ -78,10 +93,10 @@ def parse(stage: int, rows: list[dict]) -> dict[str, Fixture]:
             round=round_of(stage, m["round"]),
             bo=bo,
             start=start.isoformat(),
-            status=m["status"],
+            status=status,
             a=canon(m.get("leftTeam"), strict=False),
             b=canon(m.get("rightTeam"), strict=False),
-            score=(int(m.get("leftScore") or 0), int(m.get("rightScore") or 0)),
+            score=score,
             maps=maps,
         )
     return fixtures

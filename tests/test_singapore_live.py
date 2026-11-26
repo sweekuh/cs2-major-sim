@@ -322,3 +322,26 @@ def test_map_entries_use_the_least_favorable_fresh_map_strength():
     # the least favorable value sits below the cost, and the entry lost.
     p, lo, hi = map_fair_range(0.4415, 0.477, (0, 1), "over")
     assert p > 0.92 and lo < 0.859
+
+
+def test_a_half_entered_pgl_map_score_is_not_a_finished_map():
+    """PGL read Lynn Vision 1-1 PVISION with Dust2 at 10-0 at 11:01:49 on November 26, then
+    PVISION 2-0 with Dust2 at 10-13 eight seconds later."""
+    def row(status, score, dust2):
+        return {"status": status, "timeZone": "SGT", "date": "26.11.2026", "time": "16:30", "format": "BO3",
+                "round": "Round 4", "leftTeam": "Lynn Vision", "rightTeam": "PVISION",
+                "leftScore": score[0], "rightScore": score[1],
+                "maps": [{"map": "de_ancient", "leftScore": 7, "rightScore": 13},
+                         {"map": "de_dust2", "leftScore": dust2[0], "rightScore": dust2[1]},
+                         {"map": "de_inferno", "leftScore": 0, "rightScore": 0}]}
+
+    before = feed.parse(1, [row("live", (0, 1), (0, 0))])["s1-00"]
+    torn = feed.parse(1, [row("live", (1, 1), (10, 0))])["s1-00"]
+    final = feed.parse(1, [row("end", (0, 2), (10, 13))])["s1-00"]
+    assert torn.score == (0, 1) and torn.status == "live"
+    assert final.score == (0, 2) and final.status == "end"
+    assert [e["type"] for e in diff({"s1-00": before}, {"s1-00": torn}, at="2026-11-26T11:01:49+00:00")
+            if e["type"] != "round_update"] == []
+    ends = diff({"s1-00": torn}, {"s1-00": final}, at="2026-11-26T11:01:57+00:00")
+    assert [(e["type"], e.get("map"), e.get("rounds"), e.get("map_winner")) for e in ends if e["type"] != "round_update"] == [
+        ("map_end", "de_dust2", [10, 13], "PVISION"), ("match_finish", None, None, None)]
