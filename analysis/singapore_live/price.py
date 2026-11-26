@@ -216,6 +216,22 @@ def in_play(f):
     )
 
 
+def premature_draw(fixtures) -> str | None:
+    """A drawn match that includes a team still playing an earlier match, or None.
+
+    On November 26 PGL put Wildcard into Imperial's round 5 match while Wildcard's round 4
+    decider against Chinggis Warriors was still being played. Pricing that draw conditions the
+    Swiss simulation on a result that has not happened.
+    """
+    playing = {t: f for f in fixtures if in_play(f) for t in (f.a, f.b)}
+    for f in fixtures:
+        if f.status == "upcoming" and not in_play(f):
+            for t in (f.a, f.b):
+                if t in playing and playing[t].round != f.round:
+                    return f"PGL drew {f.a} v {f.b} before {t}'s live match ended"
+    return None
+
+
 def at_map_break(f):
     # Neither feed shows live round scores, so "no rounds yet" holds for the whole next map.
     # Only bo3.gg's game status can confirm the break; without it the pricer holds instead.
@@ -434,8 +450,9 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             match_rows.append({"key": f.key, "round": f.round, "a": f.a, "b": f.b, "status": f.status,
                                "score": list(f.score), "p_a": p_a, "source": src, "close_a": close})
         cache_path.write_text(json.dumps(cache, indent=1))
-        if missing:
-            hold = "Waiting for live series odds: " + ", ".join(missing)
+        early = premature_draw(fixtures)
+        if missing or early:
+            hold = early or "Waiting for live series odds: " + ", ".join(missing)
             snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
                     "pickem": None, "entry_hold": hold, "quotes": [], "signals": [], "new_entries": 0}
             append("snapshots.jsonl", [snap])

@@ -345,3 +345,14 @@ def test_a_half_entered_pgl_map_score_is_not_a_finished_map():
     ends = diff({"s1-00": torn}, {"s1-00": final}, at="2026-11-26T11:01:57+00:00")
     assert [(e["type"], e.get("map"), e.get("rounds"), e.get("map_winner")) for e in ends if e["type"] != "round_update"] == [
         ("map_end", "de_dust2", [10, 13], "PVISION"), ("match_finish", None, None, None)]
+
+
+def test_a_draw_made_before_a_live_match_ends_holds_entries():
+    from analysis.singapore_live.price import premature_draw
+
+    decider = fx(key="s1-29", status="live", score=(1, 1), a="Wildcard", b="Chinggis Warriors")
+    later = feed.Fixture("s1-31", 1, "round 5", 5, 3, "2026-11-27T08:30:00+00:00", "upcoming", "Imperial", "Wildcard",
+                         (0, 0), (("", 0, 0),) * 3)
+    assert premature_draw([decider, later]) == "PGL drew Imperial v Wildcard before Wildcard's live match ended"
+    assert premature_draw([replace(decider, status="end", score=(2, 1)), later]) is None
+    assert premature_draw([decider, replace(later, b="NIP")]) is None
