@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -125,11 +126,15 @@ def restore_ledger() -> list[str]:
 
 
 def sync_ledger() -> None:
+    # Replace each file atomically: `git add` reading a file the watcher is truncating and
+    # rewriting in place crashed with SIGBUS on November 26.
     LEDGER.mkdir(exist_ok=True)
     for name in LEDGER_FILES:
         src = STATE / name
         if src.exists():
-            (LEDGER / name).write_bytes(src.read_bytes())
+            staging = STATE / f".{name}.sync"  # same filesystem as LEDGER, outside the tracked tree
+            staging.write_bytes(src.read_bytes())
+            os.replace(staging, LEDGER / name)
 
 
 def push_text(events: list[dict], pricing: dict | None) -> str | None:
