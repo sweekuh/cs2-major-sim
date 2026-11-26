@@ -3375,3 +3375,5 @@
 {"at": "2026-11-26T10:49:09.247459+00:00", "key": "s1-27", "a": "100 Thieves", "b": "9z", "p_a": 0.565, "kalshi_a": 0.555, "score": [0, 1], "maps": [["de_nuke", 5, 13], ["de_dust2", 0, 0], ["de_ancient", 0, 0]]}
 {"at": "2026-11-26T10:49:31.817765+00:00", "key": "s1-26", "a": "Lynn Vision", "b": "PVISION", "p_a": 0.003, "kalshi_a": null, "score": [0, 1], "maps": [["de_ancient", 7, 13], ["de_dust2", 0, 0], ["de_inferno", 0, 0]]}
 {"at": "2026-11-26T10:49:31.817765+00:00", "key": "s1-27", "a": "100 Thieves", "b": "9z", "p_a": 0.555, "kalshi_a": 0.555, "score": [1, 1], "maps": [["de_nuke", 5, 13], ["de_dust2", 13, 6], ["de_ancient", 0, 0]]}
+{"at": "2026-11-26T10:50:12.756126+00:00", "key": "s1-26", "a": "Lynn Vision", "b": "PVISION", "p_a": 0.0035, "kalshi_a": null, "score": [0, 1], "maps": [["de_ancient", 7, 13], ["de_dust2", 0, 0], ["de_inferno", 0, 0]]}
+{"at": "2026-11-26T10:50:12.756126+00:00", "key": "s1-27", "a": "100 Thieves", "b": "9z", "p_a": 0.555, "kalshi_a": 0.555, "score": [1, 1], "maps": [["de_nuke", 5, 13], ["de_dust2", 13, 6], ["de_ancient", 0, 0]]}
