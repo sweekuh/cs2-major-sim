@@ -124,7 +124,9 @@ observed.
   contracts are priced from the live series price: the map in progress takes whatever chance
   reconciles that price with fresh maps at the pre-match per-map strength. Entries need a
   5-cent edge and are graded as their own group, outside the pre-registered test. They also
-  need a price between 3 and 97 cents and an edge of at most 25 cents. Near the end of a map the
+  need a price between 3 and 97 cents and an edge of at most 25 cents, measured at the least
+  favorable fresh-map strength within 5 points of the pre-match value (map picks and in-play
+  re-rating move it). Near the end of a map the
   market knows the round score and the model does not: on November 25 four 1-cent map entries
   came from stale inputs.
 - **Durable runs.** `--ledger` restores the compact state from the committed `ledger/`

@@ -308,3 +308,17 @@ def test_entries_from_a_live_tick_wake_the_supervisor(monkeypatch, tmp_path, cap
     out = json.loads(capsys.readouterr().out)
     assert out["exit"] == "entries" and out["events"] == []
     assert out["push"] == "1 new Kalshi paper: kalshi qualify NIP YES @0.90 fair>=0.943 | PickEm 1%"
+
+
+def test_map_entries_use_the_least_favorable_fresh_map_strength():
+    from analysis.singapore_live.price import map_fair_range
+
+    # M80 v Eternal Fire, November 26 06:34: M80 at 0.715 with 0-0 maps and a 0.47 fresh-map
+    # strength put an Eternal Fire sweep near zero. Five points more for M80 leaves about 5%,
+    # the price the market charged for the sweep's NO side (94.4 cents).
+    p, lo, hi = map_fair_range(0.715, 0.47, (0, 0), "sweep_b")
+    assert p < 0.01 and hi > 0.05
+    # Imperial v FlyQuest, November 25 10:04: over 2.5 maps at 85.9 cents looked 7 cents cheap;
+    # the least favorable value sits below the cost, and the entry lost.
+    p, lo, hi = map_fair_range(0.4415, 0.477, (0, 1), "over")
+    assert p > 0.92 and lo < 0.859

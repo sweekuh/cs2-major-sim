@@ -54,6 +54,12 @@ MAPS_PRICE_BAND = (0.03, 0.97)
 MAPS_MAX_EDGE = 0.25
 
 
+# The map in progress is inferred from the series price under one fresh-map strength. Map picks
+# and in-play re-rating move that strength, and near the edge of the decomposition the fair value
+# swings hard with it, so map entries must clear the least favorable value within this band.
+MAPS_R_BAND = 0.05
+
+
 def plausible_map_entry(avg: float, edge: float) -> bool:
     return MAPS_PRICE_BAND[0] < avg < MAPS_PRICE_BAND[1] and edge <= MAPS_MAX_EDGE
 # In-play match prices move every few seconds, so an exact match between scan and recheck would
@@ -142,6 +148,12 @@ def map_score_probs(s_a: float, r: float, score: tuple[int, int]) -> dict:
     if (a, b) == (1, 1):
         return {"sweep_a": 0.0, "sweep_b": 0.0, "over": 1.0}
     return {"sweep_a": float((a, b) == (2, 0)), "sweep_b": float((a, b) == (0, 2)), "over": float(a + b == 3)}
+
+
+def map_fair_range(s_a: float, r: float, score: tuple[int, int], key: str) -> tuple[float, float, float]:
+    """(fair, lowest, highest) for one map-score outcome over fresh-map strengths r +/- MAPS_R_BAND."""
+    values = [map_score_probs(s_a, min(max(r + d, 1e-3), 1 - 1e-3), score)[key] for d in (0.0, -MAPS_R_BAND, MAPS_R_BAND)]
+    return values[0], min(values), max(values)
 
 
 def fixture_map_markets(f, k_maps, km):
@@ -519,25 +531,24 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             if pre is None:
                 continue
             fresh = bo3_to_map(pre)
-            probs = map_score_probs(mr["p_a"], fresh, f.score)
             slope = 1 / max(min(fresh, 1 - fresh), 1e-3)
             for m in bound:
                 if m["market"] not in k_books:
                     continue
-                p = probs["over"] if m["kind"] == "over" else probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]
+                key = "over" if m["kind"] == "over" else "sweep_a" if m["team"] == f.a else "sweep_b"
+                p, p_lo, p_hi = map_fair_range(mr["p_a"], fresh, f.score, key)
                 book = k_books[m["market"]]
                 yb, nb = book.get("yes_dollars") or [], book.get("no_dollars") or []
                 row = {"venue": "kalshi", "family": "maps", "team": m["team"] or "over 2.5", "market": m["market"],
-                       "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p, 4),
-                       "fair_hi": round(p, 4), "bid": max((float(x[0]) for x in yb), default=None),
+                       "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p_lo, 4),
+                       "fair_hi": round(p_hi, 4), "bid": max((float(x[0]) for x in yb), default=None),
                        "ask": round(1 - max((float(x[0]) for x in nb), default=1.0), 4) if nb else None}
-                for side, fair_side in (("yes", p), ("no", 1 - p)):
+                for side, fair_side, worst in (("yes", p, p_lo), ("no", 1 - p, 1 - p_hi)):
                     cost = kalshi_cost(book, side, map_mult)
                     if cost:
                         row[f"{side}_unit"] = round(cost["unit"], 4)
-                        row[f"{side}_edge"] = round(fair_side - cost["unit"], 4)
-                        if fair_side - cost["unit"] >= EDGE_MIN_MAPS and \
-                                plausible_map_entry(cost["avg"], fair_side - cost["unit"]):
+                        row[f"{side}_edge"] = round(worst - cost["unit"], 4)
+                        if worst - cost["unit"] >= EDGE_MIN_MAPS and plausible_map_entry(cost["avg"], worst - cost["unit"]):
                             signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
                                             "in_play": f.a in playing, "market": m["market"], "family": "maps",
                                             "kind": m["kind"], "team": m["team"], "label": m["label"],
@@ -545,7 +556,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                                             "a": f.a, "b": f.b, "score": list(f.score),
                                             "side": side, "shares": KALSHI_SIZE, "avg": round(cost["avg"], 4),
                                             "unit_cost": round(cost["unit"], 4), "fair": round(fair_side, 4),
-                                            "worst_fair": fair_side, "edge": round(fair_side - cost["unit"], 4)})
+                                            "worst_fair": worst, "edge": round(worst - cost["unit"], 4)})
                 quotes.append(row)
 
         # Only venues the user can trade produce paper entries; the rest stay in the snapshot as reference.
