@@ -48,6 +48,24 @@ SEED = 20261125
 POLY_SHARES = 20
 EDGE_MIN = 0.02
 EDGE_MIN_MAPS = 0.05  # exploratory family, not part of the pre-registered test
+# A live map market at 1-3 cents or 97-99 cents knows the round score, which the map-level
+# model does not; a gap over 25 cents there has been a stale input, not value (November 25).
+MAPS_PRICE_BAND = (0.03, 0.97)
+MAPS_MAX_EDGE = 0.25
+
+
+# The map in progress is inferred from the series price under one fresh-map strength. Map picks
+# and in-play re-rating move that strength, and near the edge of the decomposition the fair value
+# swings hard with it, so map entries must clear the least favorable value within this band.
+MAPS_R_BAND = 0.05
+
+
+def plausible_map_entry(avg: float, edge: float) -> bool:
+    return MAPS_PRICE_BAND[0] < avg < MAPS_PRICE_BAND[1] and edge <= MAPS_MAX_EDGE
+# In-play match prices move every few seconds, so an exact match between scan and recheck would
+# block every in-play entry. A recheck accepts a move of at most this much per live match and
+# raises the required edge by the most that move can shift the entry's fair value.
+LIVE_PRICE_TOLERANCE = 0.05
 PAPER_VENUES = {"kalshi"}  # the user trades on Kalshi only; Polymarket is a read-only price input
 # (prior scale, ridge weight): how far undrawn-round strengths lean on Nov 19 points.
 SCENARIOS = {"base": (1.0, 0.3), "flat_prior": (0.5, 0.3), "sticky": (1.0, 2.0), "flat_sticky": (0.5, 2.0)}
@@ -132,6 +150,12 @@ def map_score_probs(s_a: float, r: float, score: tuple[int, int]) -> dict:
     return {"sweep_a": float((a, b) == (2, 0)), "sweep_b": float((a, b) == (0, 2)), "over": float(a + b == 3)}
 
 
+def map_fair_range(s_a: float, r: float, score: tuple[int, int], key: str) -> tuple[float, float, float]:
+    """(fair, lowest, highest) for one map-score outcome over fresh-map strengths r +/- MAPS_R_BAND."""
+    values = [map_score_probs(s_a, min(max(r + d, 1e-3), 1 - 1e-3), score)[key] for d in (0.0, -MAPS_R_BAND, MAPS_R_BAND)]
+    return values[0], min(values), max(values)
+
+
 def fixture_map_markets(f, k_maps, km):
     """Kalshi map-score rows for this fixture only.
 
@@ -192,8 +216,26 @@ def in_play(f):
     )
 
 
+def premature_draw(fixtures) -> str | None:
+    """A drawn match that includes a team still playing an earlier match, or None.
+
+    On November 26 PGL put Wildcard into Imperial's round 5 match while Wildcard's round 4
+    decider against Chinggis Warriors was still being played. Pricing that draw conditions the
+    Swiss simulation on a result that has not happened.
+    """
+    playing = {t: f for f in fixtures if in_play(f) for t in (f.a, f.b)}
+    for f in fixtures:
+        if f.status == "upcoming" and not in_play(f):
+            for t in (f.a, f.b):
+                if t in playing and playing[t].round != f.round:
+                    return f"PGL drew {f.a} v {f.b} before {t}'s live match ended"
+    return None
+
+
 def at_map_break(f):
-    if f.bo != 3 or f.score not in ((1, 0), (0, 1), (1, 1)):
+    # Neither feed shows live round scores, so "no rounds yet" holds for the whole next map.
+    # Only bo3.gg's game status can confirm the break; without it the pricer holds instead.
+    if f.underway is not False or f.bo != 3 or f.score not in ((1, 0), (0, 1), (1, 1)):
         return False
     finished = sum(f.score)
     if len(f.maps) <= finished or any(a or b for _, a, b in f.maps[finished:]):
@@ -273,12 +315,19 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
     tokens.update(m["tokens"][0] for m in match_info.values() if m and not m["closed"] and m["accepting"])
     books = mk.poly_books(client, sorted(tokens)) if tokens else {}
     poly_at = now().isoformat()
+    moved = {}
     if live_fx:
         km = mk.kalshi_matches(client, live_fx)
         for f in live_fx:
             p, _ = match_quote(f, match_info[f.key], books, km)
-            if p != live_probs[f.key]:
+            was = live_probs[f.key]
+            if p is None or was is None:
+                if p != was:
+                    return [], "A live match price changed during the scan"
+                continue
+            if abs(p - was) > LIVE_PRICE_TOLERANCE + 1e-9:
                 return [], "A live match price changed during the scan"
+            moved[f.key] = abs(p - was)
 
     confirmed = []
     kalshi_books = {}
@@ -294,12 +343,25 @@ def confirm_signals(client, candidates, fx, live_probs, initial_terms):
             book, quote_at = kalshi_books[ticker]
             cost = kalshi_cost(book, signal["side"], maps_multiplier if signal.get("family") == "maps" else multiplier)
         threshold = EDGE_MIN_MAPS if signal.get("family") == "maps" else EDGE_MIN
+        # A stage derivative is linear in each live match price with slope in [-1, 1], so the
+        # total move bounds its fair-value change. A map-score contract depends only on its own
+        # match, at most 1 / min(r, 1 - r) per unit of series price (``price_slope``).
+        if signal.get("family") == "maps":
+            drift = signal.get("price_slope", 1.0) * moved.get(signal.get("match_key"), 0.0)
+        else:
+            drift = sum(moved.values())
+        threshold += drift
+        if cost and signal.get("family") == "maps" and \
+                not plausible_map_entry(cost["avg"], signal["worst_fair"] - cost["unit"]):
+            continue
         if cost and signal["worst_fair"] - cost["unit"] >= threshold:
-            confirmed.append({**signal, "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
+            confirmed.append({**signal, "live_price_drift": round(drift, 4),
+                              "avg": round(cost["avg"], 4), "unit_cost": round(cost["unit"], 4),
                               "edge": round(signal["worst_fair"] - cost["unit"], 4), "quote_observed_at": quote_at})
     # Read the official state *after* every book. Stage-wide Swiss derivatives depend
     # on other teams' matches as well as the contract team's own score.
     checked, _ = feed.fetch(client, (1,))
+    checked, _ = feed.with_live(client, checked)
     state_at = now().isoformat()
     if checked != fx:
         return [], "PGL fixtures or scores changed during the scan"
@@ -317,6 +379,7 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
     cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     with httpx.Client(timeout=25) as client:
         fx, updated = feed.fetch(client, (1,))
+        fx, _ = feed.with_live(client, fx)
         fixtures = [f for f in fx.values() if f.a and f.b]
         for f in fixtures:
             if f.a not in by_name or f.b not in by_name:
@@ -387,8 +450,9 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             match_rows.append({"key": f.key, "round": f.round, "a": f.a, "b": f.b, "status": f.status,
                                "score": list(f.score), "p_a": p_a, "source": src, "close_a": close})
         cache_path.write_text(json.dumps(cache, indent=1))
-        if missing:
-            hold = "Waiting for live series odds: " + ", ".join(missing)
+        early = premature_draw(fixtures)
+        if missing or early:
+            hold = early or "Waiting for live series odds: " + ", ".join(missing)
             snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
                     "pickem": None, "entry_hold": hold, "quotes": [], "signals": [], "new_entries": 0}
             append("snapshots.jsonl", [snap])
@@ -483,30 +547,33 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
             pre = mr.get("close_a") if mr.get("close_a") is not None else (None if in_play(f) else mr["p_a"])
             if pre is None:
                 continue
-            probs = map_score_probs(mr["p_a"], bo3_to_map(pre), f.score)
+            fresh = bo3_to_map(pre)
+            slope = 1 / max(min(fresh, 1 - fresh), 1e-3)
             for m in bound:
                 if m["market"] not in k_books:
                     continue
-                p = probs["over"] if m["kind"] == "over" else probs["sweep_a"] if m["team"] == f.a else probs["sweep_b"]
+                key = "over" if m["kind"] == "over" else "sweep_a" if m["team"] == f.a else "sweep_b"
+                p, p_lo, p_hi = map_fair_range(mr["p_a"], fresh, f.score, key)
                 book = k_books[m["market"]]
                 yb, nb = book.get("yes_dollars") or [], book.get("no_dollars") or []
                 row = {"venue": "kalshi", "family": "maps", "team": m["team"] or "over 2.5", "market": m["market"],
-                       "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p, 4),
-                       "fair_hi": round(p, 4), "bid": max((float(x[0]) for x in yb), default=None),
+                       "match": f"{f.a} vs {f.b}", "score": list(f.score), "fair": round(p, 4), "fair_lo": round(p_lo, 4),
+                       "fair_hi": round(p_hi, 4), "bid": max((float(x[0]) for x in yb), default=None),
                        "ask": round(1 - max((float(x[0]) for x in nb), default=1.0), 4) if nb else None}
-                for side, fair_side in (("yes", p), ("no", 1 - p)):
+                for side, fair_side, worst in (("yes", p, p_lo), ("no", 1 - p, 1 - p_hi)):
                     cost = kalshi_cost(book, side, map_mult)
                     if cost:
                         row[f"{side}_unit"] = round(cost["unit"], 4)
-                        row[f"{side}_edge"] = round(fair_side - cost["unit"], 4)
-                        if fair_side - cost["unit"] >= EDGE_MIN_MAPS:
+                        row[f"{side}_edge"] = round(worst - cost["unit"], 4)
+                        if worst - cost["unit"] >= EDGE_MIN_MAPS and plausible_map_entry(cost["avg"], worst - cost["unit"]):
                             signals.append({"at": at.isoformat(), "reason": reason, "venue": "kalshi",
                                             "in_play": f.a in playing, "market": m["market"], "family": "maps",
                                             "kind": m["kind"], "team": m["team"], "label": m["label"],
-                                            "match_key": f.key, "a": f.a, "b": f.b, "score": list(f.score),
+                                            "match_key": f.key, "price_slope": round(slope, 4),
+                                            "a": f.a, "b": f.b, "score": list(f.score),
                                             "side": side, "shares": KALSHI_SIZE, "avg": round(cost["avg"], 4),
                                             "unit_cost": round(cost["unit"], 4), "fair": round(fair_side, 4),
-                                            "worst_fair": fair_side, "edge": round(fair_side - cost["unit"], 4)})
+                                            "worst_fair": worst, "edge": round(worst - cost["unit"], 4)})
                 quotes.append(row)
 
         # Only venues the user can trade produce paper entries; the rest stay in the snapshot as reference.

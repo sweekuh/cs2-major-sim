@@ -6,13 +6,21 @@ Paper only. Nothing here places orders or connects to an account.
 
 PGL publishes results through `news.pglesports.com/api/groupStageEndpoint` with no push
 notifications, so `watch.py` polls it (15 s while a match is live or within 20 minutes of
-starting, 60 s otherwise) and turns changes into events:
+starting, 60 s otherwise) and turns changes into events.
+
+PGL's feed can trail live play: on November 24 its update time stayed fixed while matches were
+played. The watcher therefore layers bo3.gg's match API over every match PGL has not finished.
+A bo3.gg record counts only if it is the one listing of the same two teams within 12 hours of
+PGL's start time and uses the same format. A map winner it cannot name stops the record there,
+and PGL's result stands once PGL has one. bo3.gg marks a match current around the veto and can
+flip it back, so a match counts as live only once a map is underway, and each start is reported
+once.
 
 | Event | Fires when |
 |---|---|
-| `match_start` | PGL marks the match live or the first round score appears |
+| `match_start` | PGL marks the match live, bo3.gg shows a map underway, or the first round score appears. Once per match. |
 | `map_end` | the series score increases, once per finished map (a best-of-one's only map included) |
-| `match_finish` | PGL marks the match ended |
+| `match_finish` | PGL marks the match ended, or bo3.gg marks it finished with a decisive score |
 | `result_corrected` | PGL changes the winner of a finished match. The event carries the old and new winners and series scores. |
 | `fixture_set`, `maps_set`, `round_update` | a later round is drawn, the veto is published, a map's round score changes |
 
@@ -43,7 +51,9 @@ It uses these simulations to value Polymarket's 3-0, 3-1, 3-2, 0-3 and qualifica
 markets and Kalshi's Stage 2 qualification futures. The engine checks its draw against PGL.
 
 If both match quotes disappear between confirmed maps of a best-of-three, the simulator
-prices only the remaining maps. For equally matched teams, a 1–0 lead implies a 75%
+prices only the remaining maps. Neither feed reports live round scores, so a break counts
+only when bo3.gg shows the last map finished and none in progress; otherwise the pricer
+treats the map as underway. For equally matched teams, a 1–0 lead implies a 75%
 series win probability and a 0–1 deficit implies 25%. If a map is underway and neither
 venue provides a usable match quote, the pricer holds the stage forecast and paper entries
 until it can price that match again. One result can change other teams' Swiss pairings.
@@ -52,7 +62,10 @@ The pricer screens 20 Polymarket shares or 10 Kalshi contracts against the least
 fair value, allowing two simulation standard errors. Before recording a paper entry, it
 rechecks the market terms, executable depth, costs, live match prices and PGL state.
 It records the refreshed price and both observation times if the edge still clears two
-cents per share after fees.
+cents per share after fees. A live match price may move by up to 5 cents during the recheck,
+and the required edge rises by the move: by the sum of the live matches' moves for stage
+markets, and for map-score contracts by the move in their own match scaled by how strongly the
+contract depends on that price. A larger move blocks the entry until the next pass.
 
 Fees: Polymarket sports takers pay `shares x 0.05 x p x (1 - p)` and makers pay nothing
 ([docs](https://docs.polymarket.com/trading/fees)). Kalshi charges `0.07 x p x (1 - p)` per
@@ -110,10 +123,17 @@ observed.
 - **Map-score markets (exploratory).** Kalshi's best-of-three "Total Maps" and map "Spread"
   contracts are priced from the live series price: the map in progress takes whatever chance
   reconciles that price with fresh maps at the pre-match per-map strength. Entries need a
-  5-cent edge and are graded as their own group, outside the pre-registered test.
+  5-cent edge and are graded as their own group, outside the pre-registered test. They also
+  need a price between 3 and 97 cents and an edge of at most 25 cents, measured at the least
+  favorable fresh-map strength within 5 points of the pre-match value (map picks and in-play
+  re-rating move it). Near the end of a map the
+  market knows the round score and the model does not: on November 25 four 1-cent map entries
+  came from stale inputs.
 - **Durable runs.** `--ledger` restores the compact state from the committed `ledger/`
   directory when `state/` is empty (a fresh container) and copies it back after every event and
   pricer run. The supervising session commits `ledger/` so the paper ledger survives a container
   replacement.
 - **Notifications.** Each wake's JSON includes `push`, one line under 200 characters with the
   game events, new Kalshi paper entries and the Pick'Em chance, for a phone notification.
+  A pricer run that records entries wakes the supervisor even without a game event
+  (`"exit": "entries"`).

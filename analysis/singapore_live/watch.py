@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -97,9 +98,12 @@ def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, 
             name, ra, rb = c.maps[idx] if idx < len(c.maps) else ("", 0, 0)
             winner = c.a if ra > rb else c.b if rb > ra else None
             done = c.maps[:n]
+            if all(x != y for _, x, y in done):
+                series = [sum(x > y for _, x, y in done), sum(y > x for _, x, y in done)]
+            else:  # a source finished the map without its score; only the latest map's series is known
+                series = list(c.score) if n == done_now else None
             events.append({**base, "type": "map_end", "map_index": n, "map": name,
-                           "rounds": [ra, rb], "map_winner": winner,
-                           "series_after": [sum(x > y for _, x, y in done), sum(y > x for _, x, y in done)]})
+                           "rounds": [ra, rb], "map_winner": winner, "series_after": series})
         if p.status != "end" and c.status == "end":
             events.append({**base, "type": "match_finish", "winner": c.winner})
         elif p.status == c.status == "end" and p.winner != c.winner:
@@ -122,11 +126,15 @@ def restore_ledger() -> list[str]:
 
 
 def sync_ledger() -> None:
+    # Replace each file atomically: `git add` reading a file the watcher is truncating and
+    # rewriting in place crashed with SIGBUS on November 26.
     LEDGER.mkdir(exist_ok=True)
     for name in LEDGER_FILES:
         src = STATE / name
         if src.exists():
-            (LEDGER / name).write_bytes(src.read_bytes())
+            staging = STATE / f".{name}.sync"  # same filesystem as LEDGER, outside the tracked tree
+            staging.write_bytes(src.read_bytes())
+            os.replace(staging, LEDGER / name)
 
 
 def push_text(events: list[dict], pricing: dict | None) -> str | None:
@@ -136,9 +144,13 @@ def push_text(events: list[dict], pricing: dict | None) -> str | None:
         if e["type"] == "match_start":
             parts.append(f"LIVE {e['a']} v {e['b']} (R{e['round']} Bo{e['bo']})")
         elif e["type"] == "map_end" and not (e["bo"] == 1):
-            name = (e.get("map") or "").replace("de_", "").title()
-            sa, sb = e.get("series_after", e["score"])
-            parts.append(f"{e['a']} {sa}-{sb} {e['b']} after map {e['map_index']} {name} {e['rounds'][0]}-{e['rounds'][1]}")
+            where = " ".join(x for x in (f"map {e['map_index']}", (e.get("map") or "").replace("de_", "").title(),
+                                         "-".join(map(str, e["rounds"])) if any(e["rounds"]) else "") if x)
+            series = e.get("series_after", e["score"])
+            if series is None:
+                parts.append(f"{e['a']} v {e['b']} {where} done")
+            else:
+                parts.append(f"{e['a']} {series[0]}-{series[1]} {e['b']} after {where}")
         elif e["type"] == "match_finish":
             parts.append(f"FINAL {e['a']} {e['score'][0]}-{e['score'][1]} {e['b']}")
         elif e["type"] == "fixture_changed":
@@ -298,6 +310,9 @@ def main(argv=None) -> int:
             at = now()
             try:
                 cur, updated = feed.fetch(client, stages)
+                cur, overlay_error = feed.with_live(client, cur)
+                if overlay_error:
+                    append("errors.jsonl", [{"at": at.isoformat(), "where": "overlay", "error": overlay_error}])
                 failures = 0
             except (httpx.HTTPError, ValueError, KeyError) as exc:
                 failures += 1
@@ -311,6 +326,18 @@ def main(argv=None) -> int:
                 time.sleep(min(60, 5 * failures))
                 continue
             events = diff(prev, cur, at=at.isoformat(), updated=updated)
+            # bo3.gg can mark a match current early, drop it back to upcoming, then start it
+            # for real. Report each match's start once; later starts stay in the local log only.
+            if "started" not in checkpoint:  # first run with this guard: seed from the event log
+                log = STATE / "events.jsonl"
+                rows = [json.loads(x) for x in log.read_text().splitlines()] if log.exists() else []
+                checkpoint["started"] = sorted({e["key"] for e in rows if e.get("type") == "match_start"})
+            reported = set(checkpoint["started"])
+            repeats = [e for e in events if e["type"] == "match_start" and e["key"] in reported]
+            if repeats:
+                append("errors.jsonl", [{"at": at.isoformat(), "where": "repeat_start", "key": e["key"]} for e in repeats])
+                events = [e for e in events if e not in repeats]
+            checkpoint["started"] = sorted(reported | {e["key"] for e in events if e["type"] == "match_start"})
             if args.post:
                 outbound = [e for e in events if e["type"] != "round_update"]
                 if outbound:
@@ -336,6 +363,8 @@ def main(argv=None) -> int:
                 append("pricer_runs.jsonl", [{"at": at.isoformat(), "reason": reasons, **{k: v for k, v in pricing.items() if k != "stdout"}}])
                 sync()
             woke += [e for e in events if e["type"] in wake]
+            # Entries recorded on a live tick have no game event behind them; wake for them too.
+            entered = bool(reasons) and bool((pricing or {}).get("new_entries"))
             elapsed = (now() - started).total_seconds() / 60
             summary = {
                 "at": at.isoformat(), "feed_updated": updated,
@@ -353,8 +382,8 @@ def main(argv=None) -> int:
             if args.once:
                 print(json.dumps({"exit": "once", **summary}, indent=1))
                 return 0
-            if woke:
-                print(json.dumps({"exit": "event", **summary}, indent=1))
+            if woke or entered:
+                print(json.dumps({"exit": "event" if woke else "entries", **summary}, indent=1))
                 return 0
             if elapsed >= args.max_minutes:
                 print(json.dumps({"exit": "max_minutes", **summary}, indent=1))

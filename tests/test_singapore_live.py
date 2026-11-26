@@ -1,6 +1,7 @@
 """Offline checks for the live watcher and pricer (no network)."""
 
 import json
+from dataclasses import replace
 
 import numpy as np
 import pytest
@@ -164,3 +165,194 @@ def test_series_score_after_each_map_when_two_maps_end_between_polls():
     ends = [e for e in diff({"s1-20": before}, {"s1-20": after}, at=at) if e["type"] == "map_end"]
     assert [e["series_after"] for e in ends] == [[1, 0], [1, 1]]
     assert push_text(ends[:1], None).startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9")
+
+
+def _bo3(status, games, t1="Imperial", t2="FlyQuest", s=(0, 0), bo=3, start="2026-11-25T08:00:00.000+00:00"):
+    return {"status": status, "bo_type": bo, "start_date": start, "team1": {"name": t1}, "team2": {"name": t2},
+            "team1_score": s[0], "team2_score": s[1], "games": games}
+
+
+def test_bo3_overlay_drives_start_map_end_and_finish_while_pgl_lags():
+    pgl = {"s1-20": fx()}  # PGL still shows the match as upcoming throughout
+    at = "2026-11-25T08:40:00+00:00"
+    live = feed.overlay(pgl, {1: [_bo3("current", [{"number": 1, "status": "current", "map_name": "de_nuke"}])]})
+    assert live["s1-20"].status == "live" and live["s1-20"].maps[0] == ("de_nuke", 0, 0)
+    first = feed.overlay(pgl, {1: [_bo3("current", [
+        {"number": 1, "status": "finished", "map_name": "de_nuke", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 9},
+        {"number": 2, "status": "current", "map_name": "de_inferno"}], t1="FlyQuest", t2="Imperial Esports")]})
+    assert first["s1-20"].score == (0, 1) and first["s1-20"].maps[0] == ("de_nuke", 9, 13)
+    done = feed.overlay(pgl, {1: [_bo3("finished", [
+        {"number": 1, "status": "finished", "map_name": "de_nuke", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 9},
+        {"number": 2, "status": "finished", "map_name": "de_inferno", "winner_clan_name": "FlyQuest",
+         "winner_clan_score": 13, "loser_clan_score": 5}], t1="FlyQuest", t2="Imperial", s=(2, 0))]})
+    assert done["s1-20"].status == "end" and done["s1-20"].score == (0, 2) and done["s1-20"].winner == "FlyQuest"
+    kinds = []
+    for prev, cur in ((pgl, live), (live, first), (first, done)):
+        kinds += [e["type"] for e in diff(prev, cur, at=at) if e["type"] not in ("round_update", "maps_set")]
+    assert kinds == ["match_start", "map_end", "map_end", "match_finish"]
+
+
+def test_bo3_overlay_defers_to_pgl_and_ignores_mismatches():
+    ended = fx(status="end", score=(2, 1), maps=(("de_nuke", 13, 9), ("de_inferno", 9, 13), ("de_ancient", 13, 7)))
+    record = _bo3("finished", [], s=(0, 2))
+    assert feed.overlay({"s1-20": ended}, {1: [record]})["s1-20"] == ended  # PGL's result stands
+    upcoming = fx()
+    playing = [{"number": 1, "status": "current", "map_name": "de_nuke"}]
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing)]})["s1-20"].status == "live"
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, t2="NIP")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, start="2026-11-29T08:00:00.000+00:00")]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", playing, bo=1)]})["s1-20"] == upcoming
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("finished", [], s=(1, 1))]})["s1-20"] == upcoming
+    twice = [_bo3("current", playing), _bo3("current", playing)]
+    assert feed.overlay({"s1-20": upcoming}, {1: twice})["s1-20"] == upcoming  # ambiguous: no overlay
+
+
+def test_bo3_never_hides_a_map_result_pgl_already_has():
+    """On November 25 bo3.gg listed Dust2 finished with no winner while PGL had FlyQuest 13-11."""
+    was = fx(status="live", maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    pgl = fx(status="live", score=(0, 1), maps=(("de_dust2", 11, 13), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    unnamed = [{"number": 1, "status": "finished", "map_name": "de_dust2", "winner_clan_name": None,
+                "winner_clan_score": None, "loser_clan_score": None},
+               {"number": 2, "status": "upcoming", "map_name": None}, {"number": 3, "status": "upcoming", "map_name": None}]
+    now = feed.overlay({"s1-20": pgl}, {1: [_bo3("current", unnamed)]})["s1-20"]
+    assert now == replace(pgl, underway=False)  # map 1 finished, map 2 not started: a break
+    ends = [e for e in diff({"s1-20": was}, {"s1-20": now}, at="2026-11-25T09:30:00+00:00") if e["type"] == "map_end"]
+    assert [(e["map"], e["rounds"], e["map_winner"]) for e in ends] == [("de_dust2", [11, 13], "FlyQuest")]
+    upcoming = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    assert feed.overlay({"s1-20": upcoming}, {1: [_bo3("current", unnamed)]})["s1-20"].status == "live"
+
+
+def test_bo3_map_winners_are_matched_by_team_id_not_clan_tag():
+    """On November 25 bo3.gg named FlyQuest's map wins by clan tag "FLY" and finished the match before PGL."""
+    from analysis.singapore_live.watch import push_text
+
+    was = fx(status="live", score=(0, 1), maps=(("de_dust2", 11, 13), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    fly = {"team_id": 10398}
+    games = [{"number": 1, "status": "finished", "map_name": "de_dust2", "winner_clan_name": "FLY",
+              "winner_team_clan": fly, "winner_clan_score": 13, "loser_clan_score": 11},
+             {"number": 2, "status": "finished", "map_name": "de_cache", "winner_clan_name": "FLY",
+              "winner_team_clan": fly, "winner_clan_score": 13, "loser_clan_score": 9}]
+    record = {**_bo3("finished", games, s=(0, 2)), "team1": {"name": "Imperial", "id": 1430},
+              "team2": {"name": "FlyQuest", "id": 10398}}
+    done = feed.overlay({"s1-20": was}, {1: [record]})["s1-20"]
+    assert done.status == "end" and done.score == (0, 2)
+    assert done.maps == (("de_dust2", 11, 13), ("de_cache", 9, 13), ("de_inferno", 0, 0))
+    events = [e for e in diff({"s1-20": was}, {"s1-20": done}, at="2026-11-25T10:42:22+00:00") if e["type"] != "round_update"]
+    assert push_text(events, None) == "Imperial 0-2 FlyQuest after map 2 Cache 9-13 | FINAL Imperial 0-2 FlyQuest"
+    blind = {**record, "games": [{**g, "winner_team_clan": None, "winner_clan_name": "???"} for g in games]}
+    unknown = feed.overlay({"s1-20": was}, {1: [blind]})["s1-20"]  # winners unknown: names kept, no fake scores
+    events = [e for e in diff({"s1-20": was}, {"s1-20": unknown}, at="2026-11-25T10:42:22+00:00") if e["type"] != "round_update"]
+    assert push_text(events, None) == "Imperial 0-2 FlyQuest after map 2 Cache | FINAL Imperial 0-2 FlyQuest"
+
+
+def test_bo3_current_before_a_map_starts_is_not_a_start():
+    """On November 25 bo3.gg marked Imperial v FlyQuest current at 08:10 with no map underway, then reverted."""
+    vetoed = fx(maps=(("de_dust2", 0, 0), ("de_cache", 0, 0), ("de_inferno", 0, 0)))
+    veto = [{"number": n, "status": "upcoming", "map_name": None} for n in (1, 2, 3)]
+    assert feed.overlay({"s1-20": vetoed}, {1: [_bo3("current", veto)]})["s1-20"] == vetoed
+    playing = [{"number": 1, "status": "current", "map_name": "de_dust2"}] + veto[1:]
+    live = feed.overlay({"s1-20": vetoed}, {1: [_bo3("current", playing)]})["s1-20"]
+    assert live.status == "live" and [m for m, _, _ in live.maps] == ["de_dust2", "de_cache", "de_inferno"]
+    assert live.underway is True
+    kinds = [e["type"] for e in diff({"s1-20": vetoed}, {"s1-20": live}, at="2026-11-25T08:20:00+00:00")]
+    assert kinds == ["match_start"]  # PGL's veto survives the overlay, so no maps_set churn
+
+
+def test_a_flapping_start_is_reported_once(monkeypatch, tmp_path):
+    from analysis.singapore_live import watch
+
+    monkeypatch.setattr(watch, "STATE", tmp_path)
+    upcoming, live = fx(key="s1-18", bo=1, maps=(("", 0, 0),)), fx(key="s1-18", bo=1, status="live", maps=(("de_nuke", 0, 0),))
+    states = iter([upcoming, live, upcoming, live])
+    monkeypatch.setattr(watch.feed, "fetch", lambda *_: ({"s1-18": next(states)}, {1: "t"}))
+    for _ in range(4):
+        watch.main(["--once", "--no-track-prices", "--price-on", "", "--price-every-live", "0"])
+    starts = [json.loads(x) for x in (tmp_path / "events.jsonl").read_text().splitlines()]
+    assert [e["type"] for e in starts if e["type"] == "match_start"] == ["match_start"]
+
+
+def test_map_break_needs_bo3_to_confirm_no_map_is_underway():
+    """Neither feed shows live round scores, so "no rounds yet" held for all of map 2 of 9z v
+    DENDELE on November 25. When the series quotes vanished near its end, the pricer took it
+    for a break, priced a fresh map at about 50%, and logged 1-cent map entries."""
+    from analysis.singapore_live import price
+
+    f = fx(status="live", score=(1, 0), maps=(("de_mirage", 13, 5), ("de_cache", 0, 0), ("de_nuke", 0, 0)))
+    assert not price.at_map_break(f)  # unknown
+    assert not price.at_map_break(replace(f, underway=True))
+    assert price.at_map_break(replace(f, underway=False))
+
+
+def test_map_entries_at_extreme_prices_or_huge_gaps_are_skipped():
+    from analysis.singapore_live.price import plausible_map_entry
+
+    assert not plausible_map_entry(0.01, 0.06)  # GOSH sweep at 1 cent on November 25
+    assert not plausible_map_entry(0.01, 0.49)  # 9z v DENDELE over 2.5 maps at 1 cent
+    assert not plausible_map_entry(0.50, 0.30)
+    assert plausible_map_entry(0.85, 0.07)
+
+
+def test_entries_from_a_live_tick_wake_the_supervisor(monkeypatch, tmp_path, capsys):
+    from analysis.singapore_live import watch
+
+    monkeypatch.setattr(watch, "STATE", tmp_path)
+    live = fx(key="s1-22", status="live", score=(1, 0), maps=(("de_inferno", 13, 3), ("de_ancient", 0, 0), ("de_nuke", 0, 0)))
+    monkeypatch.setattr(watch.feed, "fetch", lambda *_: ({"s1-22": live}, {1: "t"}))
+    watch.main(["--once", "--no-track-prices", "--price-on", "", "--price-every-live", "0"])
+    capsys.readouterr()
+    pricing = {"ok": True, "new_entries": 1, "new": ["kalshi qualify NIP YES @0.90 fair>=0.943"], "pickem_p_ge5": 0.01}
+    monkeypatch.setattr(watch, "run_pricer", lambda *_: pricing)
+    assert watch.main(["--no-track-prices", "--price-on", "", "--price-every-live", "180"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["exit"] == "entries" and out["events"] == []
+    assert out["push"] == "1 new Kalshi paper: kalshi qualify NIP YES @0.90 fair>=0.943 | PickEm 1%"
+
+
+def test_map_entries_use_the_least_favorable_fresh_map_strength():
+    from analysis.singapore_live.price import map_fair_range
+
+    # M80 v Eternal Fire, November 26 06:34: M80 at 0.715 with 0-0 maps and a 0.47 fresh-map
+    # strength put an Eternal Fire sweep near zero. Five points more for M80 leaves about 5%,
+    # the price the market charged for the sweep's NO side (94.4 cents).
+    p, lo, hi = map_fair_range(0.715, 0.47, (0, 0), "sweep_b")
+    assert p < 0.01 and hi > 0.05
+    # Imperial v FlyQuest, November 25 10:04: over 2.5 maps at 85.9 cents looked 7 cents cheap;
+    # the least favorable value sits below the cost, and the entry lost.
+    p, lo, hi = map_fair_range(0.4415, 0.477, (0, 1), "over")
+    assert p > 0.92 and lo < 0.859
+
+
+def test_a_half_entered_pgl_map_score_is_not_a_finished_map():
+    """PGL read Lynn Vision 1-1 PVISION with Dust2 at 10-0 at 11:01:49 on November 26, then
+    PVISION 2-0 with Dust2 at 10-13 eight seconds later."""
+    def row(status, score, dust2):
+        return {"status": status, "timeZone": "SGT", "date": "26.11.2026", "time": "16:30", "format": "BO3",
+                "round": "Round 4", "leftTeam": "Lynn Vision", "rightTeam": "PVISION",
+                "leftScore": score[0], "rightScore": score[1],
+                "maps": [{"map": "de_ancient", "leftScore": 7, "rightScore": 13},
+                         {"map": "de_dust2", "leftScore": dust2[0], "rightScore": dust2[1]},
+                         {"map": "de_inferno", "leftScore": 0, "rightScore": 0}]}
+
+    before = feed.parse(1, [row("live", (0, 1), (0, 0))])["s1-00"]
+    torn = feed.parse(1, [row("live", (1, 1), (10, 0))])["s1-00"]
+    final = feed.parse(1, [row("end", (0, 2), (10, 13))])["s1-00"]
+    assert torn.score == (0, 1) and torn.status == "live"
+    assert final.score == (0, 2) and final.status == "end"
+    assert [e["type"] for e in diff({"s1-00": before}, {"s1-00": torn}, at="2026-11-26T11:01:49+00:00")
+            if e["type"] != "round_update"] == []
+    ends = diff({"s1-00": torn}, {"s1-00": final}, at="2026-11-26T11:01:57+00:00")
+    assert [(e["type"], e.get("map"), e.get("rounds"), e.get("map_winner")) for e in ends if e["type"] != "round_update"] == [
+        ("map_end", "de_dust2", [10, 13], "PVISION"), ("match_finish", None, None, None)]
+
+
+def test_a_draw_made_before_a_live_match_ends_holds_entries():
+    from analysis.singapore_live.price import premature_draw
+
+    decider = fx(key="s1-29", status="live", score=(1, 1), a="Wildcard", b="Chinggis Warriors")
+    later = feed.Fixture("s1-31", 1, "round 5", 5, 3, "2026-11-27T08:30:00+00:00", "upcoming", "Imperial", "Wildcard",
+                         (0, 0), (("", 0, 0),) * 3)
+    assert premature_draw([decider, later]) == "PGL drew Imperial v Wildcard before Wildcard's live match ended"
+    assert premature_draw([replace(decider, status="end", score=(2, 1)), later]) is None
+    assert premature_draw([decider, replace(later, b="NIP")]) is None

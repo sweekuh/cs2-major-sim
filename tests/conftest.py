@@ -14,6 +14,14 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def _no_live_overlay(monkeypatch):
+    """Keep the Singapore live feed offline: the bo3.gg overlay is tested with fixed records."""
+    import analysis.singapore_live.feed as _feed
+
+    monkeypatch.setattr(_feed, "LIVE_OVERLAY", False)
+
+
+@pytest.fixture(autouse=True)
 def _isolate_results_cache(tmp_path, monkeypatch):
     """Hermetic default: no test sees a REAL ``data/results_cache.json`` on disk (RES-04).
 
