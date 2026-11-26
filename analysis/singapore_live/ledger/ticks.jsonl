@@ -3677,3 +3677,4 @@
 {"at": "2026-11-26T11:51:32.846601+00:00", "key": "s1-27", "a": "100 Thieves", "b": "9z", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_nuke", 5, 13], ["de_dust2", 13, 6], ["de_ancient", 0, 0]]}
 {"at": "2026-11-26T11:51:32.846601+00:00", "key": "s1-28", "a": "Imperial", "b": "Liquid", "p_a": 0.255, "kalshi_a": 0.25, "score": [0, 0], "maps": [["de_anubis", 0, 0], ["de_cache", 0, 0], ["de_mirage", 0, 0]]}
 {"at": "2026-11-26T11:51:50.610636+00:00", "key": "s1-28", "a": "Imperial", "b": "Liquid", "p_a": 0.255, "kalshi_a": 0.25, "score": [0, 0], "maps": [["de_anubis", 0, 0], ["de_cache", 0, 0], ["de_mirage", 0, 0]]}
+{"at": "2026-11-26T11:52:23.467456+00:00", "key": "s1-28", "a": "Imperial", "b": "Liquid", "p_a": 0.255, "kalshi_a": 0.245, "score": [0, 0], "maps": [["de_anubis", 0, 0], ["de_cache", 0, 0], ["de_mirage", 0, 0]]}

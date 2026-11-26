@@ -1,4 +1,4 @@
-# Singapore live pricing · 2026-11-26T11:51:53Z · map_end,match_finish
+# Singapore live pricing · 2026-11-26T11:52:29Z · live_tick
 
 Pick'Em card: P(5+ correct) 0.0%, expected 2.68, best case 3/10
 
@@ -20,10 +20,10 @@ Pick'Em card: P(5+ correct) 0.0%, expected 2.68, best case 3/10
 | polymarket | 3-2 | PVISION | 0.000 (0.000-0.000) | None / 0.009 | -0.0095 |  |
 | kalshi | qualify | DENDELE | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FlyQuest | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| kalshi | maps | over 2.5 | 0.468 (0.466-0.493) | 0.43 / 0.46 | -0.0219 | -0.0808 |
+| kalshi | maps | over 2.5 | 0.468 (0.466-0.493) | 0.43 / 0.46 | -0.0119 | -0.0808 |
 | kalshi | maps | over 2.5 | 0.439 (0.438-0.458) | 0.44 / 0.48 | -0.0598 | -0.0358 |
-| kalshi | maps | Liquid | 0.480 (0.458-0.491) | 0.47 / 0.49 | -0.05 | -0.039 |
 | kalshi | maps | Wildcard | 0.392 (0.352-0.416) | 0.39 / 0.41 | -0.0751 | -0.0435 |
+| kalshi | maps | Liquid | 0.480 (0.458-0.491) | 0.45 / 0.49 | -0.05 | -0.059 |
 | polymarket | qualify | Liquid | 0.873 (0.871-0.873) | 0.64 / 0.93 | -0.0705 | -0.2547 |
 | polymarket | 3-2 | Chinggis Warriors | 0.055 (0.055-0.075) | 0.01 / 0.973 | -0.9223 | -0.073 |
 | polymarket | qualify | Chinggis Warriors | 0.055 (0.055-0.075) | 0.01 / 0.962 | -0.9122 | -0.0734 |

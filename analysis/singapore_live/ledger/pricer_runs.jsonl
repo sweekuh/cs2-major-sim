@@ -279,3 +279,4 @@
 {"at": "2026-11-26T11:46:07.150280+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "9z", "Imperial", "Liquid"], "new_in_play": 0, "pickem_max": 4, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-26T11:49:13.034557+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-27", "new_entries": 0}
 {"at": "2026-11-26T11:51:53.773399+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Liquid"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-26T11:52:29.759217+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Liquid"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
