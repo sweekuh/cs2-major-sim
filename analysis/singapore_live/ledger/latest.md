@@ -1,15 +1,18 @@
-# Singapore live pricing · 2026-11-27T11:26:48Z · live_tick
+# Singapore live pricing · 2026-11-27T11:43:52Z · map_end,match_finish
 
 Pick'Em card: P(5+ correct) 0.0%, expected 2.00, best case 2/10
 
 | Match | Status | Price (first team) | Source |
 |---|---|---|---|
-| Imperial vs Wildcard | live [1, 1] | 0.455 | polymarket |
-| M80 vs 100 Thieves | upcoming [0, 0] | 0.345 | polymarket |
+| M80 vs 100 Thieves | upcoming [0, 0] | 0.335 | polymarket |
 
 | Venue | Market | Team | Fair (range) | Bid / Ask | YES edge | NO edge |
 |---|---|---|---|---|---|---|
-| polymarket | qualify | 100 Thieves | 0.657 (0.657-0.657) | 0.62 / 0.64 | -0.0066 | -0.0556 |
+| polymarket | 3-2 | Imperial | 1.000 (1.000-1.000) | 0.999 / None |  | -0.0011 |
+| polymarket | qualify | 100 Thieves | 0.671 (0.671-0.671) | 0.63 / 0.65 | -0.0021 | -0.0597 |
+| polymarket | qualify | Imperial | 1.000 (1.000-1.000) | 0.999 / None |  | -0.0074 |
+| polymarket | qualify | Wildcard | 0.000 (0.000-0.000) | None / 0.001 | -0.0081 |  |
+| polymarket | 3-2 | Wildcard | 0.000 (0.000-0.000) | None / 0.001 | -0.0081 |  |
 | kalshi | qualify | PVISION | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
 | kalshi | qualify | HEROIC | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FaZe | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
@@ -18,23 +21,16 @@ Pick'Em card: P(5+ correct) 0.0%, expected 2.00, best case 2/10
 | kalshi | qualify | GOSH | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FlyQuest | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
 | kalshi | qualify | Lynn Vision | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| kalshi | maps | over 2.5 | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| kalshi | maps | Wildcard | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
-| kalshi | maps | Imperial | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
-| kalshi | maps | over 2.5 | 0.478 (0.478-0.500) | 0.44 / 0.48 | -0.0202 | -0.0779 |
-| polymarket | 3-2 | M80 | 0.343 (0.343-0.343) | 0.33 / 0.38 | -0.0556 | -0.0306 |
-| kalshi | maps | 100 Thieves | 0.366 (0.328-0.390) | 0.36 / 0.38 | -0.0694 | -0.0469 |
-| kalshi | maps | M80 | 0.156 (0.132-0.172) | 0.15 / 0.18 | -0.0637 | -0.0495 |
-| polymarket | qualify | M80 | 0.343 (0.343-0.343) | 0.33 / 0.38 | -0.0556 | -0.1173 |
-| polymarket | 3-2 | 100 Thieves | 0.657 (0.657-0.657) | 0.62 / 0.67 | -0.0932 | -0.0556 |
-| kalshi | qualify | 100 Thieves | 0.657 (0.657-0.657) | 0.13 / 0.96 | -0.3126 | -0.5419 |
-| polymarket | qualify | Wildcard | 0.551 (0.551-0.551) | 0.08 / 0.93 | -0.3893 | -0.4817 |
-| kalshi | qualify | M80 | 0.343 (0.343-0.343) | None / 0.74 | -0.4179 |  |
-| polymarket | 3-2 | Wildcard | 0.551 (0.551-0.551) | 0.04 / 0.96 | -0.4207 | -0.52 |
-| polymarket | qualify | Imperial | 0.449 (0.449-0.449) | 0.04 / 0.95 | -0.5133 | -0.4251 |
-| polymarket | 3-2 | Imperial | 0.449 (0.449-0.449) | 0.03 / 0.95 | -0.516 | -0.4275 |
-| kalshi | qualify | Wildcard | 0.551 (0.551-0.551) | 0.06 / 0.94 | -0.434 | -0.502 |
-| kalshi | qualify | Imperial | 0.449 (0.449-0.449) | 0.05 / 0.97 | -0.531 |  |
+| kalshi | maps | over 2.5 | 0.475 (0.474-0.498) | 0.44 / 0.48 | -0.0239 | -0.0757 |
+| polymarket | 3-2 | M80 | 0.329 (0.329-0.329) | 0.32 / 0.37 | -0.0597 | -0.0289 |
+| kalshi | maps | M80 | 0.151 (0.127-0.167) | 0.15 / 0.18 | -0.0637 | -0.0437 |
+| kalshi | maps | 100 Thieves | 0.374 (0.336-0.399) | 0.36 / 0.41 | -0.0914 | -0.0556 |
+| polymarket | qualify | M80 | 0.329 (0.329-0.329) | 0.32 / 0.37 | -0.0597 | -0.11 |
+| polymarket | 3-2 | 100 Thieves | 0.671 (0.671-0.671) | 0.63 / 0.68 | -0.0859 | -0.0597 |
+| kalshi | qualify | 100 Thieves | 0.671 (0.671-0.671) | 0.13 / 0.96 | -0.2982 | -0.556 |
+| kalshi | qualify | M80 | 0.329 (0.329-0.329) | None / 0.71 | -0.403 |  |
+| kalshi | qualify | Imperial | 1.000 (1.000-1.000) | 0.13 / None |  | -0.878 |
+| kalshi | qualify | Wildcard | 0.000 (0.000-0.000) | None / 0.89 | -0.897 |  |
 | kalshi | qualify | Liquid | 1.000 (1.000-1.000) | 0.6 / 0.99 |  | -0.907 |
 | kalshi | qualify | NIP | 1.000 (1.000-1.000) | 0.6 / None |  | -0.914 |
 | kalshi | qualify | Eternal Fire | 1.000 (1.000-1.000) | 0.6 / None |  | -0.914 |
