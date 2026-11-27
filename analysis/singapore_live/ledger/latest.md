@@ -1,13 +1,16 @@
-# Singapore live pricing · 2026-11-27T14:34:16Z · live_tick
+# Singapore live pricing · 2026-11-27T15:02:27Z · map_end,match_finish
 
 Pick'Em card: P(5+ correct) 0.0%, expected 2.00, best case 2/10
 
 | Match | Status | Price (first team) | Source |
 |---|---|---|---|
-| M80 vs 100 Thieves | live [1, 1] | 0.325 | polymarket |
 
 | Venue | Market | Team | Fair (range) | Bid / Ask | YES edge | NO edge |
 |---|---|---|---|---|---|---|
+| kalshi | qualify | M80 | 0.000 (0.000-0.000) | 0.1 / 0.9 | -0.907 | 0.028 |
+| kalshi | qualify | 100 Thieves | 1.000 (1.000-1.000) | 0.13 / 0.99 | 0.009 | -0.878 |
+| polymarket | 3-2 | M80 | 0.000 (0.000-0.000) | None / 0.001 | -0.0011 |  |
+| polymarket | 3-2 | 100 Thieves | 1.000 (1.000-1.000) | 0.999 / None |  | -0.0011 |
 | kalshi | qualify | PVISION | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
 | kalshi | qualify | HEROIC | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FaZe | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
@@ -16,20 +19,13 @@ Pick'Em card: P(5+ correct) 0.0%, expected 2.00, best case 2/10
 | kalshi | qualify | GOSH | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FlyQuest | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
 | kalshi | qualify | Lynn Vision | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| kalshi | maps | over 2.5 | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| kalshi | maps | 100 Thieves | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
-| kalshi | maps | M80 | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
-| polymarket | qualify | 100 Thieves | 0.682 (0.682-0.682) | 0.41 / 0.97 | -0.2974 | -0.2905 |
-| polymarket | 3-2 | 100 Thieves | 0.682 (0.682-0.682) | 0.38 / 0.97 | -0.2962 | -0.3202 |
-| kalshi | qualify | 100 Thieves | 0.682 (0.682-0.682) | 0.13 / 0.98 | -0.3098 | -0.5664 |
-| polymarket | qualify | M80 | 0.318 (0.318-0.318) | 0.03 / 0.9 | -0.5929 | -0.3105 |
-| polymarket | 3-2 | M80 | 0.318 (0.318-0.318) | 0.02 / 0.62 | -0.3202 | -0.3129 |
-| kalshi | qualify | M80 | 0.318 (0.318-0.318) | 0.1 / 0.9 | -0.5954 |  |
+| polymarket | qualify | 100 Thieves | 1.000 (1.000-1.000) | 0.68 / None |  | -0.3309 |
+| polymarket | qualify | M80 | 0.000 (0.000-0.000) | None / 0.68 | -0.6909 |  |
 | kalshi | qualify | Imperial | 1.000 (1.000-1.000) | 0.1 / None |  | -0.907 |
 | kalshi | qualify | NIP | 1.000 (1.000-1.000) | 0.6 / None |  | -0.914 |
 | kalshi | qualify | Eternal Fire | 1.000 (1.000-1.000) | 0.6 / None |  | -0.914 |
 | kalshi | qualify | Liquid | 1.000 (1.000-1.000) | 0.6 / 0.99 |  | -0.915 |
-| kalshi | qualify | Wildcard | 0.000 (0.000-0.000) | None / 0.9 | -0.959 |  |
+| kalshi | qualify | Wildcard | 0.000 (0.000-0.000) | None / 0.9 | -0.966 |  |
 | kalshi | qualify | Chinggis Warriors | 0.000 (0.000-0.000) | None / 0.9 | -0.972 |  |
 
-Signals this snapshot: 0, new paper entries: 0. Edges are after taker fees against the least favorable scenario. Paper only.
+Signals this snapshot: 1, new paper entries: 0. Edges are after taker fees against the least favorable scenario. Paper only.
