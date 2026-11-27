@@ -1,10 +1,10 @@
 {
- "at": "2026-11-27T15:02:25.625509+00:00",
+ "at": "2026-11-27T15:17:09.630728+00:00",
  "updated": {
-  "1": "2026-11-27T15:01:53.026Z",
-  "2": "2026-11-27T15:01:48.592Z",
-  "3": "2026-11-27T15:01:48.582Z",
-  "4": "2026-11-27T15:01:48.577Z"
+  "1": "2026-11-27T15:16:38.578Z",
+  "2": "2026-11-27T15:16:38.627Z",
+  "3": "2026-11-27T15:16:38.614Z",
+  "4": "2026-11-27T15:16:38.653Z"
  },
  "fixtures": {
   "s1-00": {
@@ -904,8 +904,8 @@
    "bo": 1,
    "start": "2026-11-28T04:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "FUT ESPORTS",
+   "b": "FlyQuest",
    "score": [
     0,
     0
@@ -927,8 +927,8 @@
    "bo": 1,
    "start": "2026-11-28T04:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "The MongolZ",
+   "b": "Lynn Vision",
    "score": [
     0,
     0
@@ -950,8 +950,8 @@
    "bo": 1,
    "start": "2026-11-28T05:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Astralis",
+   "b": "Imperial",
    "score": [
     0,
     0
@@ -973,8 +973,8 @@
    "bo": 1,
    "start": "2026-11-28T05:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Nemiga Gaming",
+   "b": "NIP",
    "score": [
     0,
     0
@@ -996,8 +996,8 @@
    "bo": 1,
    "start": "2026-11-28T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "G2 Esports",
+   "b": "Liquid",
    "score": [
     0,
     0
@@ -1019,8 +1019,8 @@
    "bo": 1,
    "start": "2026-11-28T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "The One",
+   "b": "Eternal Fire",
    "score": [
     0,
     0
@@ -1042,8 +1042,8 @@
    "bo": 1,
    "start": "2026-11-28T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Natus Vincere",
+   "b": "PVISION",
    "score": [
     0,
     0
@@ -1065,8 +1065,8 @@
    "bo": 1,
    "start": "2026-11-28T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "MIBR",
+   "b": "100 Thieves",
    "score": [
     0,
     0
