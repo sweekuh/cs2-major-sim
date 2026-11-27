@@ -400,3 +400,4 @@
 {"at": "2026-11-27T07:54:59.707101+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-27T07:58:00.382262+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-30", "new_entries": 0}
 {"at": "2026-11-27T08:00:51.369436+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:29:04.567501+00:00", "reason": "match_start", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
