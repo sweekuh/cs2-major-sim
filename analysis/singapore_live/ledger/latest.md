@@ -1,4 +1,4 @@
-# Singapore live pricing · 2026-11-27T14:05:02Z · map_end
+# Singapore live pricing · 2026-11-27T14:05:34Z · live_tick
 
 Pick'Em card: P(5+ correct) 0.0%, expected 2.00, best case 2/10
 
