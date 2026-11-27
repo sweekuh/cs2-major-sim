@@ -5465,3 +5465,4 @@
 {"at": "2026-11-27T11:42:56.857404+00:00", "key": "s1-31", "a": "Imperial", "b": "Wildcard", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 13, 11], ["de_mirage", 11, 13], ["de_cache", 0, 0]]}
 {"at": "2026-11-27T11:43:14.797226+00:00", "key": "s1-31", "a": "Imperial", "b": "Wildcard", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 13, 11], ["de_mirage", 11, 13], ["de_cache", 0, 0]]}
 {"at": "2026-11-27T11:43:32.757489+00:00", "key": "s1-31", "a": "Imperial", "b": "Wildcard", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 13, 11], ["de_mirage", 11, 13], ["de_cache", 0, 0]]}
+{"at": "2026-11-27T12:08:09.238853+00:00", "key": "s1-32", "a": "M80", "b": "100 Thieves", "p_a": 0.335, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_dust2", 0, 0], ["de_inferno", 0, 0], ["de_mirage", 0, 0]]}
