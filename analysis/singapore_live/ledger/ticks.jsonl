@@ -4552,3 +4552,4 @@
 {"at": "2026-11-26T15:33:46.093703+00:00", "key": "s1-29", "a": "Wildcard", "b": "Chinggis Warriors", "p_a": 0.9995, "kalshi_a": 0.825, "score": [1, 1], "maps": [["de_dust2", 13, 7], ["de_cache", 11, 13], ["de_nuke", 0, 0]]}
 {"at": "2026-11-26T15:34:04.033145+00:00", "key": "s1-29", "a": "Wildcard", "b": "Chinggis Warriors", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 13, 7], ["de_cache", 11, 13], ["de_nuke", 0, 0]]}
 {"at": "2026-11-26T15:34:45.070637+00:00", "key": "s1-29", "a": "Wildcard", "b": "Chinggis Warriors", "p_a": 0.9995, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 13, 7], ["de_cache", 11, 13], ["de_nuke", 0, 0]]}
+{"at": "2026-11-27T06:02:04.453420+00:00", "key": "s1-30", "a": "Lynn Vision", "b": "HEROIC", "p_a": 0.225, "kalshi_a": 0.235, "score": [0, 0], "maps": [["de_nuke", 0, 0], ["de_dust2", 0, 0], ["de_ancient", 0, 0]]}

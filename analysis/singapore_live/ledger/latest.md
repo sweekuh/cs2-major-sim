@@ -1,48 +1,51 @@
-# Singapore live pricing · 2026-11-26T15:35:57Z · map_end,match_finish
+# Singapore live pricing · 2026-11-27T06:02:09Z · match_start
 
-Pick'Em card: P(5+ correct) 0.0%, expected 2.72, best case 3/10
+Pick'Em card: P(5+ correct) 0.0%, expected 2.77, best case 3/10
 
 | Match | Status | Price (first team) | Source |
 |---|---|---|---|
-| Lynn Vision vs HEROIC | upcoming [0, 0] | 0.285 | polymarket |
-| Imperial vs Wildcard | upcoming [0, 0] | n/a | None |
-| M80 vs 100 Thieves | upcoming [0, 0] | 0.420 | polymarket |
+| Lynn Vision vs HEROIC | live [0, 0] | 0.235 | polymarket |
+| Imperial vs Wildcard | upcoming [0, 0] | 0.605 | polymarket |
+| M80 vs 100 Thieves | upcoming [0, 0] | 0.355 | polymarket |
 
 | Venue | Market | Team | Fair (range) | Bid / Ask | YES edge | NO edge |
 |---|---|---|---|---|---|---|
-| polymarket | qualify | Chinggis Warriors | 0.000 (0.000-0.000) | None / 0.001 | -0.0011 |  |
-| polymarket | 3-1 | Liquid | 1.000 (1.000-1.000) | 0.99 / None |  | -0.0105 |
-| polymarket | 3-1 | Imperial | 0.000 (0.000-0.000) | None / 0.01 | -0.0105 |  |
+| polymarket | qualify | 100 Thieves | 0.652 (0.652-0.652) | 0.61 / 0.63 | -0.0017 | -0.0608 |
+| kalshi | maps | over 2.5 | 0.490 (0.490-0.508) | 0.46 / 0.48 | -0.0079 | -0.0659 |
+| kalshi | maps | Lynn Vision | 0.102 (0.084-0.114) | 0.11 / 0.13 | -0.0544 | -0.0107 |
 | kalshi | qualify | PVISION | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
 | kalshi | qualify | FaZe | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | 9z | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | DENDELE | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | GOSH | 0.000 (0.000-0.000) | None / 0.01 | -0.011 |  |
 | kalshi | qualify | FlyQuest | 1.000 (1.000-1.000) | 0.99 / None |  | -0.011 |
-| polymarket | qualify | HEROIC | 0.716 (0.716-0.716) | 0.56 / 0.75 | -0.0494 | -0.175 |
-| polymarket | 3-2 | M80 | 0.412 (0.412-0.412) | 0.33 / 0.5 | -0.4256 | -0.0996 |
-| polymarket | qualify | 100 Thieves | 0.589 (0.589-0.589) | 0.4 / 0.7 | -0.1355 |  |
-| polymarket | qualify | Lynn Vision | 0.284 (0.284-0.284) | 0.14 / 0.48 | -0.2227 | -0.156 |
-| polymarket | qualify | M80 | 0.412 (0.412-0.412) | 0.25 / 0.75 | -0.3548 | -0.1779 |
-| kalshi | qualify | HEROIC | 0.716 (0.716-0.716) | 0.15 / 0.89 | -0.187 | -0.5817 |
-| polymarket | qualify | Wildcard | 0.335 (0.335-0.392) | 0.21 / 0.85 | -0.5353 | -0.1967 |
-| polymarket | qualify | Imperial | 0.665 (0.609-0.665) | 0.46 / 0.97 | -0.3699 | -0.2244 |
-| kalshi | qualify | Lynn Vision | 0.284 (0.284-0.284) | 0.06 / 0.77 | -0.5097 | -0.234 |
-| polymarket | qualify | Liquid | 1.000 (1.000-1.000) | 0.768 / None |  | -0.2409 |
-| polymarket | 3-2 | HEROIC | 0.716 (0.716-0.716) | 0.01 / 0.95 | -0.248 | -0.7132 |
-| polymarket | 3-2 | Lynn Vision | 0.284 (0.284-0.284) | 0.01 / 0.97 | -0.695 | -0.2805 |
-| kalshi | qualify | M80 | 0.412 (0.412-0.412) | 0.08 / 0.98 | -0.5774 | -0.3445 |
-| polymarket | 3-2 | 100 Thieves | 0.589 (0.589-0.589) | 0.01 / 0.94 | -0.3613 | -0.5859 |
-| polymarket | 3-2 | Imperial | 0.665 (0.609-0.665) | 0.02 / 0.97 | -0.3704 | -0.653 |
-| kalshi | qualify | Imperial | 0.665 (0.609-0.665) | 0.11 / 0.98 | -0.3805 | -0.569 |
-| polymarket | 3-2 | Wildcard | 0.335 (0.335-0.392) | 0.01 / 0.95 | -0.6341 | -0.3889 |
-| kalshi | qualify | 100 Thieves | 0.589 (0.589-0.589) | 0.03 / 0.94 | -0.3965 |  |
-| kalshi | qualify | Liquid | 1.000 (1.000-1.000) | 0.61 / 0.99 |  | -0.407 |
-| kalshi | qualify | Wildcard | 0.335 (0.335-0.392) | None / 0.99 | -0.663 |  |
-| polymarket | 3-2 | Liquid | 0.000 (0.000-0.000) | None / 0.68 | -0.6909 |  |
+| kalshi | maps | over 2.5 | 0.481 (0.481-0.502) | 0.46 / 0.48 | -0.0172 | -0.0599 |
+| kalshi | maps | Imperial | 0.325 (0.290-0.348) | 0.34 / 0.35 | -0.0761 | -0.0244 |
+| polymarket | 3-2 | M80 | 0.348 (0.348-0.348) | 0.34 / 0.39 | -0.0608 | -0.0258 |
+| polymarket | qualify | HEROIC | 0.767 (0.767-0.767) | 0.75 / 0.79 | -0.0372 | -0.0324 |
+| polymarket | qualify | Lynn Vision | 0.233 (0.233-0.233) | 0.21 / 0.26 | -0.0426 | -0.0372 |
+| polymarket | 3-2 | HEROIC | 0.767 (0.767-0.767) | 0.74 / 0.79 | -0.0372 | -0.0426 |
+| polymarket | 3-2 | Lynn Vision | 0.233 (0.233-0.233) | 0.21 / 0.26 | -0.0426 | -0.0372 |
+| kalshi | maps | M80 | 0.162 (0.137-0.178) | 0.16 / 0.18 | -0.0596 | -0.0373 |
+| kalshi | maps | 100 Thieves | 0.357 (0.320-0.381) | 0.36 / 0.37 | -0.0672 | -0.0383 |
+| kalshi | maps | Wildcard | 0.184 (0.159-0.202) | 0.18 / 0.21 | -0.0734 | -0.0422 |
+| polymarket | qualify | Wildcard | 0.396 (0.396-0.396) | 0.36 / 0.43 | -0.0532 | -0.0544 |
+| polymarket | qualify | Imperial | 0.604 (0.604-0.604) | 0.57 / 0.64 | -0.0544 | -0.0532 |
+| polymarket | 3-2 | Wildcard | 0.396 (0.396-0.396) | 0.36 / 0.43 | -0.0532 | -0.0544 |
+| polymarket | 3-2 | Imperial | 0.604 (0.604-0.604) | 0.57 / 0.64 | -0.0544 | -0.0532 |
+| kalshi | maps | HEROIC | 0.464 (0.414-0.492) | 0.4 / 0.45 | -0.0536 | -0.1094 |
+| polymarket | qualify | M80 | 0.348 (0.348-0.348) | 0.34 / 0.39 | -0.0608 | -0.1152 |
+| polymarket | 3-2 | 100 Thieves | 0.652 (0.652-0.652) | 0.61 / 0.66 | -0.1098 | -0.0608 |
+| kalshi | maps | over 2.5 | 0.435 (0.424-0.472) | 0.42 / 0.49 | -0.084 | -0.0699 |
+| kalshi | qualify | HEROIC | 0.767 (0.767-0.767) | 0.74 / 0.85 | -0.0979 | -0.081 |
+| kalshi | qualify | M80 | 0.348 (0.348-0.348) | None / 0.54 | -0.2169 |  |
+| kalshi | qualify | 100 Thieves | 0.652 (0.652-0.652) | 0.13 / 0.96 | -0.3175 | -0.5369 |
+| kalshi | qualify | Wildcard | 0.396 (0.396-0.396) | 0.06 / 0.93 | -0.5459 | -0.3469 |
+| kalshi | qualify | Imperial | 0.604 (0.604-0.604) | 0.08 / 0.97 | -0.3759 | -0.5369 |
+| kalshi | qualify | Lynn Vision | 0.233 (0.233-0.233) | None / 0.36 | -0.559 |  |
 | kalshi | qualify | Eternal Fire | 1.000 (1.000-1.000) | 0.6 / None |  | -0.907 |
+| kalshi | qualify | Liquid | 1.000 (1.000-1.000) | 0.6 / 0.99 |  | -0.907 |
 | kalshi | qualify | NIP | 1.000 (1.000-1.000) | 0.6 / None |  | -0.914 |
-| polymarket | 3-2 | Chinggis Warriors | 0.000 (0.000-0.000) | None / 0.96 | -0.9619 |  |
 | kalshi | qualify | Chinggis Warriors | 0.000 (0.000-0.000) | None / 0.9 | -0.972 |  |
 
 Signals this snapshot: 0, new paper entries: 0. Edges are after taker fees against the least favorable scenario. Paper only.
