@@ -115,6 +115,27 @@ match was live) are the hypothesis, other entries the control, and `--grade` rep
 separately. While a match is live the watcher reprices every 3 minutes so in-play gaps get
 observed.
 
+## Singapore Stage 1 paper results (November 24 to 27)
+
+All 24 paper entries settled against PGL's final records (`ledger/graded.json`). Each entry is 10
+Kalshi contracts or 20 Polymarket shares, costed at the executable price including fees.
+
+| Group | Entries | P&L | Mean per share (SE) |
+|---|---|---|---|
+| Kalshi qualify, team's match live (pre-registered hypothesis) | 4 | +$10.62 | +26.6¢ (14.8¢) |
+| Kalshi qualify, otherwise (control) | 9 | +$4.57 | +5.1¢ (15.0¢) |
+| Kalshi map score (exploratory) | 8 | +$0.18 | +0.2¢ (14.2¢) |
+| Polymarket (reference, logged before the Kalshi-only decision) | 3 | +$21.90 | +36.5¢ (2.9¢) |
+
+The in-play group beat the control by 21.5¢ per share with a standard error of about 21¢, so
+Stage 1 does not separate them. The standard errors treat entries as independent, but several
+settled on the same match: the control HEROIC YES and the in-play HEROIC NO offset each other,
+and Lynn Vision NO and HEROIC YES both lost when Lynn Vision beat HEROIC in round 5. The
+effective sample is smaller than the counts. Four of the map entries came from a pricing bug
+fixed during the stage, and the entry rules changed during the stage (PR #22). Once every Stage 1
+match has ended the pricer records no more entries: Kalshi keeps trading decided contracts until
+settlement, and an entry then is not a forecast.
+
 ## Live configuration (November 24)
 
 - **Kalshi only.** Paper entries come only from Kalshi markets (`PAPER_VENUES` in `price.py`).

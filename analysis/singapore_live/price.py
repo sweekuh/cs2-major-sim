@@ -451,8 +451,11 @@ def snapshot(reason: str, quiet: bool = False) -> dict:
                                "score": list(f.score), "p_a": p_a, "source": src, "close_a": close})
         cache_path.write_text(json.dumps(cache, indent=1))
         early = premature_draw(fixtures)
-        if missing or early:
-            hold = early or "Waiting for live series odds: " + ", ".join(missing)
+        # Once every Stage 1 match has ended the outcomes are known, but Kalshi keeps trading the
+        # contracts until settlement; an entry then is not a forecast, so the experiment stops.
+        over = "Stage 1 is complete; no new entries" if fixtures and not open_fx else None
+        if missing or early or over:
+            hold = over or early or "Waiting for live series odds: " + ", ".join(missing)
             snap = {"at": at.isoformat(), "reason": reason, "feed_updated": updated.get(1), "matches": match_rows,
                     "pickem": None, "entry_hold": hold, "quotes": [], "signals": [], "new_entries": 0}
             append("snapshots.jsonl", [snap])
