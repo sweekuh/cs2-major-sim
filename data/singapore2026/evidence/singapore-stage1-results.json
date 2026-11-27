@@ -1,0 +1,850 @@
+{
+ "source": "https://news.pglesports.com/api/groupStageEndpoint?stage=1",
+ "fetched_via": "analysis/singapore_live watcher checkpoint (PGL feed, final 2026-11-27)",
+ "records": {
+  "100 Thieves": "3-2",
+  "9z": "1-3",
+  "Chinggis Warriors": "1-3",
+  "DENDELE": "0-3",
+  "Eternal Fire": "3-1",
+  "FaZe": "1-3",
+  "FlyQuest": "3-0",
+  "GOSH": "0-3",
+  "HEROIC": "2-3",
+  "Imperial": "3-2",
+  "Liquid": "3-1",
+  "Lynn Vision": "3-2",
+  "M80": "2-3",
+  "NIP": "3-0",
+  "PVISION": "3-1",
+  "Wildcard": "2-3"
+ },
+ "matches": [
+  {
+   "round": 1,
+   "teams": [
+    "HEROIC",
+    "Imperial"
+   ],
+   "winner": "Imperial",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     6,
+     13
+    ]
+   ],
+   "start": "2026-11-24T04:00:00+00:00",
+   "pgl_key": "s1-00"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "9z",
+    "Lynn Vision"
+   ],
+   "winner": "Lynn Vision",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_inferno",
+     11,
+     13
+    ]
+   ],
+   "start": "2026-11-24T04:00:00+00:00",
+   "pgl_key": "s1-01"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "NIP",
+    "M80"
+   ],
+   "winner": "NIP",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     10
+    ]
+   ],
+   "start": "2026-11-24T05:00:00+00:00",
+   "pgl_key": "s1-02"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "100 Thieves",
+    "Chinggis Warriors"
+   ],
+   "winner": "100 Thieves",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     13,
+     6
+    ]
+   ],
+   "start": "2026-11-24T05:00:00+00:00",
+   "pgl_key": "s1-03"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "Liquid",
+    "GOSH"
+   ],
+   "winner": "Liquid",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     13,
+     1
+    ]
+   ],
+   "start": "2026-11-24T06:00:00+00:00",
+   "pgl_key": "s1-04"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "PVISION",
+    "DENDELE"
+   ],
+   "winner": "PVISION",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_ancient",
+     13,
+     3
+    ]
+   ],
+   "start": "2026-11-24T06:00:00+00:00",
+   "pgl_key": "s1-05"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "FaZe",
+    "Wildcard"
+   ],
+   "winner": "Wildcard",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     9,
+     13
+    ]
+   ],
+   "start": "2026-11-24T07:00:00+00:00",
+   "pgl_key": "s1-06"
+  },
+  {
+   "round": 1,
+   "teams": [
+    "Eternal Fire",
+    "FlyQuest"
+   ],
+   "winner": "FlyQuest",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     7,
+     13
+    ]
+   ],
+   "start": "2026-11-24T07:00:00+00:00",
+   "pgl_key": "s1-07"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "NIP",
+    "Lynn Vision"
+   ],
+   "winner": "NIP",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_ancient",
+     13,
+     10
+    ]
+   ],
+   "start": "2026-11-24T08:00:00+00:00",
+   "pgl_key": "s1-08"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "HEROIC",
+    "Chinggis Warriors"
+   ],
+   "winner": "HEROIC",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     13,
+     3
+    ]
+   ],
+   "start": "2026-11-24T08:00:00+00:00",
+   "pgl_key": "s1-09"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "100 Thieves",
+    "Imperial"
+   ],
+   "winner": "Imperial",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     11,
+     13
+    ]
+   ],
+   "start": "2026-11-24T09:00:00+00:00",
+   "pgl_key": "s1-10"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "9z",
+    "M80"
+   ],
+   "winner": "M80",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     8,
+     13
+    ]
+   ],
+   "start": "2026-11-24T09:00:00+00:00",
+   "pgl_key": "s1-11"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "PVISION",
+    "FlyQuest"
+   ],
+   "winner": "FlyQuest",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     9,
+     13
+    ]
+   ],
+   "start": "2026-11-24T10:00:00+00:00",
+   "pgl_key": "s1-12"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "Eternal Fire",
+    "DENDELE"
+   ],
+   "winner": "Eternal Fire",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_anubis",
+     13,
+     8
+    ]
+   ],
+   "start": "2026-11-24T10:00:00+00:00",
+   "pgl_key": "s1-13"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "FaZe",
+    "GOSH"
+   ],
+   "winner": "FaZe",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     3
+    ]
+   ],
+   "start": "2026-11-24T11:00:00+00:00",
+   "pgl_key": "s1-14"
+  },
+  {
+   "round": 2,
+   "teams": [
+    "Liquid",
+    "Wildcard"
+   ],
+   "winner": "Liquid",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     8
+    ]
+   ],
+   "start": "2026-11-24T11:00:00+00:00",
+   "pgl_key": "s1-15"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "HEROIC",
+    "M80"
+   ],
+   "winner": "M80",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_inferno",
+     10,
+     13
+    ]
+   ],
+   "start": "2026-11-25T06:00:00+00:00",
+   "pgl_key": "s1-16"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "Eternal Fire",
+    "100 Thieves"
+   ],
+   "winner": "Eternal Fire",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     6
+    ]
+   ],
+   "start": "2026-11-25T06:00:00+00:00",
+   "pgl_key": "s1-17"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "PVISION",
+    "FaZe"
+   ],
+   "winner": "PVISION",
+   "bo": 1,
+   "score": [
+    1,
+    0
+   ],
+   "maps": [
+    [
+     "de_anubis",
+     13,
+     10
+    ]
+   ],
+   "start": "2026-11-25T07:00:00+00:00",
+   "pgl_key": "s1-18"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "Wildcard",
+    "Lynn Vision"
+   ],
+   "winner": "Lynn Vision",
+   "bo": 1,
+   "score": [
+    0,
+    1
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     8,
+     13
+    ]
+   ],
+   "start": "2026-11-25T07:00:00+00:00",
+   "pgl_key": "s1-19"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "Imperial",
+    "FlyQuest"
+   ],
+   "winner": "FlyQuest",
+   "bo": 3,
+   "score": [
+    0,
+    2
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     11,
+     13
+    ],
+    [
+     "de_cache",
+     9,
+     13
+    ]
+   ],
+   "start": "2026-11-25T08:00:00+00:00",
+   "pgl_key": "s1-20"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "9z",
+    "DENDELE"
+   ],
+   "winner": "9z",
+   "bo": 3,
+   "score": [
+    2,
+    0
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     5
+    ],
+    [
+     "de_cache",
+     13,
+     7
+    ]
+   ],
+   "start": "2026-11-25T08:00:00+00:00",
+   "pgl_key": "s1-21"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "NIP",
+    "Liquid"
+   ],
+   "winner": "NIP",
+   "bo": 3,
+   "score": [
+    2,
+    0
+   ],
+   "maps": [
+    [
+     "de_inferno",
+     13,
+     3
+    ],
+    [
+     "de_ancient",
+     13,
+     8
+    ]
+   ],
+   "start": "2026-11-25T10:30:00+00:00",
+   "pgl_key": "s1-22"
+  },
+  {
+   "round": 3,
+   "teams": [
+    "GOSH",
+    "Chinggis Warriors"
+   ],
+   "winner": "Chinggis Warriors",
+   "bo": 3,
+   "score": [
+    1,
+    2
+   ],
+   "maps": [
+    [
+     "de_ancient",
+     11,
+     13
+    ],
+    [
+     "de_dust2",
+     13,
+     6
+    ],
+    [
+     "de_nuke",
+     10,
+     13
+    ]
+   ],
+   "start": "2026-11-25T10:30:00+00:00",
+   "pgl_key": "s1-23"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "M80",
+    "Eternal Fire"
+   ],
+   "winner": "Eternal Fire",
+   "bo": 3,
+   "score": [
+    1,
+    2
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     13,
+     6
+    ],
+    [
+     "de_anubis",
+     3,
+     13
+    ],
+    [
+     "de_cache",
+     4,
+     13
+    ]
+   ],
+   "start": "2026-11-26T06:00:00+00:00",
+   "pgl_key": "s1-24"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "HEROIC",
+    "FaZe"
+   ],
+   "winner": "HEROIC",
+   "bo": 3,
+   "score": [
+    2,
+    1
+   ],
+   "maps": [
+    [
+     "de_mirage",
+     13,
+     3
+    ],
+    [
+     "de_ancient",
+     11,
+     13
+    ],
+    [
+     "de_nuke",
+     13,
+     3
+    ]
+   ],
+   "start": "2026-11-26T06:00:00+00:00",
+   "pgl_key": "s1-25"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "Lynn Vision",
+    "PVISION"
+   ],
+   "winner": "PVISION",
+   "bo": 3,
+   "score": [
+    0,
+    2
+   ],
+   "maps": [
+    [
+     "de_ancient",
+     7,
+     13
+    ],
+    [
+     "de_dust2",
+     10,
+     13
+    ]
+   ],
+   "start": "2026-11-26T08:30:00+00:00",
+   "pgl_key": "s1-26"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "100 Thieves",
+    "9z"
+   ],
+   "winner": "100 Thieves",
+   "bo": 3,
+   "score": [
+    2,
+    1
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     5,
+     13
+    ],
+    [
+     "de_dust2",
+     13,
+     6
+    ],
+    [
+     "de_ancient",
+     13,
+     5
+    ]
+   ],
+   "start": "2026-11-26T08:30:00+00:00",
+   "pgl_key": "s1-27"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "Imperial",
+    "Liquid"
+   ],
+   "winner": "Liquid",
+   "bo": 3,
+   "score": [
+    0,
+    2
+   ],
+   "maps": [
+    [
+     "de_anubis",
+     7,
+     13
+    ],
+    [
+     "de_cache",
+     13,
+     16
+    ]
+   ],
+   "start": "2026-11-26T11:00:00+00:00",
+   "pgl_key": "s1-28"
+  },
+  {
+   "round": 4,
+   "teams": [
+    "Wildcard",
+    "Chinggis Warriors"
+   ],
+   "winner": "Wildcard",
+   "bo": 3,
+   "score": [
+    2,
+    1
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     13,
+     7
+    ],
+    [
+     "de_cache",
+     11,
+     13
+    ],
+    [
+     "de_nuke",
+     19,
+     16
+    ]
+   ],
+   "start": "2026-11-26T11:00:00+00:00",
+   "pgl_key": "s1-29"
+  },
+  {
+   "round": 5,
+   "teams": [
+    "Lynn Vision",
+    "HEROIC"
+   ],
+   "winner": "Lynn Vision",
+   "bo": 3,
+   "score": [
+    2,
+    0
+   ],
+   "maps": [
+    [
+     "de_nuke",
+     13,
+     11
+    ],
+    [
+     "de_dust2",
+     13,
+     6
+    ]
+   ],
+   "start": "2026-11-27T06:00:00+00:00",
+   "pgl_key": "s1-30"
+  },
+  {
+   "round": 5,
+   "teams": [
+    "Imperial",
+    "Wildcard"
+   ],
+   "winner": "Imperial",
+   "bo": 3,
+   "score": [
+    2,
+    1
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     13,
+     11
+    ],
+    [
+     "de_mirage",
+     11,
+     13
+    ],
+    [
+     "de_cache",
+     13,
+     8
+    ]
+   ],
+   "start": "2026-11-27T08:30:00+00:00",
+   "pgl_key": "s1-31"
+  },
+  {
+   "round": 5,
+   "teams": [
+    "M80",
+    "100 Thieves"
+   ],
+   "winner": "100 Thieves",
+   "bo": 3,
+   "score": [
+    1,
+    2
+   ],
+   "maps": [
+    [
+     "de_dust2",
+     6,
+     13
+    ],
+    [
+     "de_inferno",
+     13,
+     10
+    ],
+    [
+     "de_mirage",
+     5,
+     13
+    ]
+   ],
+   "start": "2026-11-27T11:00:00+00:00",
+   "pgl_key": "s1-32"
+  }
+ ]
+}
