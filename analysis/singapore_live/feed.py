@@ -58,8 +58,25 @@ def round_of(stage: int, label: str) -> int | str:
 
 
 def final_score(a: int, b: int) -> bool:
-    """A finished CS2 map: 13 in regulation or more in overtime, won by two."""
-    return max(a, b) >= 13 and abs(a - b) >= 2
+    """A score a CS2 map can end on: 13 to at most 11 in regulation, or an overtime win.
+
+    Each overtime starts level (12-12, 15-15, ...) and goes to the first team to win four of six
+    rounds, so it ends 16-12, 16-13 or 16-14, then 19-15 to 19-17, and so on. Scores PGL shows
+    while entering one side at a time (10-0, 14-0, 19-0) are not on that list.
+    """
+    win, lose = max(a, b), min(a, b)
+    if win == 13:
+        return lose <= 11
+    return win > 13 and (win - 13) % 3 == 0 and win - 4 <= lose <= win - 2
+
+
+def map_named(name: str) -> bool:
+    return bool(name) and name not in ("de_", "tba", "tbd")
+
+
+def map_finished(name: str, a: int, b: int) -> bool:
+    """PGL blanks a map's name while editing its row, so a finished map also needs its name."""
+    return map_named(name) and final_score(a, b)
 
 
 def parse(stage: int, rows: list[dict]) -> dict[str, Fixture]:
@@ -79,10 +96,13 @@ def parse(stage: int, rows: list[dict]) -> dict[str, Fixture]:
         score, status = (int(m.get("leftScore") or 0), int(m.get("rightScore") or 0)), m["status"]
         # PGL enters a map's rounds one side at a time and can count the map before both are in:
         # on November 26 Lynn Vision v PVISION read 1-1 with Dust2 at 10-0 for 8 seconds before
-        # 0-2 with Dust2 at 10-13. A map with rounds that are not a final score is still being
-        # played, so the series counts only finished maps until PGL agrees.
-        if any((ra or rb) and not final_score(ra, rb) for _, ra, rb in maps):
-            done = [(ra, rb) for _, ra, rb in maps if final_score(ra, rb)]
+        # 0-2 with Dust2 at 10-13. On November 28 it showed Natus Vincere v PVISION ended 1-0
+        # with an unnamed map at 13-0 (Ancient 13-10 a poll later) and Liquid v Eternal Fire at
+        # 1-0 with an unnamed map at 19-0 (Anubis 19-17). A map with rounds that is not named
+        # and on a final score is still being entered, so the series counts only finished maps
+        # until PGL agrees.
+        if any((ra or rb) and not map_finished(mp, ra, rb) for mp, ra, rb in maps):
+            done = [(ra, rb) for mp, ra, rb in maps if map_finished(mp, ra, rb)]
             counted = (sum(ra > rb for ra, rb in done), sum(rb > ra for ra, rb in done))
             if counted != score:
                 score, status = counted, "live" if status == "end" else status

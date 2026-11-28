@@ -51,8 +51,7 @@ def now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def map_named(name: str) -> bool:
-    return bool(name) and name not in ("de_", "tba", "tbd")
+map_named = feed.map_named
 
 
 def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, at: str,
