@@ -7985,3 +7985,4 @@
 {"at": "2026-11-28T13:14:40.974229+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
 {"at": "2026-11-28T13:14:40.974229+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.12, "kalshi_a": 0.12, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
 {"at": "2026-11-28T13:14:58.610594+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.125, "kalshi_a": 0.115, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:15:16.511903+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.135, "kalshi_a": 0.135, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
