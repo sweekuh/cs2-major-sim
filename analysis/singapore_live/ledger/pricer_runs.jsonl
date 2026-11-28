@@ -530,3 +530,7 @@
 {"at": "2026-11-28T04:00:50.298277+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T04:01:05.024820+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T04:02:00.064624+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:02:13.523755+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:05:16.011332+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:08:16.978947+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:11:17.596627+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
