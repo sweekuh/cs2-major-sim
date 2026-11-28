@@ -8073,3 +8073,50 @@
 {"at": "2026-11-28T13:37:13.013351+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.475, "kalshi_a": 0.485, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
 {"at": "2026-11-28T13:37:32.260044+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.42, "kalshi_a": 0.435, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
 {"at": "2026-11-28T13:37:32.260044+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.495, "kalshi_a": 0.545, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:38:15.079160+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.415, "kalshi_a": 0.365, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:38:15.079160+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.555, "kalshi_a": 0.575, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:38:32.737871+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:38:32.737871+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.555, "kalshi_a": 0.575, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:39:13.175935+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:39:13.175935+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.575, "kalshi_a": 0.595, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:39:30.854048+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:39:30.854048+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.595, "kalshi_a": 0.6, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:39:48.413183+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:39:48.413183+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.565, "kalshi_a": 0.6, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:40:05.749959+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:40:05.749959+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.515, "kalshi_a": 0.58, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:40:23.439092+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:40:23.439092+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.545, "kalshi_a": 0.56, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:40:41.190316+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:40:41.190316+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.615, "kalshi_a": 0.63, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:40:58.913889+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:40:58.913889+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.615, "kalshi_a": 0.605, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:41:20.513568+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:41:20.513568+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.605, "kalshi_a": 0.615, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:41:38.509871+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:41:38.509871+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.615, "kalshi_a": 0.635, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:41:56.485742+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:41:56.485742+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.635, "kalshi_a": 0.635, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:42:37.479781+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:42:37.479781+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.565, "kalshi_a": 0.6, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:42:54.955222+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:42:54.955222+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.505, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:43:17.252408+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:43:17.252408+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.51, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:43:34.931204+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:43:34.931204+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.505, "kalshi_a": 0.525, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:43:52.993763+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:43:52.993763+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.495, "kalshi_a": 0.515, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:44:10.445426+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:44:10.445426+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.515, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:44:52.081713+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:44:52.081713+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.575, "kalshi_a": 0.555, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:45:09.776527+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:45:09.776527+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.6, "kalshi_a": 0.605, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:45:27.324119+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:45:27.324119+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.61, "kalshi_a": 0.605, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:45:45.266393+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:45:45.266393+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.62, "kalshi_a": 0.62, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:46:04.192331+00:00", "key": "s2-14", "a": "Natus Vincere", "b": "Astralis", "p_a": 0.0005, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T13:46:04.192331+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.625, "kalshi_a": 0.63, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
+{"at": "2026-11-28T13:46:32.662380+00:00", "key": "s2-15", "a": "FlyQuest", "b": "PVISION", "p_a": 0.605, "kalshi_a": 0.61, "score": [0, 0], "maps": [["de_inferno", 0, 0]]}
