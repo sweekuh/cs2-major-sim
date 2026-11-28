@@ -126,6 +126,17 @@ the other seven prices fixed, raising 100 Thieves' price against MIBR from the o
 56.5% left the two cards tied (-0.26 points, interval -0.70 to +0.18); at 61.5% the 100 Thieves
 card led by 1.22 points. A 100 Thieves price above about 57% near lock is a reason to swap.
 
+### Refresh before lock (02:45 UTC, November 28)
+
+Polymarket prices about 75 minutes before the first match moved every opener by two points or less.
+Re-running both selections on the refreshed prices returned the same ten picks. Under the full
+adjustment the card passed 61,692 of 200,000 tournaments (30.8%; 26.0% under priced openers
+alone). 100 Thieves fell to 49.5% against MIBR, away from the swap trigger. The closest
+alternative became Eternal Fire for NIP: the card leads by 0.79 points (paired 95% interval 0.63
+to 0.94) with Eternal Fire at 48.5% against The One. At 53.5% the Eternal Fire card led by 0.56
+points, so an Eternal Fire price above about 51.5% would favor that swap. The tables below are from
+the November 27 run; the refreshed qualification odds are in the forecast file. [Refreshed forecast](../forecast_stage2.json)
+
 ## Qualification odds next to the markets
 
 Model qualification odds under the full adjustment, with Polymarket and Kalshi "reach Stage 3"
