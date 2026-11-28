@@ -584,3 +584,10 @@
 {"at": "2026-11-28T06:41:53.761954+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T06:45:00.677466+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T06:48:16.495778+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:51:32.363465+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:54:42.897939+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:57:46.674364+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:01:00.626251+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:04:01.059525+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:07:07.022615+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:09:50.311117+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
