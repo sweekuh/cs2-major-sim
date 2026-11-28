@@ -58,7 +58,7 @@ ALIASES = {
 
 
 def canon(raw: str | None, *, strict: bool = True) -> str | None:
-    """Return the Stage 1 spelling, or raise (strict) / pass through (lenient) if unknown."""
+    """Return the fixture spelling, or raise (strict) / pass through (lenient) if unknown."""
     if raw is None or not raw.strip():
         return None
     key = raw.strip().casefold()

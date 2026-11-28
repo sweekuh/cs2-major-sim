@@ -10,7 +10,7 @@
   "standings_date": "2026-11-02",
   "rating_unit": "10 Valve ranking points",
   "seeding_note": "Valve's rules seed the eight invited teams 1-8 by pre-event global VRS and the eight Stage 1 qualifiers 9-16 by final Stage 1 seed (record, then Buchholz difficulty, then initial seed). Round 1 pairs seed k with seed k+8; this order reproduces all eight PGL round-1 pairings. The One fields the roster Valve listed as 1win on November 2 (nafany, ArtFr0st, Ax1Le, BELCHONOKK, fame), so its rating is that roster's points.",
-  "rating_note": "All sixteen ratings are Valve's November 2 global points. HLTV's November 19 page used for Stage 1 refuses automated requests; the Stage 1 teams' November 19 points were on average 53 below their November 2 points, a near-uniform shift.",
+  "rating_note": "All sixteen ratings are Valve's November 2 global points. HLTV's November 19 page used for Stage 1 refuses automated requests; the Stage 1 teams' November 19 points were on average 53 below their November 2 points, ranging from 14 above (PVISION) to 112 below (9z).",
   "sources": {
     "bracket": "https://www.pglesports.com/cs2/pgl-major-singapore-2026/",
     "invitation": "https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md",

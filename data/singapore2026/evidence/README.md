@@ -68,8 +68,10 @@ PGL's pairing requires. Valve's game files give Stage II the same challenge as S
 five correct to pass. [Fixture](../stage2.json) · [Valve rules](https://github.com/ValveSoftware/counter-strike_rules_and_regs/blob/main/major-supplemental-rulebook.md) · [PGL roster sheet](https://news.pglesports.com/api/articles/1794219566606) · [Stage II challenge](https://github.com/SteamTracking/GameTracking-CS2/blob/master/game/csgo/pak01_dir/resource/csgo_english.txt)
 
 All sixteen ratings are Valve's November 2 points. HLTV's November 19 page, used for Stage 1,
-refuses automated requests. The Stage 1 teams' November 19 points sat on average 53 below their
-November 2 points, a near-uniform shift, so one snapshot for every team keeps the gaps comparable.
+refuses automated requests. From November 2 to November 19 the Stage 1 teams lost 53 points on
+average, but the change ran from a 14-point gain (PVISION) to a 112-point loss (9z), with a standard
+deviation of 36, and NIP fell from above Liquid to below it. The November 2 ratings miss those
+team-level changes; only the opener prices carry them.
 The openers are Polymarket bid and ask at 17:30 UTC on November 27, about ten and a half hours
 before the first match. [November 2 standings](https://github.com/ValveSoftware/counter-strike_regional_standings/blob/main/invitation/2026/standings_global_2026_11_02.md)
 

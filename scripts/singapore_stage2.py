@@ -173,24 +173,6 @@ def market_check(rows):
     return dict(observed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"), teams=out)
 
 
-def cross_check(cards, weights, n, seed, data):
-    """P(>=5) of fixed cards (name lists by bucket) under every model, on shared fresh tournaments per model."""
-    from engine.optimizer import Ballot
-
-    teams, _ = load_stage(FIXTURE)
-    ids = {t.name: t.id for t in teams}
-    ballots = {label: Ballot(*(tuple(ids[n] for n in card[bucket]) for bucket, _ in BUCKETS)) for label, card in cards.items()}
-    out = {}
-    for k, model in enumerate(MODELS):
-        matrices = mixture(teams, data["openers"], model, {}, weights, n, seed + 100 * k)
-        out[model] = {label: score(matrices, ballot, n) for label, ballot in ballots.items()}
-        if len(ballots) == 2:
-            first, second = ballots.values()
-            out[model]["paired"] = paired(matrices, first, second)
-        del matrices
-    return out
-
-
 def forecast(weights, model, n_select, n_evaluate, n_sensitivity, seed, data):
     teams, _ = load_stage(FIXTURE)
     openers = data["openers"]
