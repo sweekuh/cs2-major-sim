@@ -642,3 +642,5 @@
 {"at": "2026-11-28T10:19:05.055748+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T10:19:24.386987+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T10:19:53.401321+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:22:58.446471+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:26:01.145570+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
