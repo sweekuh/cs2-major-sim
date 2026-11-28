@@ -6755,3 +6755,4 @@
 {"at": "2026-11-28T07:09:11.522333+00:00", "key": "s2-05", "a": "The One", "b": "Eternal Fire", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
 {"at": "2026-11-28T07:09:30.689858+00:00", "key": "s2-04", "a": "G2", "b": "Liquid", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["", 0, 8]]}
 {"at": "2026-11-28T07:09:30.689858+00:00", "key": "s2-05", "a": "The One", "b": "Eternal Fire", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["", 0, 10]]}
+{"at": "2026-11-28T07:22:01.310221+00:00", "key": "s2-06", "a": "Natus Vincere", "b": "PVISION", "p_a": 0.605, "kalshi_a": 0.605, "score": [0, 0], "maps": [["de_", 0, 0]]}
