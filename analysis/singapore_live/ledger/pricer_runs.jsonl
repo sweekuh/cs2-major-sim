@@ -527,3 +527,4 @@
 {"at": "2026-11-27T14:59:32.242233+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-32", "new_entries": 0}
 {"at": "2026-11-27T15:02:27.371326+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 2, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify M80 NO @0.972 fair>=1.000 edge 2.8c"]}
 {"at": "2026-11-27T15:17:11.725815+00:00", "reason": "fixture_set", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:00:50.298277+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}

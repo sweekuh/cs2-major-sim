@@ -5949,3 +5949,4 @@
 {"at": "2026-11-27T15:01:29.839626+00:00", "key": "s1-32", "a": "M80", "b": "100 Thieves", "p_a": 0.0005, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 6, 13], ["de_inferno", 13, 10], ["de_mirage", 0, 0]]}
 {"at": "2026-11-27T15:01:49.745088+00:00", "key": "s1-32", "a": "M80", "b": "100 Thieves", "p_a": 0.0005, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 6, 13], ["de_inferno", 13, 10], ["de_mirage", 0, 0]]}
 {"at": "2026-11-27T15:02:07.755658+00:00", "key": "s1-32", "a": "M80", "b": "100 Thieves", "p_a": 0.0005, "kalshi_a": null, "score": [1, 1], "maps": [["de_dust2", 6, 13], ["de_inferno", 13, 10], ["de_mirage", 0, 0]]}
+{"at": "2026-11-28T04:00:46.838386+00:00", "key": "s2-00", "a": "FUT Esports", "b": "FlyQuest", "p_a": 0.735, "kalshi_a": 0.755, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
