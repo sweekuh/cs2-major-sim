@@ -621,3 +621,13 @@
 {"at": "2026-11-28T09:25:15.648994+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T09:25:46.106182+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T09:26:12.439654+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:29:17.106100+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:32:32.713127+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:35:47.668416+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:39:00.222388+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:42:14.412119+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:45:18.112947+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:48:28.333645+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:51:38.156324+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:54:38.827436+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:56:14.596246+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
