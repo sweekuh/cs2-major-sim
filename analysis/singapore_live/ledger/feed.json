@@ -1,10 +1,10 @@
 {
- "at": "2026-11-28T08:23:51.987389+00:00",
+ "at": "2026-11-28T08:28:16.936852+00:00",
  "updated": {
-  "1": "2026-11-28T08:23:15.485Z",
-  "2": "2026-11-28T08:23:15.504Z",
-  "3": "2026-11-28T08:23:15.493Z",
-  "4": "2026-11-28T08:23:15.519Z"
+  "1": "2026-11-28T08:27:45.536Z",
+  "2": "2026-11-28T08:27:45.758Z",
+  "3": "2026-11-28T08:27:45.943Z",
+  "4": "2026-11-28T08:27:45.678Z"
  },
  "fixtures": {
   "s1-00": {
@@ -1064,12 +1064,12 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T07:00:00+00:00",
-   "status": "live",
+   "status": "end",
    "a": "MIBR",
    "b": "100 Thieves",
    "score": [
     0,
-    0
+    1
    ],
    "maps": [
     [
@@ -1078,7 +1078,7 @@
      0
     ]
    ],
-   "underway": true
+   "underway": null
   },
   "s2-08": {
    "key": "s2-08",
@@ -1088,8 +1088,8 @@
    "bo": 1,
    "start": "2026-11-28T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "G2",
+   "b": "NIP",
    "score": [
     0,
     0
@@ -1111,8 +1111,8 @@
    "bo": 1,
    "start": "2026-11-28T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Nemiga",
+   "b": "Lynn Vision",
    "score": [
     0,
     0
@@ -1134,8 +1134,8 @@
    "bo": 1,
    "start": "2026-11-28T09:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "The One",
+   "b": "The MongolZ",
    "score": [
     0,
     0
@@ -1157,8 +1157,8 @@
    "bo": 1,
    "start": "2026-11-28T09:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Liquid",
+   "b": "Eternal Fire",
    "score": [
     0,
     0
@@ -1180,8 +1180,8 @@
    "bo": 1,
    "start": "2026-11-28T10:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "FUT Esports",
+   "b": "100 Thieves",
    "score": [
     0,
     0
@@ -1203,8 +1203,8 @@
    "bo": 1,
    "start": "2026-11-28T10:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "MIBR",
+   "b": "Imperial",
    "score": [
     0,
     0
@@ -1226,8 +1226,8 @@
    "bo": 1,
    "start": "2026-11-28T11:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Natus Vincere",
+   "b": "Astralis",
    "score": [
     0,
     0
@@ -1249,8 +1249,8 @@
    "bo": 1,
    "start": "2026-11-28T11:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "FlyQuest",
+   "b": "PVISION",
    "score": [
     0,
     0
