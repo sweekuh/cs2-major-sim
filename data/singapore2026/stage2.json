@@ -102,15 +102,15 @@
       "rating": 151.1
     }
   ],
-  "quotes_observed_at": "2026-11-27T17:30:55+00:00",
+  "quotes_observed_at": "2026-11-28T02:45:37+00:00",
   "openers": [
     {
       "teams": [
         "FUT Esports",
         "FlyQuest"
       ],
-      "bid": 0.73,
-      "ask": 0.74,
+      "bid": 0.74,
+      "ask": 0.75,
       "slug": "cs2-fut-fly-2026-11-27"
     },
     {
@@ -118,8 +118,8 @@
         "Nemiga",
         "NIP"
       ],
-      "bid": 0.52,
-      "ask": 0.53,
+      "bid": 0.53,
+      "ask": 0.54,
       "slug": "cs2-nemi1-nip-2026-11-27"
     },
     {
@@ -127,8 +127,8 @@
         "G2",
         "Liquid"
       ],
-      "bid": 0.55,
-      "ask": 0.56,
+      "bid": 0.57,
+      "ask": 0.58,
       "slug": "cs2-g2-tl1-2026-11-28"
     },
     {
@@ -136,8 +136,8 @@
         "The One",
         "Eternal Fire"
       ],
-      "bid": 0.53,
-      "ask": 0.54,
+      "bid": 0.51,
+      "ask": 0.52,
       "slug": "cs2-one6-ef1-2026-11-28"
     },
     {
@@ -145,8 +145,8 @@
         "Natus Vincere",
         "PVISION"
       ],
-      "bid": 0.64,
-      "ask": 0.65,
+      "bid": 0.63,
+      "ask": 0.64,
       "slug": "cs2-navi-prv-2026-11-28"
     },
     {
@@ -154,8 +154,8 @@
         "Astralis",
         "Imperial"
       ],
-      "bid": 0.56,
-      "ask": 0.57,
+      "bid": 0.57,
+      "ask": 0.58,
       "slug": "cs2-ast10-imp11-2026-11-28"
     },
     {
@@ -163,8 +163,8 @@
         "The MongolZ",
         "Lynn Vision"
       ],
-      "bid": 0.68,
-      "ask": 0.69,
+      "bid": 0.67,
+      "ask": 0.68,
       "slug": "cs2-mglz-lvg-2026-11-28"
     },
     {
@@ -172,8 +172,8 @@
         "MIBR",
         "100 Thieves"
       ],
-      "bid": 0.48,
-      "ask": 0.49,
+      "bid": 0.5,
+      "ask": 0.51,
       "slug": "cs2-mibr-100t-2026-11-28"
     }
   ]
