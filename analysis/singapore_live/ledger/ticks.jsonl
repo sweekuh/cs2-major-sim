@@ -7100,3 +7100,4 @@
 {"at": "2026-11-28T08:19:37.210524+00:00", "key": "s2-06", "a": "Natus Vincere", "b": "PVISION", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
 {"at": "2026-11-28T08:19:37.210524+00:00", "key": "s2-07", "a": "MIBR", "b": "100 Thieves", "p_a": 0.275, "kalshi_a": 0.23, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
 {"at": "2026-11-28T08:19:54.789203+00:00", "key": "s2-07", "a": "MIBR", "b": "100 Thieves", "p_a": 0.125, "kalshi_a": 0.21, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T08:20:34.633517+00:00", "key": "s2-07", "a": "MIBR", "b": "100 Thieves", "p_a": 0.115, "kalshi_a": 0.105, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
