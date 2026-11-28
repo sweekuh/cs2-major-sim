@@ -667,3 +667,7 @@
 {"at": "2026-11-28T11:27:17.362822+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T11:27:50.284463+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T11:30:51.146800+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:34:00.420058+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:37:10.987679+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:40:11.335640+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:41:26.642709+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
