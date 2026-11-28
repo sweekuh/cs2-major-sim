@@ -26,6 +26,28 @@ def test_names_cover_every_venue_spelling():
     assert canon("Vitality", strict=False) == "Vitality"
 
 
+def test_stage2_spellings_from_pgl_and_bo3_reach_one_name():
+    from pathlib import Path
+
+    for raw, want in [("FUT ESPORTS", "FUT Esports"), ("FUT", "FUT Esports"), ("Nemiga Gaming", "Nemiga"),
+                      ("G2 Esports", "G2"), ("1win", "The One"), ("The One", "The One"),
+                      ("NAVI", "Natus Vincere"), ("The MongolZ", "The MongolZ"), ("MIBR", "MIBR")]:
+        assert canon(raw) == want
+    for stage in ("stage1", "stage2"):
+        data = json.loads(Path(f"data/singapore2026/{stage}.json").read_text(encoding="utf-8"))
+        assert all(canon(t["name"]) == t["name"] for t in data["teams"])
+
+
+def test_bo3_overlay_matches_a_stage2_team_spelled_differently():
+    pgl = feed.Fixture("s2-00", 2, "Round 1", 1, 1, "2026-11-28T04:00:00+00:00", "upcoming",
+                       canon("FUT ESPORTS", strict=False), "FlyQuest", (0, 0), (("", 0, 0),))
+    bo3 = {2: [{"team1": {"id": 1, "name": "FUT"}, "team2": {"id": 2, "name": "FlyQuest"},
+                "start_date": "2026-11-28T04:00:00.000+00:00", "status": "current", "bo_type": 1,
+                "games": [{"number": 1, "status": "current", "map_name": "de_mirage"}]}]}
+    live = feed.overlay({"s2-00": pgl}, bo3)["s2-00"]
+    assert (live.status, live.underway, live.maps) == ("live", True, (("de_mirage", 0, 0),))
+
+
 def test_first_poll_is_silent_and_bo3_lifecycle_emits_each_event_once():
     at = "2026-11-25T08:05:00+00:00"
     assert diff(None, {"s1-20": fx()}, at=at) == []
@@ -129,6 +151,8 @@ def test_push_text_is_one_short_line():
     assert "\n" not in text and len(text) <= 195
     assert text.startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9") and "PickEm 10%" in text
     assert push_text([], None) is None
+    held = {"ok": True, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+    assert push_text(events[1:], held) == "LIVE NIP v Liquid (R3 Bo3)"
 
 
 def test_map_markets_bind_to_the_fixture_and_skip_unknown_contracts(monkeypatch):

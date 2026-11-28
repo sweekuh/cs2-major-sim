@@ -1,4 +1,4 @@
-"""One spelling per Stage 1 team, matching data/singapore2026/stage1.json.
+"""One spelling per team, matching data/singapore2026/stage1.json and stage2.json.
 
 PGL, Polymarket and Kalshi each spell teams differently. Unknown names fail loudly in the
 pricer so a renamed team can never be matched to the wrong market.
@@ -38,6 +38,22 @@ ALIASES = {
     "chinggis warriors": "Chinggis Warriors",
     "lynn vision": "Lynn Vision",
     "lynn vision gaming": "Lynn Vision",
+    # Stage 2 invitees. bo3.gg lists the shortest names (FUT, Nemiga, G2) and calls The One by
+    # its roster's earlier name, 1win; PGL uses the longer ones (FUT ESPORTS, Nemiga Gaming).
+    "fut esports": "FUT Esports",
+    "fut": "FUT Esports",
+    "nemiga": "Nemiga",
+    "nemiga gaming": "Nemiga",
+    "g2": "G2",
+    "g2 esports": "G2",
+    "the one": "The One",
+    "1win": "The One",
+    "natus vincere": "Natus Vincere",
+    "navi": "Natus Vincere",
+    "astralis": "Astralis",
+    "the mongolz": "The MongolZ",
+    "mongolz": "The MongolZ",
+    "mibr": "MIBR",
 }
 
 
