@@ -6429,3 +6429,5 @@
 {"at": "2026-11-28T06:16:19.878747+00:00", "key": "s2-05", "a": "The One", "b": "Eternal Fire", "p_a": 0.68, "kalshi_a": 0.7, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
 {"at": "2026-11-28T06:16:39.169881+00:00", "key": "s2-04", "a": "G2", "b": "Liquid", "p_a": 0.545, "kalshi_a": 0.545, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
 {"at": "2026-11-28T06:16:39.169881+00:00", "key": "s2-05", "a": "The One", "b": "Eternal Fire", "p_a": 0.685, "kalshi_a": 0.695, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T06:16:51.896613+00:00", "key": "s2-04", "a": "G2", "b": "Liquid", "p_a": 0.505, "kalshi_a": 0.545, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T06:16:51.896613+00:00", "key": "s2-05", "a": "The One", "b": "Eternal Fire", "p_a": 0.67, "kalshi_a": 0.695, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
