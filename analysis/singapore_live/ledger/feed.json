@@ -1,10 +1,10 @@
 {
- "at": "2026-11-28T14:51:43.355624+00:00",
+ "at": "2026-11-28T14:55:19.132575+00:00",
  "updated": {
-  "1": "2026-11-28T14:51:05.780Z",
-  "2": "2026-11-28T14:51:05.795Z",
-  "3": "2026-11-28T14:51:05.784Z",
-  "4": "2026-11-28T14:51:05.771Z"
+  "1": "2026-11-28T14:54:45.834Z",
+  "2": "2026-11-28T14:54:45.803Z",
+  "3": "2026-11-28T14:54:45.793Z",
+  "4": "2026-11-28T14:54:45.781Z"
  },
  "fixtures": {
   "s1-00": {
@@ -1272,8 +1272,8 @@
    "bo": 1,
    "start": "2026-11-29T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "100 Thieves",
+   "b": "Nemiga",
    "score": [
     0,
     0
@@ -1295,8 +1295,8 @@
    "bo": 1,
    "start": "2026-11-29T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "NIP",
+   "b": "MIBR",
    "score": [
     0,
     0
@@ -1318,8 +1318,8 @@
    "bo": 1,
    "start": "2026-11-29T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Natus Vincere",
+   "b": "Liquid",
    "score": [
     0,
     0
@@ -1341,8 +1341,8 @@
    "bo": 1,
    "start": "2026-11-29T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "The MongolZ",
+   "b": "FlyQuest",
    "score": [
     0,
     0
@@ -1364,8 +1364,8 @@
    "bo": 3,
    "start": "2026-11-29T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "G2",
+   "b": "The One",
    "score": [
     0,
     0
@@ -1397,8 +1397,8 @@
    "bo": 3,
    "start": "2026-11-29T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Eternal Fire",
+   "b": "Lynn Vision",
    "score": [
     0,
     0
@@ -1430,8 +1430,8 @@
    "bo": 3,
    "start": "2026-11-29T10:30:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "FUT Esports",
+   "b": "Astralis",
    "score": [
     0,
     0
@@ -1463,8 +1463,8 @@
    "bo": 3,
    "start": "2026-11-29T10:30:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Imperial",
+   "b": "PVISION",
    "score": [
     0,
     0

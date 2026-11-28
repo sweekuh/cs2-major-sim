@@ -736,3 +736,4 @@
 {"at": "2026-11-28T14:46:47.306081+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T14:49:53.069360+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
 {"at": "2026-11-28T14:50:11.523467+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:55:21.409692+00:00", "reason": "fixture_set", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
