@@ -7386,3 +7386,6 @@
 {"at": "2026-11-28T10:17:59.960401+00:00", "key": "s2-08", "a": "G2", "b": "NIP", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
 {"at": "2026-11-28T10:18:20.156610+00:00", "key": "s2-08", "a": "G2", "b": "NIP", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
 {"at": "2026-11-28T10:18:20.156610+00:00", "key": "s2-11", "a": "Liquid", "b": "Eternal Fire", "p_a": 0.605, "kalshi_a": 0.585, "score": [0, 0], "maps": [["de_anubis", 0, 0]]}
+{"at": "2026-11-28T10:19:00.433338+00:00", "key": "s2-08", "a": "G2", "b": "NIP", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_ancient", 0, 0]]}
+{"at": "2026-11-28T10:19:00.433338+00:00", "key": "s2-11", "a": "Liquid", "b": "Eternal Fire", "p_a": 0.665, "kalshi_a": 0.65, "score": [0, 0], "maps": [["de_anubis", 0, 0]]}
+{"at": "2026-11-28T10:19:21.556156+00:00", "key": "s2-11", "a": "Liquid", "b": "Eternal Fire", "p_a": 0.635, "kalshi_a": 0.635, "score": [0, 0], "maps": [["de_anubis", 0, 0]]}
