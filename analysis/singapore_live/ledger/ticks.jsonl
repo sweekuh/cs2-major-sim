@@ -7697,3 +7697,186 @@
 {"at": "2026-11-28T11:59:09.176433+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.625, "kalshi_a": 0.615, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
 {"at": "2026-11-28T11:59:34.471523+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.37, "kalshi_a": 0.365, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
 {"at": "2026-11-28T11:59:34.471523+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.685, "kalshi_a": 0.665, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:00:00.554376+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.325, "kalshi_a": 0.3, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:00:00.554376+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.695, "kalshi_a": 0.69, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:00:18.691425+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.315, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:00:18.691425+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.535, "kalshi_a": 0.59, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:00:36.323548+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.325, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:00:36.323548+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.495, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:00:55.148633+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.285, "kalshi_a": 0.285, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:00:55.148633+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:01:12.529038+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.285, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:01:12.529038+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.515, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:01:30.011194+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.275, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:01:30.011194+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.5, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:01:47.344435+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.265, "kalshi_a": 0.28, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:01:47.344435+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.495, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:02:05.740022+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.275, "kalshi_a": 0.275, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:02:05.740022+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.5, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:02:34.958858+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.335, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:02:34.958858+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.525, "kalshi_a": 0.505, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:02:52.215610+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.395, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:02:52.215610+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.475, "kalshi_a": 0.46, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:03:13.821206+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.395, "kalshi_a": 0.39, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:03:13.821206+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.46, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:03:31.437638+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.405, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:03:31.437638+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.475, "kalshi_a": 0.46, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:03:49.120905+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.405, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:03:49.120905+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.475, "kalshi_a": 0.475, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:04:06.867479+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.405, "kalshi_a": 0.405, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:04:06.867479+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.46, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:04:35.659367+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.425, "kalshi_a": 0.38, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:04:35.659367+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.45, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:04:53.641854+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.475, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:04:53.641854+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.455, "kalshi_a": 0.44, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:05:11.413011+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.475, "kalshi_a": 0.475, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:05:11.413011+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.445, "kalshi_a": 0.415, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:05:29.222966+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.465, "kalshi_a": 0.475, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:05:29.222966+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.435, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:05:46.641129+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:05:46.641129+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.415, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:06:03.942818+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:06:03.942818+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.42, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:06:23.631091+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.45, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:06:23.631091+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.425, "kalshi_a": 0.415, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:06:41.302904+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.455, "kalshi_a": 0.445, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:06:41.302904+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.42, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:06:59.049804+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.555, "kalshi_a": 0.585, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:06:59.049804+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:07:39.793413+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.585, "kalshi_a": 0.58, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:07:39.793413+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.35, "kalshi_a": 0.345, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:07:57.703763+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.585, "kalshi_a": 0.575, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:07:57.703763+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.345, "kalshi_a": 0.345, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:08:15.202897+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.585, "kalshi_a": 0.57, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:08:15.202897+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.335, "kalshi_a": 0.335, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:08:32.428468+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.585, "kalshi_a": 0.585, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:08:32.428468+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.34, "kalshi_a": 0.345, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:08:50.053058+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.535, "kalshi_a": 0.585, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:08:50.053058+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.325, "kalshi_a": 0.34, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:09:07.634376+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.335, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:09:07.634376+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.285, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:09:28.802769+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.335, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:09:28.802769+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.285, "kalshi_a": 0.265, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:09:46.587972+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.315, "kalshi_a": 0.32, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:09:46.587972+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.275, "kalshi_a": 0.255, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:10:04.521815+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.315, "kalshi_a": 0.3, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:10:04.521815+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.255, "kalshi_a": 0.265, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:10:22.488420+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.305, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:10:22.488420+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.265, "kalshi_a": 0.265, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:10:40.008685+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.315, "kalshi_a": 0.305, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:10:40.008685+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.28, "kalshi_a": 0.27, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:10:57.730744+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.28, "kalshi_a": 0.29, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:10:57.730744+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.285, "kalshi_a": 0.285, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:11:15.581602+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.455, "kalshi_a": 0.465, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:11:15.581602+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.285, "kalshi_a": 0.3, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:11:33.231488+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.575, "kalshi_a": 0.57, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:11:33.231488+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.3, "kalshi_a": 0.3, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:11:55.933862+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.58, "kalshi_a": 0.555, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:11:55.933862+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.305, "kalshi_a": 0.305, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:12:24.472606+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.595, "kalshi_a": 0.565, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:12:24.472606+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.305, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:13:00.970772+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.515, "kalshi_a": 0.49, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:13:00.970772+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.325, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:13:18.841410+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.605, "kalshi_a": 0.58, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:13:18.841410+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.325, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:13:37.210486+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.675, "kalshi_a": 0.585, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:13:37.210486+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.325, "kalshi_a": 0.31, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:13:55.027588+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.71, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:13:55.027588+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.335, "kalshi_a": 0.325, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:14:17.319423+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.705, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:14:17.319423+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.265, "kalshi_a": 0.26, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:14:34.821184+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:14:34.821184+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.275, "kalshi_a": 0.245, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:14:52.367690+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:14:52.367690+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.365, "kalshi_a": 0.375, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:15:10.350367+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:15:10.350367+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.395, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:15:28.084647+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:15:28.084647+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.395, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:15:50.979808+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:15:50.979808+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.405, "kalshi_a": 0.41, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:16:08.605643+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.695, "kalshi_a": 0.71, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:16:08.605643+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.405, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:16:26.150512+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.71, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:16:26.150512+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.405, "kalshi_a": 0.4, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:16:45.159455+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.705, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:16:45.159455+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.445, "kalshi_a": 0.4, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:17:02.570954+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.72, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:17:02.570954+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.445, "kalshi_a": 0.465, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:17:21.327827+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.72, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:17:21.327827+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.445, "kalshi_a": 0.445, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:17:38.672446+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.715, "kalshi_a": 0.72, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:17:38.672446+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.445, "kalshi_a": 0.445, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:17:56.518744+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.705, "kalshi_a": 0.71, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:17:56.518744+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.45, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:18:14.297448+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.795, "kalshi_a": 0.785, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:18:14.297448+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:18:31.929519+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.795, "kalshi_a": 0.815, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:18:31.929519+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.46, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:18:51.570254+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.825, "kalshi_a": 0.82, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:18:51.570254+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:19:10.529883+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.86, "kalshi_a": 0.82, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:19:10.529883+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:19:28.067867+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.86, "kalshi_a": 0.86, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:19:28.067867+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.465, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:19:45.530452+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.86, "kalshi_a": 0.86, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:19:45.530452+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.485, "kalshi_a": 0.485, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:20:03.794989+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.865, "kalshi_a": 0.86, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:20:03.794989+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.485, "kalshi_a": 0.425, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:20:22.079921+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.87, "kalshi_a": 0.855, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:20:22.079921+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.49, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:20:39.668135+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.87, "kalshi_a": 0.87, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:20:39.668135+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:20:57.502996+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.87, "kalshi_a": 0.87, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:20:57.502996+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.51, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:21:14.936445+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.87, "kalshi_a": 0.87, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:21:14.936445+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.505, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:21:32.362448+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.875, "kalshi_a": 0.875, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:21:32.362448+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.495, "kalshi_a": 0.495, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:22:03.850652+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.885, "kalshi_a": 0.895, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:22:03.850652+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.405, "kalshi_a": 0.4, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:22:21.728135+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.915, "kalshi_a": 0.895, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:22:21.728135+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.405, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:22:43.944800+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.905, "kalshi_a": 0.895, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:22:43.944800+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.415, "kalshi_a": 0.425, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:23:01.546398+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.905, "kalshi_a": 0.895, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:23:01.546398+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.395, "kalshi_a": 0.385, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:23:19.396553+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.935, "kalshi_a": 0.92, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:23:19.396553+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.395, "kalshi_a": 0.385, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:23:37.073029+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.975, "kalshi_a": 0.975, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:23:37.073029+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.395, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:23:54.409268+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.975, "kalshi_a": 0.975, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:23:54.409268+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.4, "kalshi_a": 0.4, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:24:12.252068+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.975, "kalshi_a": 0.975, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:24:12.252068+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.385, "kalshi_a": 0.395, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:24:29.827665+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.975, "kalshi_a": 0.98, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:24:29.827665+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.385, "kalshi_a": 0.38, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:24:47.560985+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.985, "kalshi_a": 0.98, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:24:47.560985+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.345, "kalshi_a": 0.355, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:25:32.054639+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:25:32.054639+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.36, "kalshi_a": 0.37, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:26:00.559803+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:26:00.559803+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.315, "kalshi_a": 0.3, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:26:17.754170+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:26:17.754170+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.315, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:26:35.410161+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:26:35.410161+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.305, "kalshi_a": 0.29, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:26:53.160885+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:26:53.160885+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.285, "kalshi_a": 0.295, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:27:12.255432+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:27:12.255432+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.31, "kalshi_a": 0.315, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:27:29.801655+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:27:29.801655+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.345, "kalshi_a": 0.34, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:27:47.524190+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:27:47.524190+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.355, "kalshi_a": 0.355, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:28:12.077646+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:28:12.077646+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.345, "kalshi_a": 0.35, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:28:30.297399+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:28:30.297399+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.34, "kalshi_a": 0.345, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:28:47.989753+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:28:47.989753+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.345, "kalshi_a": 0.345, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:29:06.102381+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:29:06.102381+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.335, "kalshi_a": 0.335, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:29:23.507052+00:00", "key": "s2-12", "a": "FUT Esports", "b": "100 Thieves", "p_a": 0.9995, "kalshi_a": null, "score": [0, 0], "maps": [["de_cache", 0, 0]]}
+{"at": "2026-11-28T12:29:23.507052+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.425, "kalshi_a": 0.365, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
+{"at": "2026-11-28T12:29:41.030449+00:00", "key": "s2-13", "a": "MIBR", "b": "Imperial", "p_a": 0.435, "kalshi_a": 0.455, "score": [0, 0], "maps": [["de_mirage", 0, 0]]}
