@@ -1,0 +1,690 @@
+{
+  "event": "PGL Major Singapore 2026",
+  "stage": 2,
+  "starts_at": "2026-11-28T04:00:00Z",
+  "quotes_observed_at": "2026-11-28T02:45:37+00:00",
+  "openers": [
+    {
+      "teams": [
+        "FUT Esports",
+        "FlyQuest"
+      ],
+      "bid": 0.74,
+      "ask": 0.75,
+      "slug": "cs2-fut-fly-2026-11-27"
+    },
+    {
+      "teams": [
+        "Nemiga",
+        "NIP"
+      ],
+      "bid": 0.53,
+      "ask": 0.54,
+      "slug": "cs2-nemi1-nip-2026-11-27"
+    },
+    {
+      "teams": [
+        "G2",
+        "Liquid"
+      ],
+      "bid": 0.57,
+      "ask": 0.58,
+      "slug": "cs2-g2-tl1-2026-11-28"
+    },
+    {
+      "teams": [
+        "The One",
+        "Eternal Fire"
+      ],
+      "bid": 0.51,
+      "ask": 0.52,
+      "slug": "cs2-one6-ef1-2026-11-28"
+    },
+    {
+      "teams": [
+        "Natus Vincere",
+        "PVISION"
+      ],
+      "bid": 0.63,
+      "ask": 0.64,
+      "slug": "cs2-navi-prv-2026-11-28"
+    },
+    {
+      "teams": [
+        "Astralis",
+        "Imperial"
+      ],
+      "bid": 0.57,
+      "ask": 0.58,
+      "slug": "cs2-ast10-imp11-2026-11-28"
+    },
+    {
+      "teams": [
+        "The MongolZ",
+        "Lynn Vision"
+      ],
+      "bid": 0.67,
+      "ask": 0.68,
+      "slug": "cs2-mglz-lvg-2026-11-28"
+    },
+    {
+      "teams": [
+        "MIBR",
+        "100 Thieves"
+      ],
+      "bid": 0.5,
+      "ask": 0.51,
+      "slug": "cs2-mibr-100t-2026-11-28"
+    }
+  ],
+  "seed": 20261128,
+  "n_select": 100000,
+  "card": {
+    "3-0": [
+      "FUT Esports",
+      "The MongolZ"
+    ],
+    "3-1 or 3-2": [
+      "G2",
+      "Nemiga",
+      "Natus Vincere",
+      "The One",
+      "Astralis",
+      "NIP"
+    ],
+    "0-3": [
+      "Lynn Vision",
+      "FlyQuest"
+    ]
+  },
+  "model": "Full carry",
+  "evaluation": {
+    "n": 200000,
+    "p_ge5": 0.30846,
+    "ci95_sampling": [
+      0.30643951501445055,
+      0.31048784304485577
+    ],
+    "expected_correct": 3.7948250000000003
+  },
+  "by_spread": {
+    "400": {
+      "n": 25000,
+      "p_ge5": 0.35668,
+      "ci95_sampling": [
+        0.35076445177383847,
+        0.3626395877078387
+      ],
+      "expected_correct": 4.0184,
+      "weight": 0.0022200880957286774
+    },
+    "500": {
+      "n": 25000,
+      "p_ge5": 0.3458,
+      "ci95_sampling": [
+        0.3399281461551833,
+        0.35171923654140214
+      ],
+      "expected_correct": 3.96376,
+      "weight": 0.016907736655021925
+    },
+    "600": {
+      "n": 25000,
+      "p_ge5": 0.33792,
+      "ci95_sampling": [
+        0.3320819167797441,
+        0.3438078872894035
+      ],
+      "expected_correct": 3.92676,
+      "weight": 0.03935260920374008
+    },
+    "700": {
+      "n": 25000,
+      "p_ge5": 0.32984,
+      "ci95_sampling": [
+        0.3240384327525952,
+        0.33569385414527103
+      ],
+      "expected_correct": 3.89552,
+      "weight": 0.05748475520597927
+    },
+    "800": {
+      "n": 25000,
+      "p_ge5": 0.32304,
+      "ci95_sampling": [
+        0.31727067093530625,
+        0.3288637054718776
+      ],
+      "expected_correct": 3.8676,
+      "weight": 0.09502574097306626
+    },
+    "1000": {
+      "n": 25000,
+      "p_ge5": 0.31656,
+      "ci95_sampling": [
+        0.3108226953466023,
+        0.322353672240049
+      ],
+      "expected_correct": 3.8366800000000003,
+      "weight": 0.13647978546764925
+    },
+    "1200": {
+      "n": 25000,
+      "p_ge5": 0.3114,
+      "ci95_sampling": [
+        0.3056891198869854,
+        0.31716883326850104
+      ],
+      "expected_correct": 3.8152,
+      "weight": 0.11835614928572306
+    },
+    "1400": {
+      "n": 25000,
+      "p_ge5": 0.30832,
+      "ci95_sampling": [
+        0.3026252879069181,
+        0.3140736116733769
+      ],
+      "expected_correct": 3.79856,
+      "weight": 0.11958705844410439
+    },
+    "1700": {
+      "n": 25000,
+      "p_ge5": 0.30276,
+      "ci95_sampling": [
+        0.2970952316812667,
+        0.30848537638017615
+      ],
+      "expected_correct": 3.77692,
+      "weight": 0.11341276518989207
+    },
+    "2000": {
+      "n": 25000,
+      "p_ge5": 0.3004,
+      "ci95_sampling": [
+        0.2947482392857357,
+        0.30611309395835273
+      ],
+      "expected_correct": 3.76424,
+      "weight": 0.1126113818548538
+    },
+    "2500": {
+      "n": 25000,
+      "p_ge5": 0.29504,
+      "ci95_sampling": [
+        0.2894184492356962,
+        0.30072453103338387
+      ],
+      "expected_correct": 3.7468000000000004,
+      "weight": 0.10415498059503428
+    },
+    "3000": {
+      "n": 25000,
+      "p_ge5": 0.29368,
+      "ci95_sampling": [
+        0.2880662631175211,
+        0.2993571350534225
+      ],
+      "expected_correct": 3.73828,
+      "weight": 0.0844069490292068
+    }
+  },
+  "teams": [
+    {
+      "seed": 1,
+      "team": "FUT Esports",
+      "sweep": 0.32293,
+      "advance_pick": 0.487895,
+      "qualify": 0.810825,
+      "winless": 0.02445
+    },
+    {
+      "seed": 2,
+      "team": "Nemiga",
+      "sweep": 0.171665,
+      "advance_pick": 0.462095,
+      "qualify": 0.63376,
+      "winless": 0.06905
+    },
+    {
+      "seed": 3,
+      "team": "G2",
+      "sweep": 0.18069,
+      "advance_pick": 0.467455,
+      "qualify": 0.648145,
+      "winless": 0.062135
+    },
+    {
+      "seed": 4,
+      "team": "The One",
+      "sweep": 0.130055,
+      "advance_pick": 0.420415,
+      "qualify": 0.55047,
+      "winless": 0.08818
+    },
+    {
+      "seed": 5,
+      "team": "Natus Vincere",
+      "sweep": 0.22361,
+      "advance_pick": 0.495375,
+      "qualify": 0.718985,
+      "winless": 0.04524
+    },
+    {
+      "seed": 6,
+      "team": "Astralis",
+      "sweep": 0.13583,
+      "advance_pick": 0.41881,
+      "qualify": 0.55464,
+      "winless": 0.083465
+    },
+    {
+      "seed": 7,
+      "team": "The MongolZ",
+      "sweep": 0.17412,
+      "advance_pick": 0.439755,
+      "qualify": 0.613875,
+      "winless": 0.06299
+    },
+    {
+      "seed": 8,
+      "team": "MIBR",
+      "sweep": 0.105755,
+      "advance_pick": 0.394465,
+      "qualify": 0.50022,
+      "winless": 0.104535
+    },
+    {
+      "seed": 9,
+      "team": "FlyQuest",
+      "sweep": 0.025275,
+      "advance_pick": 0.154315,
+      "qualify": 0.17959,
+      "winless": 0.30661
+    },
+    {
+      "seed": 10,
+      "team": "NIP",
+      "sweep": 0.112695,
+      "advance_pick": 0.41714,
+      "qualify": 0.5298350000000001,
+      "winless": 0.101415
+    },
+    {
+      "seed": 11,
+      "team": "Liquid",
+      "sweep": 0.08163,
+      "advance_pick": 0.35306,
+      "qualify": 0.43468999999999997,
+      "winless": 0.13997
+    },
+    {
+      "seed": 12,
+      "team": "Eternal Fire",
+      "sweep": 0.102075,
+      "advance_pick": 0.3928,
+      "qualify": 0.49487499999999995,
+      "winless": 0.111
+    },
+    {
+      "seed": 13,
+      "team": "PVISION",
+      "sweep": 0.058325,
+      "advance_pick": 0.293865,
+      "qualify": 0.35219,
+      "winless": 0.18282
+    },
+    {
+      "seed": 14,
+      "team": "Imperial",
+      "sweep": 0.0604,
+      "advance_pick": 0.28277,
+      "qualify": 0.34317000000000003,
+      "winless": 0.17913
+    },
+    {
+      "seed": 15,
+      "team": "Lynn Vision",
+      "sweep": 0.0254,
+      "advance_pick": 0.14664,
+      "qualify": 0.17204,
+      "winless": 0.309875
+    },
+    {
+      "seed": 16,
+      "team": "100 Thieves",
+      "sweep": 0.089545,
+      "advance_pick": 0.373145,
+      "qualify": 0.46269,
+      "winless": 0.129135
+    }
+  ],
+  "sensitivity": {
+    "Ratings only": {
+      "n": 25000,
+      "p_ge5": 0.24016,
+      "ci95_sampling": [
+        0.23490479396740052,
+        0.24549504987099594
+      ],
+      "expected_correct": 3.5020800000000003
+    },
+    "Opener only": {
+      "n": 25000,
+      "p_ge5": 0.26172,
+      "ci95_sampling": [
+        0.2563079267974016,
+        0.26720529206733484
+      ],
+      "expected_correct": 3.6028000000000002
+    },
+    "Half carry": {
+      "n": 25000,
+      "p_ge5": 0.28788,
+      "ci95_sampling": [
+        0.2823002710086115,
+        0.2935249093908678
+      ],
+      "expected_correct": 3.7127600000000003
+    }
+  },
+  "closest_swap": {
+    "out": "NIP",
+    "bucket": "3-1 or 3-2",
+    "in": "Eternal Fire",
+    "p_ge5": 0.300605,
+    "card_only": 13466,
+    "alternative_only": 11895,
+    "n": 200000,
+    "card_minus_alternative": 0.007855,
+    "ci95_delta": [
+      0.00629471628005936,
+      0.009415283719940638
+    ]
+  },
+  "line_tests": [
+    {
+      "team": "Eternal Fire",
+      "opponent": "The One",
+      "current": 0.485,
+      "tested": 0.5349999999999999,
+      "p_ge5": 0.30288,
+      "card_only": 1509,
+      "alternative_only": 1648,
+      "n": 25000,
+      "card_minus_alternative": -0.00556,
+      "ci95_delta": [
+        -0.009964536253973805,
+        -0.0011554637460261946
+      ]
+    },
+    {
+      "team": "Eternal Fire",
+      "opponent": "The One",
+      "current": 0.485,
+      "tested": 0.585,
+      "p_ge5": 0.3002,
+      "card_only": 1442,
+      "alternative_only": 1728,
+      "n": 25000,
+      "card_minus_alternative": -0.01144,
+      "ci95_delta": [
+        -0.015851857277737982,
+        -0.007028142722262019
+      ]
+    }
+  ],
+  "markets": {
+    "observed_at": "2026-11-28T02:47:54+00:00",
+    "teams": {
+      "FUT Esports": {
+        "model": 0.810825,
+        "kalshi": {
+          "bid": 0.76,
+          "ask": 0.8,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-FUT",
+          "mid": 0.78
+        },
+        "polymarket": {
+          "bid": 0.76,
+          "ask": 0.82,
+          "mid": 0.79
+        },
+        "model_minus_kalshi": 0.0308,
+        "model_minus_polymarket": 0.0208
+      },
+      "Nemiga": {
+        "model": 0.63376,
+        "kalshi": {
+          "bid": 0.63,
+          "ask": 0.68,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-NEMI",
+          "mid": 0.655
+        },
+        "polymarket": {
+          "bid": 0.58,
+          "ask": 0.59,
+          "mid": 0.585
+        },
+        "model_minus_kalshi": -0.0212,
+        "model_minus_polymarket": 0.0488
+      },
+      "G2": {
+        "model": 0.648145,
+        "kalshi": {
+          "bid": 0.55,
+          "ask": 0.57,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-G2",
+          "mid": 0.56
+        },
+        "polymarket": {
+          "bid": 0.56,
+          "ask": 0.6,
+          "mid": 0.58
+        },
+        "model_minus_kalshi": 0.0881,
+        "model_minus_polymarket": 0.0681
+      },
+      "The One": {
+        "model": 0.55047,
+        "kalshi": {
+          "bid": 0.43,
+          "ask": 0.46,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-ONE",
+          "mid": 0.445
+        },
+        "model_minus_kalshi": 0.1055
+      },
+      "Natus Vincere": {
+        "model": 0.718985,
+        "kalshi": {
+          "bid": 0.82,
+          "ask": 0.84,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-NAVI",
+          "mid": 0.83
+        },
+        "polymarket": {
+          "bid": 0.81,
+          "ask": 0.82,
+          "mid": 0.815
+        },
+        "model_minus_kalshi": -0.111,
+        "model_minus_polymarket": -0.096
+      },
+      "Astralis": {
+        "model": 0.55464,
+        "kalshi": {
+          "bid": 0.3,
+          "ask": 0.31,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-AST",
+          "mid": 0.305
+        },
+        "polymarket": {
+          "bid": 0.44,
+          "ask": 0.45,
+          "mid": 0.445
+        },
+        "model_minus_kalshi": 0.2496,
+        "model_minus_polymarket": 0.1096
+      },
+      "The MongolZ": {
+        "model": 0.613875,
+        "kalshi": {
+          "bid": 0.67,
+          "ask": 0.68,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-MGLZ",
+          "mid": 0.675
+        },
+        "polymarket": {
+          "bid": 0.7,
+          "ask": 0.88
+        },
+        "model_minus_kalshi": -0.0611
+      },
+      "MIBR": {
+        "model": 0.50022,
+        "kalshi": {
+          "bid": 0.38,
+          "ask": 0.42,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-MIBR",
+          "mid": 0.4
+        },
+        "polymarket": {
+          "bid": 0.39,
+          "ask": 0.48,
+          "mid": 0.435
+        },
+        "model_minus_kalshi": 0.1002,
+        "model_minus_polymarket": 0.0652
+      },
+      "FlyQuest": {
+        "model": 0.17959,
+        "kalshi": {
+          "bid": 0.45,
+          "ask": 0.47,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-FLY",
+          "mid": 0.46
+        },
+        "polymarket": {
+          "bid": 0.32,
+          "ask": 0.34,
+          "mid": 0.33
+        },
+        "model_minus_kalshi": -0.2804,
+        "model_minus_polymarket": -0.1504
+      },
+      "NIP": {
+        "model": 0.5298350000000001,
+        "kalshi": {
+          "bid": 0.49,
+          "ask": 0.53,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-NIP",
+          "mid": 0.51
+        },
+        "polymarket": {
+          "bid": 0.49,
+          "ask": 0.55,
+          "mid": 0.52
+        },
+        "model_minus_kalshi": 0.0198,
+        "model_minus_polymarket": 0.0098
+      },
+      "Liquid": {
+        "model": 0.43468999999999997,
+        "kalshi": {
+          "bid": 0.48,
+          "ask": 0.52,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-TL",
+          "mid": 0.5
+        },
+        "polymarket": {
+          "bid": 0.47,
+          "ask": 0.54,
+          "mid": 0.505
+        },
+        "model_minus_kalshi": -0.0653,
+        "model_minus_polymarket": -0.0703
+      },
+      "Eternal Fire": {
+        "model": 0.49487499999999995,
+        "kalshi": {
+          "bid": 0.32,
+          "ask": 0.36,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-EF",
+          "mid": 0.34
+        },
+        "polymarket": {
+          "bid": 0.32,
+          "ask": 0.37,
+          "mid": 0.345
+        },
+        "model_minus_kalshi": 0.1549,
+        "model_minus_polymarket": 0.1499
+      },
+      "PVISION": {
+        "model": 0.35219,
+        "kalshi": {
+          "bid": 0.45,
+          "ask": 0.49,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-PV",
+          "mid": 0.47
+        },
+        "polymarket": {
+          "bid": 0.48,
+          "ask": 0.52,
+          "mid": 0.5
+        },
+        "model_minus_kalshi": -0.1178,
+        "model_minus_polymarket": -0.1478
+      },
+      "Imperial": {
+        "model": 0.34317000000000003,
+        "kalshi": {
+          "bid": 0.29,
+          "ask": 0.32,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-IMP",
+          "mid": 0.305
+        },
+        "polymarket": {
+          "bid": 0.26,
+          "ask": 0.27,
+          "mid": 0.265
+        },
+        "model_minus_kalshi": 0.0382,
+        "model_minus_polymarket": 0.0782
+      },
+      "Lynn Vision": {
+        "model": 0.17204,
+        "kalshi": {
+          "bid": 0.25,
+          "ask": 0.27,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-LVG",
+          "mid": 0.26
+        },
+        "polymarket": {
+          "bid": 0.21,
+          "ask": 0.22,
+          "mid": 0.215
+        },
+        "model_minus_kalshi": -0.088,
+        "model_minus_polymarket": -0.043
+      },
+      "100 Thieves": {
+        "model": 0.46269,
+        "kalshi": {
+          "bid": 0.48,
+          "ask": 0.52,
+          "ticker": "KXCS2QUALIFIERS-26PGLSGS3-100T",
+          "mid": 0.5
+        },
+        "polymarket": {
+          "bid": 0.44,
+          "ask": 0.53,
+          "mid": 0.485
+        },
+        "model_minus_kalshi": -0.0373,
+        "model_minus_polymarket": -0.0223
+      }
+    }
+  }
+}

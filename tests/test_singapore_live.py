@@ -26,6 +26,28 @@ def test_names_cover_every_venue_spelling():
     assert canon("Vitality", strict=False) == "Vitality"
 
 
+def test_stage2_spellings_from_pgl_and_bo3_reach_one_name():
+    from pathlib import Path
+
+    for raw, want in [("FUT ESPORTS", "FUT Esports"), ("FUT", "FUT Esports"), ("Nemiga Gaming", "Nemiga"),
+                      ("G2 Esports", "G2"), ("1win", "The One"), ("The One", "The One"),
+                      ("NAVI", "Natus Vincere"), ("The MongolZ", "The MongolZ"), ("MIBR", "MIBR")]:
+        assert canon(raw) == want
+    for stage in ("stage1", "stage2"):
+        data = json.loads(Path(f"data/singapore2026/{stage}.json").read_text(encoding="utf-8"))
+        assert all(canon(t["name"]) == t["name"] for t in data["teams"])
+
+
+def test_bo3_overlay_matches_a_stage2_team_spelled_differently():
+    pgl = feed.Fixture("s2-00", 2, "Round 1", 1, 1, "2026-11-28T04:00:00+00:00", "upcoming",
+                       canon("FUT ESPORTS", strict=False), "FlyQuest", (0, 0), (("", 0, 0),))
+    bo3 = {2: [{"team1": {"id": 1, "name": "FUT"}, "team2": {"id": 2, "name": "FlyQuest"},
+                "start_date": "2026-11-28T04:00:00.000+00:00", "status": "current", "bo_type": 1,
+                "games": [{"number": 1, "status": "current", "map_name": "de_mirage"}]}]}
+    live = feed.overlay({"s2-00": pgl}, bo3)["s2-00"]
+    assert (live.status, live.underway, live.maps) == ("live", True, (("de_mirage", 0, 0),))
+
+
 def test_first_poll_is_silent_and_bo3_lifecycle_emits_each_event_once():
     at = "2026-11-25T08:05:00+00:00"
     assert diff(None, {"s1-20": fx()}, at=at) == []
@@ -129,6 +151,8 @@ def test_push_text_is_one_short_line():
     assert "\n" not in text and len(text) <= 195
     assert text.startswith("Imperial 1-0 FlyQuest after map 1 Nuke 13-9") and "PickEm 10%" in text
     assert push_text([], None) is None
+    held = {"ok": True, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+    assert push_text(events[1:], held) == "LIVE NIP v Liquid (R3 Bo3)"
 
 
 def test_map_markets_bind_to_the_fixture_and_skip_unknown_contracts(monkeypatch):
@@ -345,6 +369,36 @@ def test_a_half_entered_pgl_map_score_is_not_a_finished_map():
     ends = diff({"s1-00": torn}, {"s1-00": final}, at="2026-11-26T11:01:57+00:00")
     assert [(e["type"], e.get("map"), e.get("rounds"), e.get("map_winner")) for e in ends if e["type"] != "round_update"] == [
         ("map_end", "de_dust2", [10, 13], "PVISION"), ("match_finish", None, None, None)]
+
+
+def test_final_score_accepts_only_scores_a_cs2_map_can_end_on():
+    for a, b in [(13, 0), (13, 11), (11, 13), (16, 12), (16, 14), (14, 16), (19, 15), (19, 17), (22, 20)]:
+        assert feed.final_score(a, b), (a, b)
+    for a, b in [(0, 0), (10, 0), (13, 12), (14, 0), (14, 12), (16, 15), (17, 15), (19, 0), (19, 14), (20, 18)]:
+        assert not feed.final_score(a, b), (a, b)
+
+
+def test_pgl_rows_caught_mid_edit_on_november_28_wait_for_the_finished_map():
+    """PGL showed Natus Vincere v PVISION ended 1-0 with an unnamed map at 13-0 (Ancient 13-10 a
+    poll later), and Liquid v Eternal Fire at 1-0 with an unnamed map at 19-0 (Anubis 19-17)."""
+    def row(status, score, name, rounds, left="Natus Vincere", right="PVISION"):
+        return {"status": status, "timeZone": "SGT", "date": "28.11.2026", "time": "15:00", "format": "BO1",
+                "round": "opening round m7", "leftTeam": left, "rightTeam": right,
+                "leftScore": score[0], "rightScore": score[1],
+                "maps": [{"map": name, "leftScore": rounds[0], "rightScore": rounds[1]}]}
+
+    before = feed.parse(2, [row("live", (0, 0), "de_ancient", (0, 0))])["s2-00"]
+    torn = feed.parse(2, [row("end", (1, 0), "de_", (13, 0))])["s2-00"]
+    final = feed.parse(2, [row("end", (1, 0), "de_ancient", (13, 10))])["s2-00"]
+    assert (torn.status, torn.score) == ("live", (0, 0))
+    assert (final.status, final.score) == ("end", (1, 0))
+    assert [e["type"] for e in diff({"s2-00": before}, {"s2-00": torn}, at="2026-11-28T08:19:54+00:00")
+            if e["type"] in ("map_end", "match_finish")] == []
+    ends = diff({"s2-00": torn}, {"s2-00": final}, at="2026-11-28T08:20:34+00:00")
+    assert [(e["type"], e.get("rounds")) for e in ends if e["type"] in ("map_end", "match_finish")] == [
+        ("map_end", [13, 10]), ("match_finish", None)]
+    liquid = feed.parse(2, [row("live", (1, 0), "", (19, 0), "Team Liquid", "Eternal Fire")])["s2-00"]
+    assert (liquid.a, liquid.status, liquid.score) == ("Liquid", "live", (0, 0))
 
 
 def test_a_draw_made_before_a_live_match_ends_holds_entries():

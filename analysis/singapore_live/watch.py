@@ -51,8 +51,7 @@ def now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def map_named(name: str) -> bool:
-    return bool(name) and name not in ("de_", "tba", "tbd")
+map_named = feed.map_named
 
 
 def diff(prev: dict[str, feed.Fixture] | None, cur: dict[str, feed.Fixture], *, at: str,
@@ -160,7 +159,8 @@ def push_text(events: list[dict], pricing: dict | None) -> str | None:
     if pricing and pricing.get("ok"):
         if pricing.get("new"):
             parts.append(f"{len(pricing['new'])} new Kalshi paper: " + "; ".join(pricing["new"][:2]))
-        parts.append(f"PickEm {100 * pricing.get('pickem_p_ge5', 0):.0f}%")
+        if pricing.get("pickem_p_ge5") is not None:  # a held pricer reports no Pick'Em chance
+            parts.append(f"PickEm {100 * pricing['pickem_p_ge5']:.0f}%")
     elif pricing and not pricing.get("ok"):
         parts.append("pricer error, check log")
     if not parts:

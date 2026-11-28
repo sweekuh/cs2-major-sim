@@ -61,3 +61,24 @@ python analysis/pr18_review/score_singapore.py results.json \
 ```
 
 `results.json` maps each team to its final record, for example `{"NIP": "3-1"}`.
+
+## Stage 1 result (scored November 27)
+
+Final records come from PGL's results feed, frozen in
+[`data/singapore2026/evidence/singapore-stage1-results.json`](../../data/singapore2026/evidence/singapore-stage1-results.json).
+Scored with the rule fixed on November 20:
+
+| Forecast | Card | Stated P(≥5) | Per-team log loss | Qualify Brier |
+|---|---|---|---|---|
+| Published spread mix (9z card) | 2/10, miss | 40.9% | 1.2925 | 0.2514 |
+| Spread 600 (DENDELE card) | 2/10, miss | 44.1% | 1.3281 | 0.2607 |
+| Base rates (2, 6, 2, 6 of 16) | | | 1.2555 | |
+
+Both forecasts scored worse than base rates. The published forecast's gap to base rates (0.037) is
+under the 0.05 the rule treats as noise, so one stage does not show the forecast was worse than
+base rates, and it shows no skill either. The two correct picks were Liquid and Eternal Fire, both
+3-1, in the advance bucket. Both 3-0 picks qualified without sweeping (100 Thieves 3-2, PVISION
+3-1), NIP went 3-0 from the advance bucket, and neither 0-3 pick went winless (Chinggis Warriors
+1-3, Lynn Vision 3-2). The teams that went 3-0 (NIP, FlyQuest) and 0-3 (DENDELE, GOSH) were all
+off those buckets.
+

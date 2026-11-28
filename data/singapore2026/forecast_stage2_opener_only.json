@@ -1,0 +1,437 @@
+{
+  "event": "PGL Major Singapore 2026",
+  "stage": 2,
+  "starts_at": "2026-11-28T04:00:00Z",
+  "quotes_observed_at": "2026-11-28T02:45:37+00:00",
+  "openers": [
+    {
+      "teams": [
+        "FUT Esports",
+        "FlyQuest"
+      ],
+      "bid": 0.74,
+      "ask": 0.75,
+      "slug": "cs2-fut-fly-2026-11-27"
+    },
+    {
+      "teams": [
+        "Nemiga",
+        "NIP"
+      ],
+      "bid": 0.53,
+      "ask": 0.54,
+      "slug": "cs2-nemi1-nip-2026-11-27"
+    },
+    {
+      "teams": [
+        "G2",
+        "Liquid"
+      ],
+      "bid": 0.57,
+      "ask": 0.58,
+      "slug": "cs2-g2-tl1-2026-11-28"
+    },
+    {
+      "teams": [
+        "The One",
+        "Eternal Fire"
+      ],
+      "bid": 0.51,
+      "ask": 0.52,
+      "slug": "cs2-one6-ef1-2026-11-28"
+    },
+    {
+      "teams": [
+        "Natus Vincere",
+        "PVISION"
+      ],
+      "bid": 0.63,
+      "ask": 0.64,
+      "slug": "cs2-navi-prv-2026-11-28"
+    },
+    {
+      "teams": [
+        "Astralis",
+        "Imperial"
+      ],
+      "bid": 0.57,
+      "ask": 0.58,
+      "slug": "cs2-ast10-imp11-2026-11-28"
+    },
+    {
+      "teams": [
+        "The MongolZ",
+        "Lynn Vision"
+      ],
+      "bid": 0.67,
+      "ask": 0.68,
+      "slug": "cs2-mglz-lvg-2026-11-28"
+    },
+    {
+      "teams": [
+        "MIBR",
+        "100 Thieves"
+      ],
+      "bid": 0.5,
+      "ask": 0.51,
+      "slug": "cs2-mibr-100t-2026-11-28"
+    }
+  ],
+  "seed": 20261129,
+  "n_select": 100000,
+  "card": {
+    "3-0": [
+      "FUT Esports",
+      "The MongolZ"
+    ],
+    "3-1 or 3-2": [
+      "G2",
+      "Natus Vincere",
+      "The One",
+      "Astralis",
+      "Nemiga",
+      "NIP"
+    ],
+    "0-3": [
+      "Lynn Vision",
+      "FlyQuest"
+    ]
+  },
+  "model": "Opener only",
+  "evaluation": {
+    "n": 200000,
+    "p_ge5": 0.260215,
+    "ci95_sampling": [
+      0.2582967040485688,
+      0.26214250735505845
+    ],
+    "expected_correct": 3.594455
+  },
+  "by_spread": {
+    "400": {
+      "n": 25000,
+      "p_ge5": 0.52404,
+      "ci95_sampling": [
+        0.51784588490871,
+        0.5302267280612905
+      ],
+      "expected_correct": 4.56564,
+      "weight": 0.0022200880957286774
+    },
+    "500": {
+      "n": 25000,
+      "p_ge5": 0.45052,
+      "ci95_sampling": [
+        0.44436043078779436,
+        0.45669477346529935
+      ],
+      "expected_correct": 4.32388,
+      "weight": 0.016907736655021925
+    },
+    "600": {
+      "n": 25000,
+      "p_ge5": 0.40184,
+      "ci95_sampling": [
+        0.39577808037101536,
+        0.40793208231054634
+      ],
+      "expected_correct": 4.1463600000000005,
+      "weight": 0.03935260920374008
+    },
+    "700": {
+      "n": 25000,
+      "p_ge5": 0.36356,
+      "ci95_sampling": [
+        0.357618548160001,
+        0.369543377229896
+      ],
+      "expected_correct": 4.005599999999999,
+      "weight": 0.05748475520597927
+    },
+    "800": {
+      "n": 25000,
+      "p_ge5": 0.33412,
+      "ci95_sampling": [
+        0.32829884995614506,
+        0.3399921217799741
+      ],
+      "expected_correct": 3.89292,
+      "weight": 0.09502574097306626
+    },
+    "1000": {
+      "n": 25000,
+      "p_ge5": 0.2908,
+      "ci95_sampling": [
+        0.28520301069287335,
+        0.2964612724467224
+      ],
+      "expected_correct": 3.7285199999999996,
+      "weight": 0.13647978546764925
+    },
+    "1200": {
+      "n": 25000,
+      "p_ge5": 0.2604,
+      "ci95_sampling": [
+        0.25499702908553373,
+        0.26587659538983505
+      ],
+      "expected_correct": 3.6106399999999996,
+      "weight": 0.11835614928572306
+    },
+    "1400": {
+      "n": 25000,
+      "p_ge5": 0.24104,
+      "ci95_sampling": [
+        0.23577804050825327,
+        0.246381532923055
+      ],
+      "expected_correct": 3.5361599999999997,
+      "weight": 0.11958705844410439
+    },
+    "1700": {
+      "n": 25000,
+      "p_ge5": 0.22124,
+      "ci95_sampling": [
+        0.21613763909511577,
+        0.2264280184956762
+      ],
+      "expected_correct": 3.4500400000000004,
+      "weight": 0.11341276518989207
+    },
+    "2000": {
+      "n": 25000,
+      "p_ge5": 0.2064,
+      "ci95_sampling": [
+        0.20142831867399053,
+        0.21146189896360645
+      ],
+      "expected_correct": 3.38688,
+      "weight": 0.1126113818548538
+    },
+    "2500": {
+      "n": 25000,
+      "p_ge5": 0.192,
+      "ci95_sampling": [
+        0.18716496576397798,
+        0.19692967671687986
+      ],
+      "expected_correct": 3.31112,
+      "weight": 0.10415498059503428
+    },
+    "3000": {
+      "n": 25000,
+      "p_ge5": 0.18212,
+      "ci95_sampling": [
+        0.17738475353294936,
+        0.1869529248820347
+      ],
+      "expected_correct": 3.2610400000000004,
+      "weight": 0.0844069490292068
+    }
+  },
+  "teams": [
+    {
+      "seed": 1,
+      "team": "FUT Esports",
+      "sweep": 0.28306,
+      "advance_pick": 0.46723,
+      "qualify": 0.7502899999999999,
+      "winless": 0.03414
+    },
+    {
+      "seed": 2,
+      "team": "Nemiga",
+      "sweep": 0.176915,
+      "advance_pick": 0.45824,
+      "qualify": 0.6351549999999999,
+      "winless": 0.072925
+    },
+    {
+      "seed": 3,
+      "team": "G2",
+      "sweep": 0.16966,
+      "advance_pick": 0.44419,
+      "qualify": 0.61385,
+      "winless": 0.07231
+    },
+    {
+      "seed": 4,
+      "team": "The One",
+      "sweep": 0.143065,
+      "advance_pick": 0.429845,
+      "qualify": 0.57291,
+      "winless": 0.08843
+    },
+    {
+      "seed": 5,
+      "team": "Natus Vincere",
+      "sweep": 0.171945,
+      "advance_pick": 0.43635,
+      "qualify": 0.608295,
+      "winless": 0.067475
+    },
+    {
+      "seed": 6,
+      "team": "Astralis",
+      "sweep": 0.14321,
+      "advance_pick": 0.41229,
+      "qualify": 0.5555,
+      "winless": 0.08923
+    },
+    {
+      "seed": 7,
+      "team": "The MongolZ",
+      "sweep": 0.15962,
+      "advance_pick": 0.409015,
+      "qualify": 0.568635,
+      "winless": 0.07497
+    },
+    {
+      "seed": 8,
+      "team": "MIBR",
+      "sweep": 0.11701,
+      "advance_pick": 0.395005,
+      "qualify": 0.512015,
+      "winless": 0.10759
+    },
+    {
+      "seed": 9,
+      "team": "FlyQuest",
+      "sweep": 0.03622,
+      "advance_pick": 0.201095,
+      "qualify": 0.237315,
+      "winless": 0.274625
+    },
+    {
+      "seed": 10,
+      "team": "NIP",
+      "sweep": 0.11863,
+      "advance_pick": 0.40468,
+      "qualify": 0.5233099999999999,
+      "winless": 0.11004
+    },
+    {
+      "seed": 11,
+      "team": "Liquid",
+      "sweep": 0.09639,
+      "advance_pick": 0.371755,
+      "qualify": 0.46814500000000003,
+      "winless": 0.13236
+    },
+    {
+      "seed": 12,
+      "team": "Eternal Fire",
+      "sweep": 0.102865,
+      "advance_pick": 0.36655,
+      "qualify": 0.46941499999999997,
+      "winless": 0.125285
+    },
+    {
+      "seed": 13,
+      "team": "PVISION",
+      "sweep": 0.0856,
+      "advance_pick": 0.385935,
+      "qualify": 0.471535,
+      "winless": 0.138145
+    },
+    {
+      "seed": 14,
+      "team": "Imperial",
+      "sweep": 0.06614,
+      "advance_pick": 0.279795,
+      "qualify": 0.345935,
+      "winless": 0.185045
+    },
+    {
+      "seed": 15,
+      "team": "Lynn Vision",
+      "sweep": 0.034865,
+      "advance_pick": 0.178905,
+      "qualify": 0.21377000000000002,
+      "winless": 0.291555
+    },
+    {
+      "seed": 16,
+      "team": "100 Thieves",
+      "sweep": 0.094805,
+      "advance_pick": 0.35912,
+      "qualify": 0.453925,
+      "winless": 0.135875
+    }
+  ],
+  "sensitivity": {
+    "Ratings only": {
+      "n": 25000,
+      "p_ge5": 0.23616,
+      "ci95_sampling": [
+        0.23093588113850977,
+        0.24146519182301474
+      ],
+      "expected_correct": 3.4909999999999997
+    },
+    "Half carry": {
+      "n": 25000,
+      "p_ge5": 0.28076,
+      "ci95_sampling": [
+        0.2752235561091112,
+        0.2863638121295359
+      ],
+      "expected_correct": 3.69184
+    },
+    "Full carry": {
+      "n": 25000,
+      "p_ge5": 0.30516,
+      "ci95_sampling": [
+        0.29948218606734794,
+        0.3108976845202181
+      ],
+      "expected_correct": 3.7951200000000003
+    }
+  },
+  "closest_swap": {
+    "out": "Astralis",
+    "bucket": "3-1 or 3-2",
+    "in": "MIBR",
+    "p_ge5": 0.256215,
+    "card_only": 11957,
+    "alternative_only": 11157,
+    "n": 200000,
+    "card_minus_alternative": 0.004,
+    "ci95_delta": [
+      0.0025101808056008945,
+      0.005489819194399106
+    ]
+  },
+  "line_tests": [
+    {
+      "team": "MIBR",
+      "opponent": "100 Thieves",
+      "current": 0.505,
+      "tested": 0.555,
+      "p_ge5": 0.25596,
+      "card_only": 1466,
+      "alternative_only": 1425,
+      "n": 25000,
+      "card_minus_alternative": 0.00164,
+      "ci95_delta": [
+        -0.0025753637642919507,
+        0.005855363764291951
+      ]
+    },
+    {
+      "team": "MIBR",
+      "opponent": "100 Thieves",
+      "current": 0.505,
+      "tested": 0.605,
+      "p_ge5": 0.2586,
+      "card_only": 1475,
+      "alternative_only": 1455,
+      "n": 25000,
+      "card_minus_alternative": 0.0008,
+      "ci95_delta": [
+        -0.0034437392067656566,
+        0.005043739206765657
+      ]
+    }
+  ]
+}

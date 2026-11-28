@@ -1,10 +1,10 @@
 {
- "at": "2026-11-26T15:35:55.596196+00:00",
+ "at": "2026-11-28T14:55:19.132575+00:00",
  "updated": {
-  "1": "2026-11-26T15:35:17.252Z",
-  "2": "2026-11-26T15:35:17.229Z",
-  "3": "2026-11-26T15:35:17.282Z",
-  "4": "2026-11-26T15:35:17.220Z"
+  "1": "2026-11-28T14:54:45.834Z",
+  "2": "2026-11-28T14:54:45.803Z",
+  "3": "2026-11-28T14:54:45.793Z",
+  "4": "2026-11-28T14:54:45.781Z"
  },
  "fixtures": {
   "s1-00": {
@@ -804,26 +804,26 @@
    "round": 5,
    "bo": 3,
    "start": "2026-11-27T06:00:00+00:00",
-   "status": "upcoming",
+   "status": "end",
    "a": "Lynn Vision",
    "b": "HEROIC",
    "score": [
-    0,
+    2,
     0
    ],
    "maps": [
     [
-     "",
-     0,
-     0
+     "de_nuke",
+     13,
+     11
     ],
     [
-     "",
-     0,
-     0
+     "de_dust2",
+     13,
+     6
     ],
     [
-     "",
+     "de_ancient",
      0,
      0
     ]
@@ -837,28 +837,28 @@
    "round": 5,
    "bo": 3,
    "start": "2026-11-27T08:30:00+00:00",
-   "status": "upcoming",
+   "status": "end",
    "a": "Imperial",
    "b": "Wildcard",
    "score": [
-    0,
-    0
+    2,
+    1
    ],
    "maps": [
     [
-     "",
-     0,
-     0
+     "de_dust2",
+     13,
+     11
     ],
     [
-     "",
-     0,
-     0
+     "de_mirage",
+     11,
+     13
     ],
     [
-     "",
-     0,
-     0
+     "de_cache",
+     13,
+     8
     ]
    ],
    "underway": null
@@ -870,28 +870,28 @@
    "round": 5,
    "bo": 3,
    "start": "2026-11-27T11:00:00+00:00",
-   "status": "upcoming",
+   "status": "end",
    "a": "M80",
    "b": "100 Thieves",
    "score": [
-    0,
-    0
+    1,
+    2
    ],
    "maps": [
     [
-     "",
-     0,
-     0
+     "de_dust2",
+     6,
+     13
     ],
     [
-     "",
-     0,
-     0
+     "de_inferno",
+     13,
+     10
     ],
     [
-     "",
-     0,
-     0
+     "de_mirage",
+     5,
+     13
     ]
    ],
    "underway": null
@@ -903,18 +903,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T04:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "FUT Esports",
+   "b": "FlyQuest",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_cache",
+     13,
+     10
     ]
    ],
    "underway": null
@@ -926,18 +926,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T04:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "The MongolZ",
+   "b": "Lynn Vision",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_inferno",
+     13,
+     9
     ]
    ],
    "underway": null
@@ -949,18 +949,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T05:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Astralis",
+   "b": "Imperial",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_inferno",
+     13,
+     9
     ]
    ],
    "underway": null
@@ -972,18 +972,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T05:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Nemiga",
+   "b": "NIP",
    "score": [
     0,
-    0
+    1
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_mirage",
+     7,
+     13
     ]
    ],
    "underway": null
@@ -995,18 +995,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T06:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "G2",
+   "b": "Liquid",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_mirage",
+     13,
+     8
     ]
    ],
    "underway": null
@@ -1018,18 +1018,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T06:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "The One",
+   "b": "Eternal Fire",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_cache",
+     13,
+     10
     ]
    ],
    "underway": null
@@ -1041,18 +1041,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T07:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Natus Vincere",
+   "b": "PVISION",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_ancient",
+     13,
+     10
     ]
    ],
    "underway": null
@@ -1064,18 +1064,18 @@
    "round": 1,
    "bo": 1,
    "start": "2026-11-28T07:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "MIBR",
+   "b": "100 Thieves",
    "score": [
     0,
-    0
+    1
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_cache",
+     11,
+     13
     ]
    ],
    "underway": null
@@ -1087,18 +1087,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T08:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "G2",
+   "b": "NIP",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_ancient",
+     13,
+     10
     ]
    ],
    "underway": null
@@ -1110,18 +1110,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T08:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Nemiga",
+   "b": "Lynn Vision",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_ancient",
+     13,
+     1
     ]
    ],
    "underway": null
@@ -1133,18 +1133,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T09:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "The One",
+   "b": "The MongolZ",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_mirage",
+     13,
+     10
     ]
    ],
    "underway": null
@@ -1156,18 +1156,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T09:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Liquid",
+   "b": "Eternal Fire",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_anubis",
+     19,
+     17
     ]
    ],
    "underway": null
@@ -1179,18 +1179,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T10:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "FUT Esports",
+   "b": "100 Thieves",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_cache",
+     13,
+     8
     ]
    ],
    "underway": null
@@ -1202,18 +1202,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T10:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "MIBR",
+   "b": "Imperial",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_mirage",
+     16,
+     14
     ]
    ],
    "underway": null
@@ -1225,18 +1225,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T11:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "Natus Vincere",
+   "b": "Astralis",
    "score": [
     0,
-    0
+    1
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_ancient",
+     11,
+     13
     ]
    ],
    "underway": null
@@ -1248,18 +1248,18 @@
    "round": 2,
    "bo": 1,
    "start": "2026-11-28T11:00:00+00:00",
-   "status": "upcoming",
-   "a": null,
-   "b": null,
+   "status": "end",
+   "a": "FlyQuest",
+   "b": "PVISION",
    "score": [
-    0,
+    1,
     0
    ],
    "maps": [
     [
-     "de_",
-     0,
-     0
+     "de_inferno",
+     16,
+     14
     ]
    ],
    "underway": null
@@ -1272,15 +1272,15 @@
    "bo": 1,
    "start": "2026-11-29T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "100 Thieves",
+   "b": "Nemiga",
    "score": [
     0,
     0
    ],
    "maps": [
     [
-     "de_",
+     "",
      0,
      0
     ]
@@ -1295,15 +1295,15 @@
    "bo": 1,
    "start": "2026-11-29T06:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "NIP",
+   "b": "MIBR",
    "score": [
     0,
     0
    ],
    "maps": [
     [
-     "de_",
+     "",
      0,
      0
     ]
@@ -1318,15 +1318,15 @@
    "bo": 1,
    "start": "2026-11-29T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Natus Vincere",
+   "b": "Liquid",
    "score": [
     0,
     0
    ],
    "maps": [
     [
-     "de_",
+     "",
      0,
      0
     ]
@@ -1341,15 +1341,15 @@
    "bo": 1,
    "start": "2026-11-29T07:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "The MongolZ",
+   "b": "FlyQuest",
    "score": [
     0,
     0
    ],
    "maps": [
     [
-     "de_",
+     "",
      0,
      0
     ]
@@ -1364,8 +1364,8 @@
    "bo": 3,
    "start": "2026-11-29T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "G2",
+   "b": "The One",
    "score": [
     0,
     0
@@ -1397,8 +1397,8 @@
    "bo": 3,
    "start": "2026-11-29T08:00:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Eternal Fire",
+   "b": "Lynn Vision",
    "score": [
     0,
     0
@@ -1430,8 +1430,8 @@
    "bo": 3,
    "start": "2026-11-29T10:30:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "FUT Esports",
+   "b": "Astralis",
    "score": [
     0,
     0
@@ -1463,8 +1463,8 @@
    "bo": 3,
    "start": "2026-11-29T10:30:00+00:00",
    "status": "upcoming",
-   "a": null,
-   "b": null,
+   "a": "Imperial",
+   "b": "PVISION",
    "score": [
     0,
     0
@@ -3164,6 +3164,25 @@
   "s1-26",
   "s1-27",
   "s1-28",
-  "s1-29"
+  "s1-29",
+  "s1-30",
+  "s1-31",
+  "s1-32",
+  "s2-00",
+  "s2-01",
+  "s2-02",
+  "s2-03",
+  "s2-04",
+  "s2-05",
+  "s2-06",
+  "s2-07",
+  "s2-08",
+  "s2-09",
+  "s2-10",
+  "s2-11",
+  "s2-12",
+  "s2-13",
+  "s2-14",
+  "s2-15"
  ]
 }

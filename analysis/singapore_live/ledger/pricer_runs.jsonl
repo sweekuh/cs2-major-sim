@@ -358,3 +358,382 @@
 {"at": "2026-11-26T15:29:02.337595+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Chinggis Warriors", "Wildcard"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-26T15:32:05.756299+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Chinggis Warriors", "Wildcard"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
 {"at": "2026-11-26T15:35:57.723656+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:02:09.523856+00:00", "reason": "match_start", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:02:54.105932+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:06:10.123500+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:09:14.753816+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:12:16.631110+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:15:17.450428+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:18:35.010075+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 1, "pickem_max": 3, "signals": 1, "new_entries": 1, "new": ["qualify HEROIC NO @0.31 fair 0.43 in-play"], "top": ["kalshi qualify HEROIC NO @0.308 fair>=0.427 edge 11.9c in-play"]}
+{"at": "2026-11-27T06:19:15.802648+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.308 fair>=0.445 edge 13.7c in-play"]}
+{"at": "2026-11-27T06:22:25.637117+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.308 fair>=0.496 edge 18.8c in-play"]}
+{"at": "2026-11-27T06:25:32.176948+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.308 fair>=0.484 edge 17.6c in-play"]}
+{"at": "2026-11-27T06:28:49.137187+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.436 edge 12.1c in-play"]}
+{"at": "2026-11-27T06:32:01.200774+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.355 edge 4.0c in-play"]}
+{"at": "2026-11-27T06:35:05.414617+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.421 edge 10.6c in-play"]}
+{"at": "2026-11-27T06:38:10.776478+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.355 edge 4.0c in-play"]}
+{"at": "2026-11-27T06:41:11.526080+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.336 edge 2.1c in-play"]}
+{"at": "2026-11-27T06:44:17.584707+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:47:23.707118+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:50:25.231397+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.315 fair>=0.576 edge 26.1c in-play"]}
+{"at": "2026-11-27T06:53:30.927596+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:54:04.416073+00:00", "reason": "map_end", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:54:38.141991+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T06:57:52.195040+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:01:08.557740+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:04:23.689102+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:07:24.024805+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:10:28.928564+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:13:42.854474+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:16:59.218638+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:19:59.410285+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:23:15.692231+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:26:31.114233+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:29:45.891636+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:33:02.325510+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:36:03.369461+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:39:14.767895+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:42:17.059102+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:45:33.172710+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.966 fair>=0.996 edge 3.0c in-play"]}
+{"at": "2026-11-27T07:48:45.450049+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify HEROIC NO @0.966 fair>=0.990 edge 2.4c in-play"]}
+{"at": "2026-11-27T07:51:50.303903+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:54:59.707101+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["HEROIC", "Lynn Vision"], "new_in_play": 0, "pickem_max": 3, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T07:58:00.382262+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-30", "new_entries": 0}
+{"at": "2026-11-27T08:00:51.369436+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:29:04.567501+00:00", "reason": "match_start", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:29:36.041352+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:32:50.336544+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:36:18.731620+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:39:22.066017+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:42:32.826972+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:45:44.412499+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:48:59.908787+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:52:06.425519+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:55:22.442637+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T08:58:36.137830+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:01:49.526492+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:05:06.968563+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:08:11.210738+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:11:27.965906+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:14:39.054233+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:17:39.057034+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:20:43.916461+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:23:44.738082+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:27:01.594681+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:30:17.536237+00:00", "reason": "map_end", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:30:51.726329+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:33:54.696192+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:37:09.740852+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:40:10.642741+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:43:25.563646+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:46:42.958212+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:49:46.792511+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:52:59.749944+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:56:01.775761+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T09:59:18.293117+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:02:18.796830+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:05:26.509958+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:08:29.038506+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:11:32.104444+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:14:35.120401+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:17:36.278629+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:20:53.893553+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:24:07.611551+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:27:25.848813+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:30:32.471710+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:33:32.918146+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:36:38.065802+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:39:04.654962+00:00", "reason": "map_end", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:39:34.869663+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:42:44.152732+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:45:44.597539+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:49:01.099133+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:52:14.862110+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:55:26.440484+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T10:58:29.934469+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:01:47.886598+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:04:52.756721+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:08:08.799481+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:11:09.655585+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:14:12.321613+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:17:13.716152+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:20:25.743466+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:23:43.155256+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:26:48.997640+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:30:05.587770+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:33:07.895583+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:36:14.392924+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["Imperial", "Wildcard"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T11:39:31.062027+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-31", "new_entries": 0}
+{"at": "2026-11-27T11:42:36.328305+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-31", "new_entries": 0}
+{"at": "2026-11-27T11:43:52.868761+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:08:13.753706+00:00", "reason": "match_start", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:08:43.861112+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:11:59.399796+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:15:14.328430+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:18:30.792117+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:21:47.015466+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:25:03.909723+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:28:19.864321+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:31:22.604034+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:34:39.854706+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:37:55.880302+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:41:15.059454+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:44:15.817810+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:47:23.149233+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:50:30.837164+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:52:35.166869+00:00", "reason": "map_end", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:53:23.646203+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:56:25.704810+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T12:59:26.373284+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:02:32.352908+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:05:42.274829+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:08:43.694389+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:11:51.501031+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:15:04.177518+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:18:11.785794+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:21:15.128207+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:24:18.671200+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:27:36.508298+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:30:47.779045+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:33:55.968950+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:36:56.776401+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:39:58.259717+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:43:13.488161+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:46:21.213901+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:49:22.933316+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 1, "pickem_max": 2, "signals": 1, "new_entries": 1, "new": ["maps over YES @0.63 fair 0.77 in-play"], "top": ["kalshi maps over YES @0.627 fair>=0.684 edge 5.7c in-play"]}
+{"at": "2026-11-27T13:50:24.170228+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi maps over YES @0.607 fair>=0.684 edge 7.7c in-play"]}
+{"at": "2026-11-27T13:53:33.515687+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:56:42.124633+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T13:59:58.403392+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:03:16.027443+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:05:02.422708+00:00", "reason": "map_end", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:05:34.957644+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:08:35.358788+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:11:52.560623+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:15:01.117338+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:18:09.040668+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:21:44.288102+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:25:05.380933+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:28:08.792322+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:31:10.101052+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:34:16.635469+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:37:24.044144+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:40:40.932519+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:43:47.440281+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:47:05.030790+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:50:09.201256+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:53:11.862032+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:56:15.270981+00:00", "reason": "live_tick", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": ["100 Thieves", "M80"], "new_in_play": 0, "pickem_max": 2, "signals": 0, "new_entries": 0, "new": [], "top": []}
+{"at": "2026-11-27T14:59:32.242233+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Waiting for live series odds: s1-32", "new_entries": 0}
+{"at": "2026-11-27T15:02:27.371326+00:00", "reason": "map_end,match_finish", "ok": true, "pickem_p_ge5": 0.0, "entry_hold": null, "live_teams": [], "new_in_play": 0, "pickem_max": 2, "signals": 1, "new_entries": 0, "new": [], "top": ["kalshi qualify M80 NO @0.972 fair>=1.000 edge 2.8c"]}
+{"at": "2026-11-27T15:17:11.725815+00:00", "reason": "fixture_set", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:00:50.298277+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:01:05.024820+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:02:00.064624+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:02:13.523755+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:05:16.011332+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:08:16.978947+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:11:17.596627+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:14:26.259178+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:17:38.433683+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:20:57.420909+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:24:10.888710+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:27:16.230195+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:30:24.507018+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:33:29.880339+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:36:35.665580+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:39:53.002065+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:43:02.510690+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:46:22.202998+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:49:34.474291+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:52:39.224012+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:55:45.008892+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T04:56:45.523466+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:09:00.794231+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:09:18.789117+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:12:32.433085+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:13:13.652773+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:13:45.671923+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:16:59.241969+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:20:06.727366+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:23:13.910380+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:26:40.181160+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:29:48.362277+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:32:50.030802+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:35:50.297472+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:39:07.826956+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:42:23.159031+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:45:34.010542+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:48:49.214009+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:52:13.269398+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:55:14.762822+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:58:29.264723+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T05:58:43.194245+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:00:48.096728+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:14:01.446500+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:14:15.201466+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:16:41.956079+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:16:55.246625+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:20:02.760644+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:23:07.246794+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:26:17.961601+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:29:27.932908+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:32:30.260437+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:35:32.993318+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:38:49.463838+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:41:53.761954+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:45:00.677466+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:48:16.495778+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:51:32.363465+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:54:42.897939+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T06:57:46.674364+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:01:00.626251+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:04:01.059525+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:07:07.022615+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:09:50.311117+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:22:04.914103+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:22:26.271920+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:25:28.594571+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:28:37.329471+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:28:53.879294+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:31:58.457917+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:35:12.207283+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:38:22.836937+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:41:33.113615+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:44:33.514022+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:47:45.753403+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:50:56.172080+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:54:00.903721+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T07:57:11.773389+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:00:17.008127+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:03:18.139616+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:06:30.014383+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:09:47.679391+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:12:53.240242+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:15:54.652762+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:19:02.427223+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:19:57.658361+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:20:48.625429+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:24:06.174232+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:25:37.156386+00:00", "reason": "fixture_set", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T08:28:18.939451+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:24:57.427683+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:25:15.648994+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:25:46.106182+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:26:12.439654+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:29:17.106100+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:32:32.713127+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:35:47.668416+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:39:00.222388+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:42:14.412119+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:45:18.112947+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:48:28.333645+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:51:38.156324+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:54:38.827436+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:56:14.596246+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:56:33.593159+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T09:59:44.331826+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:02:47.629607+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:05:51.338888+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:09:04.627857+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:12:28.132674+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:15:41.364473+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:18:22.767545+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:19:05.055748+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:19:24.386987+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:19:53.401321+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:22:58.446471+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:26:01.145570+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:29:03.375335+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:32:07.365918+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:32:25.867082+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:35:32.005556+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:38:37.165917+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:41:39.583232+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:44:47.549838+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:47:49.166342+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:51:03.962314+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:54:12.544650+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T10:57:24.268422+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:00:30.015237+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:03:43.679861+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:06:55.999168+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:10:18.500348+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:13:28.183400+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:16:45.750203+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:19:50.003273+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:23:02.722077+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:26:20.513404+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:27:17.362822+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:27:50.284463+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:30:51.146800+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:34:00.420058+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:37:10.987679+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:40:11.335640+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:41:26.642709+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:41:40.707136+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:42:53.443596+00:00", "reason": "map_end", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:44:01.218411+00:00", "reason": "match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:44:22.930158+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:47:24.158515+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:50:32.193938+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:53:45.813888+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:56:47.950096+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:59:16.631612+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T11:59:37.581456+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:02:55.175892+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:06:06.525558+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:09:10.457620+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:12:27.427172+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:15:30.921923+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:18:34.658507+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:21:35.137395+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:24:50.242923+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:27:54.860992+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:29:54.755085+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:30:10.106263+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:33:16.300437+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:36:20.904416+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:39:26.414521+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:42:27.130467+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T12:44:49.844300+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:06:15.272470+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:09:32.600148+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:12:33.609089+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:15:01.125133+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:15:19.992386+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:18:32.868922+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:21:34.478767+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:24:41.647408+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:27:47.590540+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:30:52.971681+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:31:14.272965+00:00", "reason": "match_start", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:31:34.482540+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:34:36.165908+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:37:45.903640+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:41:03.825474+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:44:13.087509+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:46:35.776594+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:46:50.253660+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:49:52.882340+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:52:56.570319+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:56:05.495925+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T13:59:18.763789+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:02:24.546544+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:05:38.944818+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:09:01.757202+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:12:06.117295+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:15:34.370113+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:18:50.885141+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:21:53.276662+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:24:56.996781+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:28:06.121866+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:31:12.770477+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:34:21.167378+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:37:30.059273+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:40:35.968946+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:43:41.372162+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:46:47.306081+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:49:53.069360+00:00", "reason": "live_tick", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:50:11.523467+00:00", "reason": "map_end,match_finish", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
+{"at": "2026-11-28T14:55:21.409692+00:00", "reason": "fixture_set", "ok": true, "entry_hold": "Stage 1 is complete; no new entries", "new_entries": 0}
